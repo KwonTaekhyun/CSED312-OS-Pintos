@@ -119,6 +119,9 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 void thread_block (void);
 void thread_unblock (struct thread *);
 
+// [p1-1-1]
+void thread_sleep(void);
+
 struct thread *thread_current (void);
 tid_t thread_tid (void);
 const char *thread_name (void);
@@ -129,6 +132,9 @@ void thread_yield (void);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
+
+// [p1-1-1] test
+void test_list_foreach (struct list* List);
 
 int thread_get_priority (void);
 void thread_set_priority (int);
