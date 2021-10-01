@@ -89,7 +89,6 @@ struct thread
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
-
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
@@ -100,6 +99,12 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+
+    //WK modified
+    int origin_priority;
+    struct lock *wait_lock;
+    struct list donation_threads;
+    struct list_elem donation_thread_elem;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -137,5 +142,11 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+//Wk modified
+void order_ready_list();
+void start_donation();
+void end_donation();
+
 
 #endif /* threads/thread.h */
