@@ -28,6 +28,10 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+// [p1-1-1] sleep_thread_list
+// sleep state의 thread들을 저장하는 리스트
+static struct list sleep_thread_list;
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -240,6 +244,17 @@ thread_unblock (struct thread *t)
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
+}
+
+// [p1-1-1] thread_sleep function 구현
+// timer sleep을 호출한 thread(현재 실행중인 thread)를 sleep state로 전환시킨다
+// sleep state: ready state가 아닌 blocked state로 thread를 전환하지만 timer가 재게되면 다시 실행되어야 한다
+// 따라서 별도로 정의된 sleep_thread_list(sleep state의 thread들을 관리하는 리스트)로 timer_sleep이 구현되도록 한다 
+void thread_sleep(){
+  // 1. 현재 실행중인 thread를 sleep_thread_list에 추가한다
+  list_push_back(&sleep_thread_list, thread_current ());
+  // 2. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
+  thread_block();
 }
 
 /* Returns the name of the running thread. */
