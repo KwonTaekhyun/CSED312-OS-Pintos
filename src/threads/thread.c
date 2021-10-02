@@ -250,13 +250,43 @@ thread_unblock (struct thread *t)
 // timer sleep을 호출한 thread(현재 실행중인 thread)를 sleep state로 전환시킨다
 // sleep state: ready state가 아닌 blocked state로 thread를 전환하지만 timer가 재게되면 다시 실행되어야 한다
 // 따라서 별도로 정의된 sleep_thread_list(sleep state의 thread들을 관리하는 리스트)로 timer_sleep이 구현되도록 한다 
-void thread_sleep(void){
-  test_list_foreach(&sleep_thread_list);
-  // 1. 현재 실행중인 thread를 sleep_thread_list에 추가한다
+void thread_sleep(int64_t wakeup_ticks){
+  // 1. 현재 실행중인 thread의 wakeup_ticks를 갱신한다
+  thread_current()->wakeup_ticks = wakeup_ticks;
+  // 2. 현재 실행중인 thread를 sleep_thread_list에 추가한다
   list_push_back(&sleep_thread_list, thread_current ());
-  // 2. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
+  // 3. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
   thread_block();
-  test_list_foreach(&sleep_thread_list);
+}
+
+// [p1-1-2] thread_wakeup function 구현
+void thread_wakeup(int64_t current_ticks){
+
+  for (struct list_elem *e = list_begin (&sleep_thread_list); e != list_end (&sleep_thread_list);
+      e = list_next (e))
+  {
+    struct thread *thr = list_entry(e, struct thread, elem);
+
+    if(thr->wakeup_ticks <= current_ticks){
+      thread_unblock(thr);
+    }
+  }
+}
+
+int64_t thread_min_wakeup_ticks(){
+  int64_t min_wakeup_ticks = NULL;
+
+  for (struct list_elem *e = list_begin (&sleep_thread_list); e != list_end (&sleep_thread_list);
+      e = list_next (e))
+  {
+    struct thread *thr = list_entry(e, struct thread, elem);
+    int64_t thr_wakeup_ticks = thr->wakeup_ticks;
+
+    if(min_wakeup_ticks == NULL) min_wakeup_ticks = thr_wakeup_ticks;
+    else min_wakeup_ticks = min_wakeup_ticks < thr_wakeup_ticks ? min_wakeup_ticks : thr_wakeup_ticks;
+  }
+
+  return min_wakeup_ticks;
 }
 
 /* Returns the name of the running thread. */
@@ -346,14 +376,6 @@ thread_foreach (thread_action_func *func, void *aux)
       struct thread *t = list_entry (e, struct thread, allelem);
       func (t, aux);
     }
-}
-
-// [p1-1-1] test
-void test_list_foreach (struct list* List){
-  int cnt = 0;
-  for(struct list_elem* i; i != &(List->tail); i = i->next){
-    printf("[%d]", &cnt);
-  }
 }
 
 /* Sets the current thread's priority to NEW_PRIORITY. */

@@ -100,6 +100,9 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+
+    // [p1-1-2] timer sleep -> unblocked되어야할 timer ticks
+    int64_t wakeup_ticks;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -120,7 +123,11 @@ void thread_block (void);
 void thread_unblock (struct thread *);
 
 // [p1-1-1]
-void thread_sleep(void);
+void thread_sleep(int64_t wakeup_ticks);
+
+// [p1-1-2]
+void thread_wakeup(int64_t current_ticks);
+int64_t thread_min_wakeup_ticks();
 
 struct thread *thread_current (void);
 tid_t thread_tid (void);
@@ -132,9 +139,6 @@ void thread_yield (void);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
-
-// [p1-1-1] test
-void test_list_foreach (struct list* List);
 
 int thread_get_priority (void);
 void thread_set_priority (int);
