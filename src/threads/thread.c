@@ -33,7 +33,7 @@ static struct list all_list;
 static struct list sleep_thread_list;
 
 // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
-int64_t min_thread_wakeup_ticks;
+int64_t min_thread_wakeup_ticks = INT64_MAX;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -105,6 +105,7 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+  initial_thread->wakeup_ticks = 0;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
