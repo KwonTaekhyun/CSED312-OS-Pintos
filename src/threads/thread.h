@@ -90,6 +90,9 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
+    // [p1-1-3] 초기화 재설정
+    struct list_elem sleepelem;
+
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 

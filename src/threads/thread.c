@@ -28,9 +28,9 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
-// [p1-1-1] sleep_thread_list
+// [p1-1-1] sleep_list
 // sleep state의 thread들을 저장하는 리스트
-static struct list sleep_thread_list;
+static struct list sleep_list;
 
 // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
 int64_t min_thread_wakeup_ticks = INT64_MAX;
@@ -98,6 +98,7 @@ thread_init (void)
 
   lock_init (&tid_lock);
   list_init (&ready_list);
+  list_init (&sleep_list);
   list_init (&all_list);
 
   /* Set up a thread structure for the running thread. */
@@ -268,7 +269,7 @@ int64_t get_min_thread_wakeup_ticks(void){
 void reset_min_thread_wakeup_ticks(void){
   int64_t min_wakeup_ticks = NULL;
 
-  for (struct list_elem *e = list_begin (&sleep_thread_list); e != list_end (&sleep_thread_list);
+  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);
       e = list_next (e))
   {
     struct thread *thr = list_entry(e, struct thread, elem);
@@ -284,19 +285,19 @@ void reset_min_thread_wakeup_ticks(void){
 // [p1-1-1] thread_sleep function 구현
 // timer sleep을 호출한 thread(현재 실행중인 thread)를 sleep state로 전환시킨다
 // sleep state: ready state가 아닌 blocked state로 thread를 전환하지만 timer가 재게되면 다시 실행되어야 한다
-// 따라서 별도로 정의된 sleep_thread_list(sleep state의 thread들을 관리하는 리스트)로 timer_sleep이 구현되도록 한다 
+// 따라서 별도로 정의된 sleep_list(sleep state의 thread들을 관리하는 리스트)로 timer_sleep이 구현되도록 한다 
 void thread_sleep(int64_t wakeup_ticks){
   // [fix] thread_block 실행을 위해 interrupt를 turn-off한다
   enum intr_level old_level = intr_disable ();
 
-  // [fix] idle_thread가 아닐 때만 current_thread를 block하고 sleep_thread_list에 push한다
+  // [fix] idle_thread가 아닐 때만 current_thread를 block하고 sleep_list에 push한다
   if(thread_current() != idle_thread){
     // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
     set_min_thread_wakeup_ticks(wakeup_ticks);
     // 1. 현재 실행중인 thread의 wakeup_ticks를 갱신한다
     thread_current()->wakeup_ticks = wakeup_ticks;
-    // 2. 현재 실행중인 thread를 sleep_thread_list에 추가한다
-    list_push_back(&sleep_thread_list, thread_current ());
+    // 2. 현재 실행중인 thread를 sleep_list에 추가한다
+    list_push_back(&sleep_list, thread_current ());
     // 3. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
     thread_block();
   }
@@ -307,12 +308,13 @@ void thread_sleep(int64_t wakeup_ticks){
 // [p1-1-2] thread_wakeup function 구현
 void thread_wakeup(int64_t current_ticks){
 
-  for (struct list_elem *e = list_begin (&sleep_thread_list); e != list_end (&sleep_thread_list);)
+  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);)
   {
     struct thread *thr = list_entry(e, struct thread, elem);
 
     if(thr->wakeup_ticks <= current_ticks){
-      // [fix] sleep_thread_list에서 wakeup할 thread를 제거한다
+      // [fix] sleep_list에서 wakeup할 thread를 제거한다
+      thr->wakeup_ticks = 0;
       e = list_remove(&(thr->elem));
 
       thread_unblock(thr);
