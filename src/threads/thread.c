@@ -107,7 +107,7 @@ thread_init (void)
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
   // [p1-1-3] 초기화
-  initial_thread->wakeup_ticks = 0;
+  initial_thread->wakeup_ticks = INT64_MAX;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -144,7 +144,7 @@ thread_tick (int64_t ticks)
   else
     kernel_ticks++;
 
-  if(min_thread_wakeup_ticks >= ticks){
+  if(ticks >= min_thread_wakeup_ticks){
     // [p1-1-3] thread_ticks를 증가시키기 전에 wakeup할 sleep thread들을 처리한다
     thread_wakeup(ticks);
   }
@@ -305,7 +305,7 @@ void thread_sleep(int64_t wakeup_ticks){
     // 1. 현재 실행중인 thread의 wakeup_ticks를 갱신한다
     thr->wakeup_ticks = wakeup_ticks;
     // 2. 현재 실행중인 thread를 sleep_list에 추가한다
-    list_push_back(&sleep_list, &thr->sleepelem);
+    list_push_back(&sleep_list, &thr->elem);
     // 3. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
     thread_block();
   }
@@ -556,7 +556,7 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   // [p1-1-3] 초기화
-  t->wakeup_ticks = 0;
+  t->wakeup_ticks = INT64_MAX;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
