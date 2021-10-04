@@ -89,10 +89,12 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
+  enum intr_level old_level;
   int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
   
+
   // [p1-1-1]
   thread_sleep(start + ticks);
 }
@@ -172,10 +174,7 @@ static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
-  thread_tick ();
-
-  // [fix] 최소 wakeup_ticks보다 현재 timer_ticks가 크거나 같으면 thread_wakeup을 호출한다
-  if(get_min_thread_wakeup_ticks() <= ticks) thread_wakeup(ticks);
+  thread_tick (ticks);
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

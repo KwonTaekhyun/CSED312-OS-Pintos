@@ -106,6 +106,7 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
+  // [p1-1-3] 초기화
   initial_thread->wakeup_ticks = 0;
 }
 
@@ -129,7 +130,7 @@ thread_start (void)
 /* Called by the timer interrupt handler at each timer tick.
    Thus, this function runs in an external interrupt context. */
 void
-thread_tick (void) 
+thread_tick (int64_t ticks) 
 {
   struct thread *t = thread_current ();
 
@@ -142,6 +143,11 @@ thread_tick (void)
 #endif
   else
     kernel_ticks++;
+
+  if(min_thread_wakeup_ticks >= ticks){
+    // [p1-1-3] thread_ticks를 증가시키기 전에 wakeup할 sleep thread들을 처리한다
+    thread_wakeup(ticks);
+  }
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
@@ -290,14 +296,16 @@ void thread_sleep(int64_t wakeup_ticks){
   // [fix] thread_block 실행을 위해 interrupt를 turn-off한다
   enum intr_level old_level = intr_disable ();
 
+  struct thread *thr = thread_current();
+
   // [fix] idle_thread가 아닐 때만 current_thread를 block하고 sleep_list에 push한다
-  if(thread_current() != idle_thread){
+  if(thr != idle_thread){
     // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
     set_min_thread_wakeup_ticks(wakeup_ticks);
     // 1. 현재 실행중인 thread의 wakeup_ticks를 갱신한다
-    thread_current()->wakeup_ticks = wakeup_ticks;
+    thr->wakeup_ticks = wakeup_ticks;
     // 2. 현재 실행중인 thread를 sleep_list에 추가한다
-    list_push_back(&sleep_list, thread_current ());
+    list_push_back(&sleep_list, &thr->sleepelem);
     // 3. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
     thread_block();
   }
@@ -316,6 +324,7 @@ void thread_wakeup(int64_t current_ticks){
       // [fix] sleep_list에서 wakeup할 thread를 제거한다
       thr->wakeup_ticks = 0;
       e = list_remove(&(thr->elem));
+      reset_min_thread_wakeup_ticks();
 
       thread_unblock(thr);
     }
@@ -546,6 +555,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+  // [p1-1-3] 초기화
+  t->wakeup_ticks = 0;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
