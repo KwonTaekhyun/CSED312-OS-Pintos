@@ -175,7 +175,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
   thread_tick ();
 
   // [fix] 최소 wakeup_ticks보다 현재 timer_ticks가 크거나 같으면 thread_wakeup을 호출한다
-  if(thread_min_wakeup_ticks() <= ticks) thread_wakeup(ticks);
+  if(get_min_thread_wakeup_ticks() <= ticks) thread_wakeup(ticks);
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

@@ -32,6 +32,9 @@ static struct list all_list;
 // sleep state의 thread들을 저장하는 리스트
 static struct list sleep_thread_list;
 
+// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+int64_t min_thread_wakeup_ticks;
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -241,9 +244,40 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
+
+  // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+  reset_min_thread_wakeup_ticks();
+
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
+}
+
+// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+void set_min_thread_wakeup_ticks(int64_t wakeup_ticks){
+  if(wakeup_ticks < min_thread_wakeup_ticks) min_thread_wakeup_ticks = wakeup_ticks;
+}
+
+// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+int64_t get_min_thread_wakeup_ticks(void){
+  return min_thread_wakeup_ticks;
+}
+
+// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+void reset_min_thread_wakeup_ticks(void){
+  int64_t min_wakeup_ticks = NULL;
+
+  for (struct list_elem *e = list_begin (&sleep_thread_list); e != list_end (&sleep_thread_list);
+      e = list_next (e))
+  {
+    struct thread *thr = list_entry(e, struct thread, elem);
+    int64_t thr_wakeup_ticks = thr->wakeup_ticks;
+
+    if(min_wakeup_ticks == NULL) min_wakeup_ticks = thr_wakeup_ticks;
+    else if(thr_wakeup_ticks < min_wakeup_ticks) min_wakeup_ticks = thr_wakeup_ticks;
+  }
+
+  if(min_wakeup_ticks != NULL) min_thread_wakeup_ticks = min_wakeup_ticks;
 }
 
 // [p1-1-1] thread_sleep function 구현
@@ -256,6 +290,8 @@ void thread_sleep(int64_t wakeup_ticks){
 
   // [fix] idle_thread가 아닐 때만 current_thread를 block하고 sleep_thread_list에 push한다
   if(thread_current() != idle_thread){
+    // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+    set_min_thread_wakeup_ticks(wakeup_ticks);
     // 1. 현재 실행중인 thread의 wakeup_ticks를 갱신한다
     thread_current()->wakeup_ticks = wakeup_ticks;
     // 2. 현재 실행중인 thread를 sleep_thread_list에 추가한다
@@ -284,22 +320,6 @@ void thread_wakeup(int64_t current_ticks){
       e = list_next(e);
     }
   }
-}
-
-int64_t thread_min_wakeup_ticks(){
-  int64_t min_wakeup_ticks = NULL;
-
-  for (struct list_elem *e = list_begin (&sleep_thread_list); e != list_end (&sleep_thread_list);
-      e = list_next (e))
-  {
-    struct thread *thr = list_entry(e, struct thread, elem);
-    int64_t thr_wakeup_ticks = thr->wakeup_ticks;
-
-    if(min_wakeup_ticks == NULL) min_wakeup_ticks = thr_wakeup_ticks;
-    else min_wakeup_ticks = min_wakeup_ticks < thr_wakeup_ticks ? min_wakeup_ticks : thr_wakeup_ticks;
-  }
-
-  return min_wakeup_ticks;
 }
 
 /* Returns the name of the running thread. */

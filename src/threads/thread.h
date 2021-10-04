@@ -124,10 +124,12 @@ void thread_unblock (struct thread *);
 
 // [p1-1-1]
 void thread_sleep(int64_t wakeup_ticks);
+void set_min_thread_wakeup_ticks(int64_t wakeup_ticks);
+int64_t get_min_thread_wakeup_ticks(void);
+void reset_min_thread_wakeup_ticks(void);
 
 // [p1-1-2]
 void thread_wakeup(int64_t current_ticks);
-int64_t thread_min_wakeup_ticks();
 
 struct thread *thread_current (void);
 tid_t thread_tid (void);
