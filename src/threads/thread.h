@@ -144,9 +144,9 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 //Wk modified
-void order_ready_list();
+void check_yield();
 void start_donation();
 void end_donation();
-
+bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED);
 
 #endif /* threads/thread.h */
