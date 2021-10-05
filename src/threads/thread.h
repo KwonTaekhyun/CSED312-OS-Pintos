@@ -105,6 +105,8 @@ struct thread
     struct lock *wait_lock;
     struct list donation_threads;
     struct list_elem donation_thread_elem;
+    // [p1-1-2] timer sleep -> unblocked되어야할 timer ticks
+    int64_t wakeup_ticks;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -115,7 +117,8 @@ extern bool thread_mlfqs;
 void thread_init (void);
 void thread_start (void);
 
-void thread_tick (void);
+// [p1-1-3]
+void thread_tick (int64_t);
 void thread_print_stats (void);
 
 typedef void thread_func (void *aux);
@@ -123,6 +126,15 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 
 void thread_block (void);
 void thread_unblock (struct thread *);
+
+// [p1-1-1]
+void thread_sleep(int64_t wakeup_ticks);
+void set_min_thread_wakeup_ticks(int64_t wakeup_ticks);
+int64_t get_min_thread_wakeup_ticks(void);
+void reset_min_thread_wakeup_ticks(void);
+
+// [p1-1-2]
+void thread_wakeup(int64_t current_ticks);
 
 struct thread *thread_current (void);
 tid_t thread_tid (void);
