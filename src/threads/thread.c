@@ -146,7 +146,7 @@ thread_tick (int64_t ticks)
     kernel_ticks++;
 
   if(ticks >= min_thread_wakeup_ticks){
-    // [p1-1-3] thread_ticks를 증가시키기 전에 wakeup할 sleep thread들을 처리한다
+    /* P1-1. thread_ticks를 증가시키기 전에 wakeup할 sleep thread들을 처리한다 */
     thread_wakeup(ticks);
   }
 
@@ -262,79 +262,6 @@ thread_unblock (struct thread *t)
   //list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
-}
-
-// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
-void set_min_thread_wakeup_ticks(int64_t wakeup_ticks){
-  if(wakeup_ticks < min_thread_wakeup_ticks) min_thread_wakeup_ticks = wakeup_ticks;
-}
-
-// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
-int64_t get_min_thread_wakeup_ticks(void){
-  return min_thread_wakeup_ticks;
-}
-
-// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
-void reset_min_thread_wakeup_ticks(void){
-  int64_t min_wakeup_ticks = NULL;
-
-  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);
-      e = list_next (e))
-  {
-    struct thread *thr = list_entry(e, struct thread, elem);
-    int64_t thr_wakeup_ticks = thr->wakeup_ticks;
-
-    if(min_wakeup_ticks == NULL) min_wakeup_ticks = thr_wakeup_ticks;
-    else if(thr_wakeup_ticks < min_wakeup_ticks) min_wakeup_ticks = thr_wakeup_ticks;
-  }
-
-  if(min_wakeup_ticks != NULL) min_thread_wakeup_ticks = min_wakeup_ticks;
-}
-
-// [p1-1-1] thread_sleep function 구현
-// timer sleep을 호출한 thread(현재 실행중인 thread)를 sleep state로 전환시킨다
-// sleep state: ready state가 아닌 blocked state로 thread를 전환하지만 timer가 재게되면 다시 실행되어야 한다
-// 따라서 별도로 정의된 sleep_list(sleep state의 thread들을 관리하는 리스트)로 timer_sleep이 구현되도록 한다 
-void thread_sleep(int64_t wakeup_ticks){
-  // [fix] thread_block 실행을 위해 interrupt를 turn-off한다
-  enum intr_level old_level = intr_disable ();
-
-  struct thread *thr = thread_current();
-
-  // [fix] idle_thread가 아닐 때만 current_thread를 block하고 sleep_list에 push한다
-  if(thr != idle_thread){
-    // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
-    set_min_thread_wakeup_ticks(wakeup_ticks);
-    // 1. 현재 실행중인 thread의 wakeup_ticks를 갱신한다
-    thr->wakeup_ticks = wakeup_ticks;
-    // 2. 현재 실행중인 thread를 sleep_list에 추가한다
-    list_push_back(&sleep_list, &thr->elem);
-    // 3. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
-    thread_block();
-  }
-
-  intr_set_level (old_level);
-}
-
-// [p1-1-2] thread_wakeup function 구현
-void thread_wakeup(int64_t current_ticks){
-
-  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);)
-  {
-    struct thread *thr = list_entry(e, struct thread, elem);
-
-    if(thr->wakeup_ticks <= current_ticks){
-      // [fix] sleep_list에서 wakeup할 thread를 제거한다
-      thr->wakeup_ticks = 0;
-      e = list_remove(&(thr->elem));
-      reset_min_thread_wakeup_ticks();
-
-      thread_unblock(thr);
-    }
-    else{
-      e = list_next(e);
-    }
-  }
 }
 
 /* Returns the name of the running thread. */
@@ -683,7 +610,74 @@ allocate_tid (void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
-///////////////////priority scheduling
+/* P1-1. Alarm clock */
+
+void set_min_thread_wakeup_ticks(int64_t wakeup_ticks){
+  if(wakeup_ticks < min_thread_wakeup_ticks) min_thread_wakeup_ticks = wakeup_ticks;
+}
+
+int64_t get_min_thread_wakeup_ticks(void){
+  return min_thread_wakeup_ticks;
+}
+
+void reset_min_thread_wakeup_ticks(void){
+  int64_t min_wakeup_ticks = NULL;
+
+  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);
+      e = list_next (e))
+  {
+    struct thread *thr = list_entry(e, struct thread, elem);
+    int64_t thr_wakeup_ticks = thr->wakeup_ticks;
+
+    if(min_wakeup_ticks == NULL) min_wakeup_ticks = thr_wakeup_ticks;
+    else if(thr_wakeup_ticks < min_wakeup_ticks) min_wakeup_ticks = thr_wakeup_ticks;
+  }
+
+  if(min_wakeup_ticks != NULL) min_thread_wakeup_ticks = min_wakeup_ticks;
+}
+
+void thread_sleep(int64_t wakeup_ticks){
+  // [fix] thread_block 실행을 위해 interrupt를 turn-off한다
+  enum intr_level old_level = intr_disable ();
+
+  struct thread *thr = thread_current();
+
+  // [fix] idle_thread가 아닐 때만 current_thread를 block하고 sleep_list에 push한다
+  if(thr != idle_thread){
+    // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+    set_min_thread_wakeup_ticks(wakeup_ticks);
+    // 1. 현재 실행중인 thread의 wakeup_ticks를 갱신한다
+    thr->wakeup_ticks = wakeup_ticks;
+    // 2. 현재 실행중인 thread를 sleep_list에 추가한다
+    list_push_back(&sleep_list, &thr->elem);
+    // 3. 현재 실행중인 thread를 THREAD_BLOCKED state로 전환하고 scheduler를 triggering한다
+    thread_block();
+  }
+
+  intr_set_level (old_level);
+}
+
+void thread_wakeup(int64_t current_ticks){
+
+  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);)
+  {
+    struct thread *thr = list_entry(e, struct thread, elem);
+
+    if(thr->wakeup_ticks <= current_ticks){
+      // [fix] sleep_list에서 wakeup할 thread를 제거한다
+      thr->wakeup_ticks = 0;
+      e = list_remove(&(thr->elem));
+      reset_min_thread_wakeup_ticks();
+
+      thread_unblock(thr);
+    }
+    else{
+      e = list_next(e);
+    }
+  }
+}
+
+/* P1-2. Priority scheduling */
 
 bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED){
   if((list_entry(a, struct thread, elem)->priority)>(list_entry(b, struct thread, elem)->priority))
@@ -695,3 +689,5 @@ void check_yield(){
   if((thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority))
     thread_yield();
 }
+
+/* P1-3. Advanced scheduling */

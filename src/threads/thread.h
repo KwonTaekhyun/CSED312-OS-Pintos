@@ -117,7 +117,7 @@ extern bool thread_mlfqs;
 void thread_init (void);
 void thread_start (void);
 
-// [p1-1-3]
+/* P1-1 */
 void thread_tick (int64_t);
 void thread_print_stats (void);
 
@@ -126,15 +126,6 @@ tid_t thread_create (const char *name, int priority, thread_func *, void *);
 
 void thread_block (void);
 void thread_unblock (struct thread *);
-
-// [p1-1-1]
-void thread_sleep(int64_t wakeup_ticks);
-void set_min_thread_wakeup_ticks(int64_t wakeup_ticks);
-int64_t get_min_thread_wakeup_ticks(void);
-void reset_min_thread_wakeup_ticks(void);
-
-// [p1-1-2]
-void thread_wakeup(int64_t current_ticks);
 
 struct thread *thread_current (void);
 tid_t thread_tid (void);
@@ -154,6 +145,13 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+/* P1-1. Alarm clock */
+void set_min_thread_wakeup_ticks(int64_t wakeup_ticks);
+int64_t get_min_thread_wakeup_ticks(void);
+void reset_min_thread_wakeup_ticks(void);
+void thread_sleep(int64_t wakeup_ticks);
+void thread_wakeup(int64_t current_ticks);
 
 //Wk modified
 void check_yield();
