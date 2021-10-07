@@ -389,7 +389,6 @@ void end_donation(struct lock *lock)
   cur->priority = cur->origin_priority;
   if(!list_empty(&cur->donation_threads))
   {
-    //list_sort(&cur->donation_threads, compare_priority, 0);
     struct thread *temp = list_entry(list_begin(&cur->donation_threads),struct thread, donation_thread_elem);
     if(temp->priority > cur->priority) cur->priority = temp->priority;
   }
