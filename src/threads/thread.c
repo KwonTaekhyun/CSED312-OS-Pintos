@@ -562,6 +562,11 @@ init_thread (struct thread *t, const char *name, int priority)
 
   // [p1-1-3] 초기화
   t->wakeup_ticks = INT64_MAX;
+  // [p1-2] 초기화
+  t->origin_priority = priority;
+  t->wait_lock = NULL;
+  list_init(&t->donation_threads);
+
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
@@ -693,4 +698,17 @@ void check_yield(){
   if(list_empty(&ready_list)) return;
   if((thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority))
     thread_yield();
+}
+
+/////////priority donation
+void start_donation()
+{
+  int i;
+  struct thread *cur_holder = thread_current();
+  while(cur_holder!=NULL)
+  {
+    
+    if(cur_holder->wait_lock==NULL) break;
+
+  }
 }
