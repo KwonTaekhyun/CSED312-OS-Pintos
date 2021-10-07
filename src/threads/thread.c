@@ -1,3 +1,5 @@
+/* ------------------------------------헤더파일------------------------------------ */
+
 #include "threads/thread.h"
 #include <debug.h>
 #include <stddef.h>
@@ -15,6 +17,8 @@
 #include "userprog/process.h"
 #endif
 
+/* ------------------------------------상수, 변수 정의------------------------------------ */
+
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
@@ -27,13 +31,6 @@ static struct list ready_list;
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
-
-// [p1-1-1] sleep_list
-// sleep state의 thread들을 저장하는 리스트
-static struct list sleep_list;
-
-// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
-int64_t min_thread_wakeup_ticks = INT64_MAX;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -66,6 +63,15 @@ static unsigned thread_ticks;   /* # of timer ticks since last yield. */
    Controlled by kernel command-line option "-o mlfqs". */
 bool thread_mlfqs;
 
+/* P1-1. Alarm clock */
+static struct list sleep_list;
+int64_t min_thread_wakeup_ticks = INT64_MAX;
+
+/* P1-3. Advanced scheduling */
+static FP load_avg;
+
+/* ------------------------------------함수원형------------------------------------ */
+
 static void kernel_thread (thread_func *, void *aux);
 
 static void idle (void *aux UNUSED);
@@ -78,6 +84,8 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 void order_ready_list();
+
+/* ------------------------------------기존함수------------------------------------ */
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -107,8 +115,12 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
-  // [p1-1-3] 초기화
+
+  /* P1-1. Alarm clock */
   initial_thread->wakeup_ticks = INT64_MAX;
+
+  /* P1-3. Advanced scheduling */
+  load_avg = 0;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -368,37 +380,6 @@ thread_get_priority (void)
   return thread_current ()->priority;
 }
 
-/* Sets the current thread's nice value to NICE. */
-void
-thread_set_nice (int nice UNUSED)
-{
-  /* Not yet implemented. */
-}
-
-/* Returns the current thread's nice value. */
-int
-thread_get_nice (void)
-{
-  /* Not yet implemented. */
-  return 0;
-}
-
-/* Returns 100 times the system load average. */
-int
-thread_get_load_avg (void)
-{
-  /* Not yet implemented. */
-  return 0;
-}
-
-/* Returns 100 times the current thread's recent_cpu value. */
-int
-thread_get_recent_cpu (void)
-{
-  /* Not yet implemented. */
-  return 0;
-}
-
 /* Idle thread.  Executes when no other thread is ready to run.
 
    The idle thread is initially put on the ready list by
@@ -488,8 +469,12 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   t->origin_priority = priority;
 
-  // [p1-1-3] 초기화
+  /* P1-1 */
   t->wakeup_ticks = INT64_MAX;
+
+  /* P1-3 */
+  t->nice = 0;
+  t->recent_cpu = 0;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
@@ -610,6 +595,8 @@ allocate_tid (void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
+/* ------------------------------------구현한 함수------------------------------------ */
+
 /* P1-1. Alarm clock */
 
 void set_min_thread_wakeup_ticks(int64_t wakeup_ticks){
@@ -684,10 +671,95 @@ bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED)
     return true;
   else return false;
 }
+
 void check_yield(){
   if(list_empty(&ready_list)) return;
   if((thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority))
     thread_yield();
 }
 
+bool boolean_check_yield(void){
+  if(list_empty(&ready_list)) return false;
+  return (thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority);
+}
+
 /* P1-3. Advanced scheduling */
+
+void thread_mlfqs_priority(struct thread *t){
+  if(t != idle_thread){
+    t->priority = FP_to_int(FP_add_int (FP_div_int(t->recent_cpu, -4), PRI_MAX - t->nice * 2));
+  }
+}
+
+void thread_mlfqs_recent_cpu(struct thread *t){
+  if(t != idle_thread){
+    FP load_avg_mul_by_2 = FP_mult_int(load_avg, 2);
+    t->recent_cpu = FP_add_int(FP_mult(FP_div(load_avg_mul_by_2, FP_add_int(load_avg_mul_by_2, 1)), t->recent_cpu), t->nice);
+  }
+}
+
+void mlfqs_load_avg(void){
+  int num_ready_threads = list_size(&ready_list);
+  if(thread_current() != idle_thread){
+    num_ready_threads++;
+  }
+  load_avg = FP_add(FP_mult(load_avg, FP_div(int_to_FP(59), int_to_FP(60))), FP_div_int(int_to_FP(num_ready_threads), 60));
+}
+
+/* Sets the current thread's nice value to NICE. */
+void thread_set_nice (int nice)
+{
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
+  struct thread *current_thread = thread_current();
+  if(current_thread != idle_thread){
+    current_thread->nice = nice;
+    thread_mlfqs_recent_cpu(current_thread);
+    thread_mlfqs_priority(current_thread);
+  }
+
+  if(boolean_check_yield) thread_yield();
+
+  intr_set_level (old_level);
+}
+
+/* Returns the current thread's nice value. */
+int thread_get_nice (void)
+{
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
+  int nice = thread_current()->nice;
+
+  intr_set_level (old_level);
+
+  return nice;
+}
+
+/* Returns 100 times the system load average. */
+int thread_get_load_avg (void)
+{
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
+  int rounded_load_avg = FP_to_round(FP_mult_int(load_avg, 100));
+
+  intr_set_level (old_level);
+
+  return rounded_load_avg;
+}
+
+/* Returns 100 times the current thread's recent_cpu value. */
+int thread_get_recent_cpu (void)
+{
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
+  int rounded_recent_cpu = FP_to_round(FP_mult_int(thread_current()->recent_cpu, 100));
+
+  intr_set_level (old_level);
+
+  return rounded_recent_cpu; 
+}
+

@@ -5,7 +5,7 @@
 typedef int FP;
 
 FP int_to_FP(int x);
-FP FP_to_zero(FP x);
+int FP_to_int(FP x);
 FP FP_to_round(FP x);
 FP FP_add(FP x, FP y);
 FP FP_add_int(FP x, int y);

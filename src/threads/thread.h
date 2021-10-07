@@ -5,6 +5,9 @@
 #include <list.h>
 #include <stdint.h>
 
+/* P1-3. Advanced scheduling */
+#include "threads/fixed-point.h"
+
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -100,13 +103,20 @@ struct thread
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
 
-    //WK modified
+   /* ------------------------------------추가한 멤버------------------------------------ */
+
+    /* P1-1. Alarm clock */
+    int64_t wakeup_ticks;
+
+    /* P1-2. Priority scheduling */
     int origin_priority;
     struct lock *wait_lock;
     struct list donation_threads;
     struct list_elem donation_thread_elem;
-    // [p1-1-2] timer sleep -> unblocked되어야할 timer ticks
-    int64_t wakeup_ticks;
+
+   /* P1-3. Advanced scheduling */
+   int nice;
+   FP recent_cpu;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -158,5 +168,16 @@ void check_yield();
 void start_donation();
 void end_donation();
 bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED);
+
+bool boolean_check_yield(void);
+
+/* P1-3. Advanced scheduling */
+void thread_mlfqs_priority(struct thread *t);
+void thread_mlfqs_recent_cpu(struct thread *t);
+void mlfqs_load_avg(void);
+void thread_set_nice (int nice);
+int thread_get_nice (void);
+int thread_get_load_avg (void);
+int thread_get_recent_cpu (void);
 
 #endif /* threads/thread.h */
