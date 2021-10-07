@@ -17,6 +17,9 @@
 #include "userprog/process.h"
 #endif
 
+/* P1-3. Advanced scheduling */
+#include "devices/timer.h"
+
 /* ------------------------------------상수, 변수 정의------------------------------------ */
 
 /* Random value for struct thread's `magic' member.
@@ -156,6 +159,30 @@ thread_tick (int64_t ticks)
 #endif
   else
     kernel_ticks++;
+
+  /* P1-3. Advanced scheduling */
+  if(thread_mlfqs){
+    struct thread *current_thread = thread_current();
+
+    if(current_thread != idle_thread){
+      current_thread->recent_cpu = FP_add_int(current_thread->recent_cpu, 1);
+    }
+
+    if(ticks % 4 == 0){
+      thread_mlfqs_priority(current_thread);
+
+      if(ticks % TIMER_FREQ == 0){
+        mlfqs_load_avg();
+
+        for (struct list_elem *e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e)) {
+          struct thread* t = list_entry (e, struct thread, allelem);
+
+          thread_mlfqs_recent_cpu(t);
+          thread_mlfqs_priority(t);
+        }
+      }
+    }
+  }
 
   if(ticks >= min_thread_wakeup_ticks){
     /* P1-1. thread_ticks를 증가시키기 전에 wakeup할 sleep thread들을 처리한다 */
@@ -369,8 +396,11 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority)
 {
-  thread_current ()->priority = new_priority;
-  check_yield();
+  /* P1-3. Advanced scheduling */
+  if(!thread_mlfqs){
+    thread_current ()->priority = new_priority;
+    check_yield();
+  }
 }
 
 /* Returns the current thread's priority. */
@@ -709,8 +739,7 @@ void mlfqs_load_avg(void){
 /* Sets the current thread's nice value to NICE. */
 void thread_set_nice (int nice)
 {
-  enum intr_level old_level;
-  old_level = intr_disable ();
+  enum intr_level old_level = intr_disable ();
 
   struct thread *current_thread = thread_current();
   if(current_thread != idle_thread){
@@ -727,8 +756,7 @@ void thread_set_nice (int nice)
 /* Returns the current thread's nice value. */
 int thread_get_nice (void)
 {
-  enum intr_level old_level;
-  old_level = intr_disable ();
+  enum intr_level old_level = intr_disable ();
 
   int nice = thread_current()->nice;
 
@@ -740,8 +768,7 @@ int thread_get_nice (void)
 /* Returns 100 times the system load average. */
 int thread_get_load_avg (void)
 {
-  enum intr_level old_level;
-  old_level = intr_disable ();
+  enum intr_level old_level = intr_disable ();
 
   int rounded_load_avg = FP_to_round(FP_mult_int(load_avg, 100));
 
@@ -753,8 +780,7 @@ int thread_get_load_avg (void)
 /* Returns 100 times the current thread's recent_cpu value. */
 int thread_get_recent_cpu (void)
 {
-  enum intr_level old_level;
-  old_level = intr_disable ();
+  enum intr_level old_level = intr_disable ();
 
   int rounded_recent_cpu = FP_to_round(FP_mult_int(thread_current()->recent_cpu, 100));
 

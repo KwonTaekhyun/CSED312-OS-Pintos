@@ -156,6 +156,8 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
+/* ------------------------------------구현한 함수------------------------------------ */
+
 /* P1-1. Alarm clock */
 void set_min_thread_wakeup_ticks(int64_t wakeup_ticks);
 int64_t get_min_thread_wakeup_ticks(void);
