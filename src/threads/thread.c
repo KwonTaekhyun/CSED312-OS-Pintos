@@ -429,7 +429,16 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority)
 {
-  thread_current ()->priority = new_priority;
+  struct thread *cur = thread_current();
+  cur->priority = new_priority;
+  cur->origin_priority = new_priority;
+  cur->priority = cur->origin_priority;
+  if(!list_empty(&cur->donation_threads))
+  {
+    list_sort(&cur->donation_threads, compare_priority, 0);
+    struct thread *temp = list_entry(list_begin(&cur->donation_threads),struct thread, donation_thread_elem);
+    if(temp->priority > cur->priority) cur->priority = temp->priority;
+  }
   check_yield();
 }
 
@@ -694,21 +703,10 @@ bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED)
     return true;
   else return false;
 }
+
 void check_yield(){
   if(list_empty(&ready_list)) return;
   if((thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority))
     thread_yield();
 }
 
-/////////priority donation
-void start_donation()
-{
-  int i;
-  struct thread *cur_holder = thread_current();
-  while(cur_holder!=NULL)
-  {
-    
-    if(cur_holder->wait_lock==NULL) break;
-
-  }
-}
