@@ -1,5 +1,14 @@
 {
   "files.associations": {
-    "stddef.h": "c"
-  }
+    "stddef.h": "c",
+    "__errc": "c",
+    "ccomplex": "c",
+    "ctgmath": "c",
+    "ios": "c",
+    "version": "c",
+    "algorithm": "c",
+    "new": "c",
+    "vaddr.h": "c"
+  },
+  "C_Cpp.errorSquiggles": "Enabled"
 }

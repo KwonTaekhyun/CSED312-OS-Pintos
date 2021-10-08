@@ -1,3 +1,5 @@
+/* ------------------------------------헤더파일------------------------------------ */
+
 #include "threads/thread.h"
 #include <debug.h>
 #include <stddef.h>
@@ -15,6 +17,12 @@
 #include "userprog/process.h"
 #endif
 
+/* P1-3. Advanced scheduling */
+#include "devices/timer.h"
+#include "threads/fixed-point.h"
+
+/* ------------------------------------상수, 변수 정의------------------------------------ */
+
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
@@ -27,13 +35,6 @@ static struct list ready_list;
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
-
-// [p1-1-1] sleep_list
-// sleep state의 thread들을 저장하는 리스트
-static struct list sleep_list;
-
-// [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
-int64_t min_thread_wakeup_ticks = INT64_MAX;
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -66,6 +67,15 @@ static unsigned thread_ticks;   /* # of timer ticks since last yield. */
    Controlled by kernel command-line option "-o mlfqs". */
 bool thread_mlfqs;
 
+/* P1-1. Alarm clock */
+static struct list sleep_list;
+int64_t min_thread_wakeup_ticks = INT64_MAX;
+
+/* P1-3. Advanced scheduling */
+static FP load_avg;
+
+/* ------------------------------------함수원형------------------------------------ */
+
 static void kernel_thread (thread_func *, void *aux);
 
 static void idle (void *aux UNUSED);
@@ -77,6 +87,8 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+
+/* ------------------------------------기존함수------------------------------------ */
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -106,8 +118,12 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
-  // [p1-1-3] 초기화
+
+  /* P1-1. Alarm clock */
   initial_thread->wakeup_ticks = INT64_MAX;
+
+  /* P1-3. Advanced scheduling */
+  load_avg = 0;
 }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
@@ -143,6 +159,30 @@ thread_tick (int64_t ticks)
 #endif
   else
     kernel_ticks++;
+
+  /* P1-3. Advanced scheduling */
+  if(thread_mlfqs){
+    struct thread *current_thread = thread_current();
+
+    if(current_thread != idle_thread){
+      current_thread->recent_cpu = FP_add_int(current_thread->recent_cpu, 1);
+    }
+
+    if(ticks % 4 == 0){
+      thread_mlfqs_priority(current_thread);
+
+      if(ticks % TIMER_FREQ == 0){
+        mlfqs_load_avg();
+
+        for (struct list_elem *e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e)) {
+          struct thread* t = list_entry (e, struct thread, allelem);
+
+          thread_mlfqs_recent_cpu(t);
+          thread_mlfqs_priority(t);
+        }
+      }
+    }
+  }
 
   if(ticks >= min_thread_wakeup_ticks){
     /* P1-1. thread_ticks를 증가시키기 전에 wakeup할 sleep thread들을 처리한다 */
@@ -255,10 +295,9 @@ thread_unblock (struct thread *t)
   ASSERT (t->status == THREAD_BLOCKED);
   list_insert_ordered(&ready_list, &t->elem, compare_priority, 0);
 
-  // [p1-1-fix] 시간초과로 인한 로직 수정; 지역변수로 관리
+  /* P1-1 */
   reset_min_thread_wakeup_ticks();
 
-  //list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -356,7 +395,9 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority)
 {
-  struct thread *cur = thread_current();
+  /* P1-3. Advanced scheduling */
+  if(!thread_mlfqs){
+      struct thread *cur = thread_current();
   cur->priority = new_priority;
   cur->origin_priority = new_priority;
   cur->priority = cur->origin_priority;
@@ -367,8 +408,8 @@ thread_set_priority (int new_priority)
     if(temp->priority > cur->priority) cur->priority = temp->priority;
   }
   check_yield();
+  }
 }
-
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void)
@@ -376,37 +417,6 @@ thread_get_priority (void)
   return thread_current ()->priority;
 }
 
-/* Sets the current thread's nice value to NICE. */
-void
-thread_set_nice (int nice UNUSED)
-{
-  /* Not yet implemented. */
-}
-
-/* Returns the current thread's nice value. */
-int
-thread_get_nice (void)
-{
-  /* Not yet implemented. */
-  return 0;
-}
-
-/* Returns 100 times the system load average. */
-int
-thread_get_load_avg (void)
-{
-  /* Not yet implemented. */
-  return 0;
-}
-
-/* Returns 100 times the current thread's recent_cpu value. */
-int
-thread_get_recent_cpu (void)
-{
-  /* Not yet implemented. */
-  return 0;
-}
-
 /* Idle thread.  Executes when no other thread is ready to run.
 
    The idle thread is initially put on the ready list by
@@ -496,13 +506,17 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   t->origin_priority = priority;
 
-  // [p1-1-3] 초기화
+  /* P1-1 */
   t->wakeup_ticks = INT64_MAX;
   // [p1-2] 초기화
   t->origin_priority = priority;
   t->wait_lock = NULL;
   list_init(&t->donation_threads);
 
+
+  /* P1-3 */
+  t->nice = 0;
+  t->recent_cpu = 0;
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
@@ -623,6 +637,8 @@ allocate_tid (void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
+/* ------------------------------------구현한 함수------------------------------------ */
+
 /* P1-1. Alarm clock */
 
 void set_min_thread_wakeup_ticks(int64_t wakeup_ticks){
@@ -704,4 +720,84 @@ void check_yield(){
     thread_yield();
 }
 
+bool boolean_check_yield(void){
+  if(list_empty(&ready_list)) return false;
+  return (thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority);
+}
+
 /* P1-3. Advanced scheduling */
+
+void thread_mlfqs_priority(struct thread *t){
+  if(t != idle_thread){
+    t->priority = FP_to_int(FP_add_int (FP_div_int(t->recent_cpu, -4), PRI_MAX - t->nice * 2));
+  }
+}
+
+void thread_mlfqs_recent_cpu(struct thread *t){
+  if(t != idle_thread){
+    FP load_avg_mul_by_2 = FP_mult_int(load_avg, 2);
+    t->recent_cpu = FP_add_int(FP_mult(FP_div(load_avg_mul_by_2, FP_add_int(load_avg_mul_by_2, 1)), t->recent_cpu), t->nice);
+  }
+}
+
+void mlfqs_load_avg(void){
+  int num_ready_threads = list_size(&ready_list);
+  if(thread_current() != idle_thread){
+    num_ready_threads++;
+  }
+  load_avg = FP_add(FP_mult(load_avg, FP_div(int_to_FP(59), int_to_FP(60))), FP_div_int(int_to_FP(num_ready_threads), 60));
+}
+
+/* Sets the current thread's nice value to NICE. */
+void thread_set_nice (int nice)
+{
+  enum intr_level old_level = intr_disable ();
+
+  struct thread *current_thread = thread_current();
+  if(current_thread != idle_thread){
+    current_thread->nice = nice;
+    thread_mlfqs_recent_cpu(current_thread);
+    thread_mlfqs_priority(current_thread);
+  }
+
+  if(boolean_check_yield) thread_yield();
+
+  intr_set_level (old_level);
+}
+
+/* Returns the current thread's nice value. */
+int thread_get_nice (void)
+{
+  enum intr_level old_level = intr_disable ();
+
+  int nice = thread_current()->nice;
+
+  intr_set_level (old_level);
+
+  return nice;
+}
+
+/* Returns 100 times the system load average. */
+int thread_get_load_avg (void)
+{
+  enum intr_level old_level = intr_disable ();
+
+  int rounded_load_avg = FP_to_round(FP_mult_int(load_avg, 100));
+
+  intr_set_level (old_level);
+
+  return rounded_load_avg;
+}
+
+/* Returns 100 times the current thread's recent_cpu value. */
+int thread_get_recent_cpu (void)
+{
+  enum intr_level old_level = intr_disable ();
+
+  int rounded_recent_cpu = FP_to_round(FP_mult_int(thread_current()->recent_cpu, 100));
+
+  intr_set_level (old_level);
+
+  return rounded_recent_cpu; 
+}
+
