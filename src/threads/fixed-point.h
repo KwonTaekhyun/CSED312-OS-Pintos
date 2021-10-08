@@ -1,13 +1,14 @@
-#include <stdint.h>
+#ifndef FIXED_POINT_H
+#define FIXED_POINT_H
 
 typedef int FP;
-static int Correction = 16384; // 1 << 14
+static const int Correction = 16384; // 1 << 14
 
 extern inline FP int_to_FP(int x){
     return x * Correction;
 }
 
-extern inline FP FP_to_zero(FP x){
+extern inline FP FP_to_int(int x){
     return x / Correction;
 }
 
@@ -48,3 +49,5 @@ extern inline FP FP_div(FP x, FP y){
 extern inline FP FP_div_int(FP x, int y){
     return x / y;
 }
+
+#endif
