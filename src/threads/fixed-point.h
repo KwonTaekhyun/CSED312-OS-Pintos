@@ -26,11 +26,11 @@ extern inline FP FP_add_int(FP x, int y){
 }
 
 extern inline FP FP_sub(FP x, FP y){
-    x - y;
+    return x - y;
 }
 
 extern inline FP FP_sub_int(FP x, int y){
-    x - y * Correction;
+    return x - y * Correction;
 }
 
 extern inline FP FP_mult(FP x, FP y){
