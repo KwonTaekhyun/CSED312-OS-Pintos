@@ -77,7 +77,6 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
-void order_ready_list();
 
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -357,7 +356,16 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority)
 {
-  thread_current ()->priority = new_priority;
+  struct thread *cur = thread_current();
+  cur->priority = new_priority;
+  cur->origin_priority = new_priority;
+  cur->priority = cur->origin_priority;
+  if(!list_empty(&cur->donation_threads))
+  {
+    list_sort(&cur->donation_threads, compare_priority, 0);
+    struct thread *temp = list_entry(list_begin(&cur->donation_threads),struct thread, donation_thread_elem);
+    if(temp->priority > cur->priority) cur->priority = temp->priority;
+  }
   check_yield();
 }
 
@@ -490,6 +498,11 @@ init_thread (struct thread *t, const char *name, int priority)
 
   // [p1-1-3] 초기화
   t->wakeup_ticks = INT64_MAX;
+  // [p1-2] 초기화
+  t->origin_priority = priority;
+  t->wait_lock = NULL;
+  list_init(&t->donation_threads);
+
 
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
@@ -684,6 +697,7 @@ bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED)
     return true;
   else return false;
 }
+
 void check_yield(){
   if(list_empty(&ready_list)) return;
   if((thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority))

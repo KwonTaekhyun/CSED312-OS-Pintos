@@ -155,8 +155,6 @@ void thread_wakeup(int64_t current_ticks);
 
 //Wk modified
 void check_yield();
-void start_donation();
-void end_donation();
 bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED);
 
 #endif /* threads/thread.h */
