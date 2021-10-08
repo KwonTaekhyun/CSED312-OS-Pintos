@@ -19,6 +19,7 @@
 
 /* P1-3. Advanced scheduling */
 #include "devices/timer.h"
+#include "threads/fixed-point.h"
 
 /* ------------------------------------상수, 변수 정의------------------------------------ */
 

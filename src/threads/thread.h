@@ -5,9 +5,6 @@
 #include <list.h>
 #include <stdint.h>
 
-/* P1-3. Advanced scheduling */
-#include "threads/fixed-point.h"
-
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -116,7 +113,7 @@ struct thread
 
    /* P1-3. Advanced scheduling */
    int nice;
-   FP recent_cpu;
+   int recent_cpu;
   };
 
 /* If false (default), use round-robin scheduler.
