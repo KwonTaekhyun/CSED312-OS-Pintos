@@ -716,13 +716,13 @@ bool compare_priority(struct list_elem *a, struct list_elem *b, void *aux){
 
 void check_yield(){
   if(list_empty(&ready_list)) return;
-  if((thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority))
+  if((list_entry(list_front(&ready_list),struct thread, elem)->priority)>(thread_current()->priority))
     thread_yield();
 }
 
 bool boolean_check_yield(void){
   if(list_empty(&ready_list)) return false;
-  return (thread_current()->priority) < (list_entry(list_front(&ready_list),struct thread, elem)->priority);
+  return ((list_entry(list_front(&ready_list),struct thread, elem)->priority)>(thread_current()->priority));
 }
 
 /* P1-3. Advanced scheduling */
