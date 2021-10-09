@@ -708,7 +708,7 @@ void thread_wakeup(int64_t current_ticks){
 
 /* P1-2. Priority scheduling */
 
-bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED){
+bool compare_priority(struct list_elem *a, struct list_elem *b){
   if((list_entry(a, struct thread, elem)->priority)>(list_entry(b, struct thread, elem)->priority))
     return true;
   else return false;
