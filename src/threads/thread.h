@@ -164,7 +164,7 @@ void thread_wakeup(int64_t current_ticks);
 
 //Wk modified
 void check_yield();
-bool compare_priority(struct list_elem *a, struct list_elem *b,void *aux UNUSED);
+bool compare_priority(struct list_elem *a, struct list_elem *b);
 
 bool boolean_check_yield(void);
 
