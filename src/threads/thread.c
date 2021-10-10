@@ -69,7 +69,7 @@ bool thread_mlfqs;
 
 /* P1-1. Alarm clock */
 static struct list sleep_list;
-int64_t min_thread_wakeup_ticks = INT64_MAX;
+static int64_t min_thread_wakeup_ticks = INT64_MAX;
 
 /* P1-3. Advanced scheduling */
 static FP load_avg;
@@ -294,9 +294,6 @@ thread_unblock (struct thread *t)
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
   list_insert_ordered(&ready_list, &t->elem, compare_priority, 0);
-
-  /* P1-1 */
-  reset_min_thread_wakeup_ticks();
 
   t->status = THREAD_READY;
   intr_set_level (old_level);
@@ -643,10 +640,6 @@ uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
 void set_min_thread_wakeup_ticks(int64_t wakeup_ticks){
   if(wakeup_ticks < min_thread_wakeup_ticks) min_thread_wakeup_ticks = wakeup_ticks;
-}
-
-int64_t get_min_thread_wakeup_ticks(void){
-  return min_thread_wakeup_ticks;
 }
 
 void reset_min_thread_wakeup_ticks(void){

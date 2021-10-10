@@ -157,7 +157,6 @@ int thread_get_load_avg (void);
 
 /* P1-1. Alarm clock */
 void set_min_thread_wakeup_ticks(int64_t wakeup_ticks);
-int64_t get_min_thread_wakeup_ticks(void);
 void reset_min_thread_wakeup_ticks(void);
 void thread_sleep(int64_t wakeup_ticks);
 void thread_wakeup(int64_t current_ticks);
