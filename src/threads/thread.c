@@ -181,7 +181,7 @@ thread_tick (int64_t ticks)
           thread_mlfqs_priority(t);
         }
 
-        list_sort(ready_list, compare_priority, 0);
+        list_sort(&ready_list, compare_priority, 0);
       }
 
       if(boolean_check_yield) thread_yield();
