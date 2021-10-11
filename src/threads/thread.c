@@ -180,7 +180,11 @@ thread_tick (int64_t ticks)
           thread_mlfqs_recent_cpu(t);
           thread_mlfqs_priority(t);
         }
+
+        list_sort(ready_list, compare_priority, 0);
       }
+
+      if(boolean_check_yield) thread_yield();
     }
   }
 
@@ -505,7 +509,8 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /* P1-1 */
   t->wakeup_ticks = INT64_MAX;
-  // [p1-2] 초기화
+
+  /* P1-2 */
   t->origin_priority = priority;
   t->wait_lock = NULL;
   list_init(&t->donation_threads);
@@ -720,12 +725,14 @@ bool boolean_check_yield(void){
 
 /* P1-3. Advanced scheduling */
 
+/* 인자로 받은 thread의 priority를 재계산해 갱신하는 함수 */
 void thread_mlfqs_priority(struct thread *t){
   if(t != idle_thread){
-    t->priority = FP_to_int(FP_add_int (FP_div_int(t->recent_cpu, -4), PRI_MAX - t->nice * 2));
+    t->priority = FP_to_int(FP_add_int(FP_div_int(t->recent_cpu, -4), PRI_MAX - t->nice * 2));
   }
 }
 
+/* 인자로 받은 thread의 recent_cpu를 재계산해 갱신하는 함수 */
 void thread_mlfqs_recent_cpu(struct thread *t){
   if(t != idle_thread){
     FP load_avg_mul_by_2 = FP_mult_int(load_avg, 2);
@@ -733,6 +740,7 @@ void thread_mlfqs_recent_cpu(struct thread *t){
   }
 }
 
+/* 시스템의 load_avg를 재계산하는 함수 */
 void mlfqs_load_avg(void){
   int num_ready_threads = list_size(&ready_list);
   if(thread_current() != idle_thread){
