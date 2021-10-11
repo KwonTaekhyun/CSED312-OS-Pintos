@@ -191,6 +191,7 @@ thread_tick (int64_t ticks)
         }
         ++thread_ticks;
         intr_yield_on_return ();
+        return;
       }
     }
   }
