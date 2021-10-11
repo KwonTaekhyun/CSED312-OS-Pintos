@@ -184,7 +184,14 @@ thread_tick (int64_t ticks)
         list_sort(&ready_list, compare_priority, 0);
       }
 
-      if(boolean_check_yield) thread_yield();
+      if(boolean_check_yield){
+        if(ticks >= min_thread_wakeup_ticks){
+          /* P1-1. thread_ticks를 증가시키기 전에 wakeup할 sleep thread들을 처리한다 */
+          thread_wakeup(ticks);
+        }
+        ++thread_ticks;
+        intr_yield_on_return ();
+      }
     }
   }
 
