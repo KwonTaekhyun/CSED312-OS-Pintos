@@ -174,7 +174,9 @@ thread_tick (int64_t ticks)
       if(ticks % TIMER_FREQ == 0){
         mlfqs_load_avg();
 
-        for (struct list_elem *e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e)) {
+        struct list_elem *e;
+
+        for (e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e)) {
           struct thread* t = list_entry (e, struct thread, allelem);
 
           thread_mlfqs_recent_cpu(t);
@@ -658,7 +660,9 @@ void set_min_thread_wakeup_ticks(int64_t wakeup_ticks){
 void reset_min_thread_wakeup_ticks(void){
   int64_t min_wakeup_ticks = NULL;
 
-  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);
+  struct list_elem *e;
+
+  for (e = list_begin (&sleep_list); e != list_end (&sleep_list);
       e = list_next (e))
   {
     struct thread *thr = list_entry(e, struct thread, elem);
@@ -693,8 +697,9 @@ void thread_sleep(int64_t wakeup_ticks){
 }
 
 void thread_wakeup(int64_t current_ticks){
-
-  for (struct list_elem *e = list_begin (&sleep_list); e != list_end (&sleep_list);)
+  struct list_elem *e;
+  
+  for (e = list_begin (&sleep_list); e != list_end (&sleep_list);)
   {
     struct thread *thr = list_entry(e, struct thread, elem);
 
