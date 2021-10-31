@@ -71,9 +71,11 @@ start_process (void *file_name_)
   {
     token = strtok(NULL, " ", &save_ptr);
     argv[argc] = token;
+    printf("%s\n", &argv[argc]);
     argc++;
   }
   argc--;
+  printf("%d\n", &argc);
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
@@ -488,6 +490,5 @@ install_page (void *upage, void *kpage, bool writable)
 //2-2
 void argu_stack(char **argv, int argc, void **esp)
 {
-
 
 }
