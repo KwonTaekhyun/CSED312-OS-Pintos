@@ -64,12 +64,12 @@ start_process (void *file_name_)
   int argc;
   char *token;
   char *save_ptr;
-  token = strtok(file_name, " ", &save_ptr);
+  token = strtok_r(file_name, " ", &save_ptr);
   argv[0] = token;
   argc = 1;
   while(token!=NULL)
   {
-    token = strtok(NULL, " ", &save_ptr);
+    token = strtok_r(NULL, " ", &save_ptr);
     argv[argc] = token;
     printf("%s\n", &argv[argc]);
     argc++;
