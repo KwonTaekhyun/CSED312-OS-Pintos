@@ -89,6 +89,7 @@ start_process (void *file_name_)
     thread_exit ();
   
   argu_stack(argv, argc, &if_.esp);
+  hex_dump(if_.esp , if_.esp , PHYS_BASE – if_.esp , true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -490,5 +491,43 @@ install_page (void *upage, void *kpage, bool writable)
 //2-2
 void argu_stack(char **argv, int argc, void **esp)
 {
+  int i,j;
+  char **argv_addr;
+  argv_addr = (char**)malloc(sizeof(char*)*argc);
+  for(i = argc - 1 ; i >= 0 ; i -- )
+  {
+    for(j=strlen(argv[i]); j >=0; j--)
+    {
+      *esp-=1;
+      **(char**)esp = argv[i][j];
+    }
+    /* *esp-=strlen(argv[i])+1;
+    memcpy(*esp, argv[i], strlen(argv[i]) + 1); */
+    argv_addr[i] = (char*) *esp;
+  }
+  while((int)*esp%4!= 0)
+  {
+    *esp-=sizeof(uint8_t);
+    uint8_t temp = 0;
+    memcpy(*esp, temp, sizeof(uint8_t));
+  }
+  char* argv_null = 0
+  *esp-=sizeof(char*);
+  memcpy(*esp, argv_null, sizeof(char*));
+  for (i=argc-1;i>=0;i--)
+  {
+    *esp-=sizeof(char**);
+    memcpy(*esp, argv_addr[i], sizeof(char**));
+  }
+  char **argv_pointer = *esp;
+  *esp-=sizeof(char**);
+  memcpy(*esp,&argv_pointer,sizeof(char**));
+  *esp-=sizeof(int);
+  memcpy(*esp,argc,sizeof(int));
+  *esp-=sizeof(void*);
+  void *ret = 0;
+  memcpy(*esp,ret,sizeof(void*));
+
+
 
 }
