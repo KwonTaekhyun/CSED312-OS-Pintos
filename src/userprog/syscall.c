@@ -148,7 +148,7 @@ syscall_handler (struct intr_frame *f)
 // 유효한 주소를 가리키는지 확인하는 함수
 
 // esp에서 n개의 인자들을 읽어오는 함수
-bool read_argument (void *SP, void *arg, int bytes){
+int read_argument (void *SP, void *arg, int bytes){
   if(!(is_user_vaddr(SP) && is_user_vaddr(SP + bytes))){
     return false;
   }
