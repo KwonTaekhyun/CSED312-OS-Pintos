@@ -511,8 +511,8 @@ void argu_stack(char **argv, int argc, void **esp)
     char temp = 0;
     memcpy(*esp, &temp, sizeof(char));
   }
-  char* argv_null = 0
-  *esp-=sizeof(char*);
+  char* argv_null = 0;
+  (char *)*esp-=sizeof(char*);
   memcpy(*esp, &argv_null, sizeof(char*));
   for (i=argc-1;i>=0;i--)
   {
