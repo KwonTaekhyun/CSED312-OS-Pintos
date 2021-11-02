@@ -43,7 +43,7 @@ process_execute (const char *file_name)
   strlcpy (arg_copy, fn_copy, PGSIZE);
   char *argv;
   arg_copy = strtok_r(arg_copy," ",&argv);
-  printf("%s\n",arg_copy);
+  printf("at process_exec : %s\n",arg_copy);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
@@ -67,19 +67,17 @@ start_process (void *file_name_)
   char *token;
   char *save_ptr;
   token = strtok_r(file_name, " ", &save_ptr);
-  printf("token: %s\n",token);
   argv[0] = token;
   argc = 1;
-  printf("before while\n");
   while(token!=NULL)
   {
     token = strtok_r(NULL, " ", &save_ptr);
-    printf("after strtok\n");
+    printf("token: %s\n",token);
+    if(token == NULL) break;
     argv[argc] = token;
     printf("%s\n", argv[argc]);
     argc++;
   }
-  argc--;
   printf("%d\n", argc);
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
