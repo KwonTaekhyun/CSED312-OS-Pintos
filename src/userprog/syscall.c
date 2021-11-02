@@ -56,7 +56,6 @@ syscall_handler (struct intr_frame *f)
         exit(-1);
       }
       // 2. process 종료
-      struct thread *current_thread = thread_current();
       exit(exit_status);
       break;
     }
@@ -65,11 +64,11 @@ syscall_handler (struct intr_frame *f)
       // 1. file name, initial_size 읽어오기
       char *file;
       unsigned initial_size;
-      if(!read_argument(SP + 4, file, sizeod(uint32_t))){
+      if(!read_argument(SP + 4, file, sizeof(uint32_t))){
         *RT = false;
         exit(-1);
       }
-      if(!read_argument(SP + 8, &initial_size, sizeod(unsigned))){
+      if(!read_argument(SP + 8, &initial_size, sizeof(uint32_t))){
         *RT = false;
         exit(-1);
       }
@@ -85,7 +84,7 @@ syscall_handler (struct intr_frame *f)
       //2-4. file 삭제
       // 1. file name 읽어오기
       char *file;
-      if(!read_argument(SP + 4, file, sizeod(uint32_t))){
+      if(!read_argument(SP + 4, file, sizeof(uint32_t))){
         *RT = false;
         exit(-1);
       }
@@ -156,7 +155,7 @@ bool read_argument (void *SP, void *arg, int bytes){
 
   int i;
   for(i = 0; i < bytes; i++){
-    *(arg + i) = *(SP + i);
+    *(char *)(arg + i) = *(char *)(SP + i);
   }
   return true;
 }
