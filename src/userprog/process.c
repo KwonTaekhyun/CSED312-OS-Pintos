@@ -112,6 +112,9 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  //test
+  int dummy = 0, i;
+  for(i=0; i<7 * 10000 * 10000; ++i) dummy += i;
   return -1;
 }
 
