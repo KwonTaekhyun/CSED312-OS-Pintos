@@ -89,7 +89,7 @@ start_process (void *file_name_)
     thread_exit ();
   
   argu_stack(argv, argc, &if_.esp);
-  hex_dump(if_.esp , if_.esp , PHYS_BASE – if_.esp , true);
+  hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -507,26 +507,26 @@ void argu_stack(char **argv, int argc, void **esp)
   }
   while((int)*esp%4!= 0)
   {
-    *esp-=sizeof(uint8_t);
-    uint8_t temp = 0;
-    memcpy(*esp, temp, sizeof(uint8_t));
+    *esp-=sizeof(char);
+    char temp = 0;
+    memcpy(*esp, &temp, sizeof(char));
   }
   char* argv_null = 0
   *esp-=sizeof(char*);
-  memcpy(*esp, argv_null, sizeof(char*));
+  memcpy(*esp, &argv_null, sizeof(char*));
   for (i=argc-1;i>=0;i--)
   {
     *esp-=sizeof(char**);
-    memcpy(*esp, argv_addr[i], sizeof(char**));
+    memcpy(*esp, &argv_addr[i], sizeof(char**));
   }
   char **argv_pointer = *esp;
   *esp-=sizeof(char**);
   memcpy(*esp,&argv_pointer,sizeof(char**));
   *esp-=sizeof(int);
-  memcpy(*esp,argc,sizeof(int));
+  memcpy(*esp,&argc,sizeof(int));
   *esp-=sizeof(void*);
   void *ret = 0;
-  memcpy(*esp,ret,sizeof(void*));
+  memcpy(*esp,&ret,sizeof(void*));
 
 
 
