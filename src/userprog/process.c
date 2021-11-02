@@ -56,6 +56,7 @@ process_execute (const char *file_name)
 static void
 start_process (void *file_name_)
 {
+  printf("start_process\n");
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
@@ -113,6 +114,11 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  //test
+  int dummy = 0, i;
+  for(i=0; i<7 * 10000 * 10000; ++i) dummy += i;
+  ASSERT(dummy != 0);
+
   return -1;
 }
 
