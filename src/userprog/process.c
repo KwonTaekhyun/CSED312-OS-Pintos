@@ -43,6 +43,7 @@ process_execute (const char *file_name)
   strlcpy (arg_copy, fn_copy, PGSIZE);
   char *argv;
   arg_copy = strtok_r(arg_copy," ",&argv);
+  printf("%d\n",arg_copy);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
