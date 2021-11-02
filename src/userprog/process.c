@@ -115,10 +115,9 @@ process_wait (tid_t child_tid UNUSED)
 {
   //test
   int dummy = 0, i;
-  for(i=0; i<1000000; ++i){
-    dummy++;
-    printf("%d\n", &dummy);
-  }
+  for(i=0; i<7 * 10000 * 10000; ++i) dummy += i;
+  ASSERT(dummy != 0);
+
   return -1;
 }
 
