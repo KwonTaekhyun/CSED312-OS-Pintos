@@ -471,8 +471,7 @@ init_thread (struct thread *t, const char *name, int priority)
   /*----------P2------------*/
   #ifdef USERPROG
   list_init(&(t->children));
-  sema_init(t->sema_wait, 0);
-  sema_init(t->sema_load, 0);
+  sema_init(&(t->sema_wait), 0);
   list_push_back(&(running_thread()->children), &(t->child));
   #endif
 }

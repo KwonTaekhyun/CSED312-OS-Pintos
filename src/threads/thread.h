@@ -102,8 +102,7 @@ struct thread
     struct list_elem child;
     int exit_status;
 
-    struct semaphore *sema_wait;
-    struct semaphore *sema_load;
+    struct semaphore sema_wait;
 // #endif
 
     /* Owned by thread.c. */

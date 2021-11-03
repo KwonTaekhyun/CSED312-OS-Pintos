@@ -145,7 +145,7 @@ process_wait (tid_t child_tid)
         child_elem != list_end(&(current_thread->children)); child_elem = list_next(child_elem)){
     struct thread *thr = list_entry(child_elem, struct thread, child);
     if(thr->tid == child_tid){
-      sema_down(thr->sema_wait);
+      sema_down(&(thr->sema_wait));
       list_remove(child_elem);
       exit_status = thr->exit_status;
       break;
@@ -179,7 +179,7 @@ process_exit (void)
       pagedir_destroy (pd);
     }
   
-  sema_up(cur->sema_wait);
+  sema_up(&(cur->sema_wait));
 }
 
 /* Sets up the CPU for running user code in the current
