@@ -24,23 +24,24 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
+  is_valid_address(f->esp, 0, 4);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
       shutdown_power_off();
       break;
     }
     case SYS_EXIT:{
-      is_valid_address(f->esp, 4, 7);
+      is_valid_address(f->esp, 4, 8);
       exit(*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_EXEC:{
-      is_valid_address(f->esp, 4, 7);
+      is_valid_address(f->esp, 4, 8);
       exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_WAIT:{
-      is_valid_address(f->esp, 4, 7);
+      is_valid_address(f->esp, 4, 8);
       wait((pid_t)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -57,12 +58,12 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_READ:{
-      is_valid_address(f->esp, 20, 31);
+      is_valid_address(f->esp, 20, 32);
       read((int)*(uint32_t *)(f->esp+20), (void *)*(uint32_t *)(f->esp + 24), (unsigned)*((uint32_t *)(f->esp + 28)));
       break;
     }
     case SYS_WRITE:{
-      is_valid_address(f->esp, 20, 31);
+      is_valid_address(f->esp, 20, 32);
       f->eax = write((int)*(uint32_t *)(f->esp+20), (void *)*(uint32_t *)(f->esp + 24), (unsigned)*((uint32_t *)(f->esp + 28)));
       break;
     }
