@@ -81,27 +81,36 @@ start_process (void *file_name_)
     argc++;
   }
   //test
-  // printf("%d\n", argc);
+  int i;
+  printf("argc = %d\n", argc);
+  for(i=0;i<argc;i++)
+  {
+    printf("argv[i] = %s\n",argv[i]);
+  }
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   //test
-  // printf("Before load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+  //printf("Before load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
   success = load (argv[0], &if_.eip, &if_.esp);
   //test
   printf("After load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
   if(success)
   {
     //test
-    // printf("Before argu_stack : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+    //printf("Before argu_stack : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+    argu_stack(argv, argc, &if_.esp);
+  }
   /* If load failed, quit. */
-  if (!success) 
+  palloc_free_page (file_name);
+  if (!success){
     thread_exit ();
-  
+  }
   //test
   // hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
+
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -110,7 +119,6 @@ start_process (void *file_name_)
      and jump to it. */
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED ();
-  }
 }
 
 /* Waits for thread TID to die and returns its exit status.  If
@@ -519,7 +527,11 @@ void argu_stack(char **argv, int argc, void **esp)
     {
       //test
       // printf("i: %d, j: %d, argv[i] = %s\n",i,j,argv[i]);
+      *esp-=1;
+      //test
+      // printf("esp-1 success\n");
       // printf("argv[i][j] : %c\n",argv[i][j]);
+      **(char**)esp = argv[i][j];
     }
     /* *esp-=strlen(argv[i])+1;
     memcpy(*esp, argv[i], strlen(argv[i]) + 1); */
