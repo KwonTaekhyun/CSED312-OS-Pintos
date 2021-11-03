@@ -23,6 +23,8 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   /* P2-3 */
+  //test
+  printf("\n\n\nsyscall number: %d\n\n\n", (int *)(f->esp));
 
   //1-1. interrupt frame으로부터 stack pointer, 
   //return value를 저장하는 레지스터 읽어오기
