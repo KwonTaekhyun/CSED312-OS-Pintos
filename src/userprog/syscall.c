@@ -40,7 +40,7 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_WAIT:{
-      is_valid_address(f->esp + 4);
+      is_valid_address(f->esp, 4, 7);
       wait((pid_t)*(uint32_t *)(f->esp + 4));
       break;
     }

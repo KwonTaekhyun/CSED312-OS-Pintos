@@ -5,6 +5,5 @@
     "atomic": "c",
     "__config": "c",
     "ostream": "c"
-  },
-  "C_Cpp.errorSquiggles": "Disabled"
+  }
 }
