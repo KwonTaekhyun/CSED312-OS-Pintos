@@ -86,12 +86,15 @@ start_process (void *file_name_)
   if_.eflags = FLAG_IF | FLAG_MBS;
   printf("Before load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
   success = load (file_name, &if_.eip, &if_.esp);
-  printf("After load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+  if(success)
+  {
+    printf("Before argu_stack : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+    argu_stack(argv, argc, &if_.esp);
+  }
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
     thread_exit ();
-  argu_stack(argv, argc, &if_.esp);
   hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
