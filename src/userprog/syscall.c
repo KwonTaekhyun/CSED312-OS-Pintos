@@ -35,12 +35,12 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_EXEC:{
-      check_user_vaddr(f->esp, 4, 7);
+      is_valid_address(f->esp, 4, 7);
       exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_WAIT:{
-      check_user_vaddr(f->esp + 4);
+      is_valid_address(f->esp + 4);
       wait((pid_t)*(uint32_t *)(f->esp + 4));
       break;
     }
