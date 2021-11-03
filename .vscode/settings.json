@@ -4,6 +4,8 @@
     "__availability": "c",
     "atomic": "c",
     "__config": "c",
-    "ostream": "c"
+    "ostream": "c",
+    "cstdlib": "c",
+    "locale": "c"
   }
 }
