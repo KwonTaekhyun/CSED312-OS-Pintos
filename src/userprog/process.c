@@ -82,11 +82,11 @@ start_process (void *file_name_)
   }
   //test
   int i;
-  printf("argc = %d\n", argc);
-  for(i=0;i<argc;i++)
-  {
-    printf("argv[i] = %s\n",argv[i]);
-  }
+  // printf("argc = %d\n", argc);
+  // for(i=0;i<argc;i++)
+  // {
+  //   printf("argv[i] = %s\n",argv[i]);
+  // }
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
@@ -96,7 +96,7 @@ start_process (void *file_name_)
   //printf("Before load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
   success = load (argv[0], &if_.eip, &if_.esp);
   //test
-  printf("After load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+  // printf("After load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
   if(success)
   {
     //test
