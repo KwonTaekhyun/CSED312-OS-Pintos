@@ -9,7 +9,6 @@
 #include "threads/intr-stubs.h"
 #include "threads/palloc.h"
 #include "threads/switch.h"
-#include "threads/synch.h"
 #include "threads/vaddr.h"
 #ifdef USERPROG
 #include "userprog/process.h"
@@ -472,6 +471,7 @@ init_thread (struct thread *t, const char *name, int priority)
   #ifdef USERPROG
   list_init(&(t->children));
   sema_init(&(t->sema_wait), 0);
+  sema_init(&(t->sema_exit), 0);
   list_push_back(&(running_thread()->children), &(t->child));
   #endif
 }
