@@ -18,6 +18,10 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 
+/*-------------P2-----------------*/
+#include "threads/synch.h"
+#include <list.h>
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
@@ -131,14 +135,24 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  //test
-  int dummy = 0, i;
-  for(i=0; i<7 * 10000 * 10000; ++i) dummy += i;
-  ASSERT(dummy != 0);
+  struct list_elem *child_elem;
+  struct thread *current_thread = thread_current();
+  int exit_status = -1;
 
-  return -1;
+  for(child_elem = list_begin(&(current_thread->children)); 
+        child_elem != list_end(&(current_thread->children)); child_elem = list_next(child_elem)){
+    struct thread *thr = list_entry(child_elem, struct thread, child);
+    if(thr->tid == child_tid){
+      sema_down(&(thr->sema_wait));
+      list_remove(child_elem);
+      exit_status = thr->exit_status;
+      break;
+    }
+  }
+
+  return exit_status;
 }
 
 /* Free the current process's resources. */
@@ -164,6 +178,8 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+  
+  sema_up(&(cur->sema_wait));
 }
 
 /* Sets up the CPU for running user code in the current

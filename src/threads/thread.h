@@ -93,13 +93,18 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-#ifdef USERPROG
+// #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
-#endif
 
-    /* P2-3 */
+    /*---------P2--------*/
+    struct list children;
+    struct list_elem child;
     int exit_status;
+
+    struct semaphore sema_wait;
+    struct semaphore sema_load;
+// #endif
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */

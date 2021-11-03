@@ -6,6 +6,7 @@
     "__config": "c",
     "ostream": "c",
     "cstdlib": "c",
-    "locale": "c"
+    "locale": "c",
+    "version": "cpp"
   }
 }
