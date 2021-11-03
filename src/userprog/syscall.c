@@ -169,3 +169,8 @@ void exit(int exit_status){
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
 }
+bool create(const char *file , unsigned initial_size)
+{
+  return filesys_create (file, initial_size);
+
+}
