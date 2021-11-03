@@ -58,13 +58,13 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_READ:{
-      is_valid_address(f->esp, 20, 31);
-      read((int)*(uint32_t *)(f->esp+20), (void *)*(uint32_t *)(f->esp + 24), (unsigned)*((uint32_t *)(f->esp + 28)));
+      is_valid_address(f->esp, 4, 15);
+      read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
-      is_valid_address(f->esp, 20, 31);
-      f->eax = write((int)*(uint32_t *)(f->esp+20), (void *)*(uint32_t *)(f->esp + 24), (unsigned)*((uint32_t *)(f->esp + 28)));
+      is_valid_address(f->esp, 4, 15);
+      f->eax = write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_SEEK:{
