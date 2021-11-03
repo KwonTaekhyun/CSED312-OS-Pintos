@@ -69,7 +69,7 @@ start_process (void *file_name_)
   token = strtok_r(file_name, " ", &save_ptr);
   argv[0] = token;
   //test
-  printf("filename in start_process : %s, len : %d\n", argv[0], strlen(argv[0]));
+  //printf("filename in start_process : %s, len : %d\n", argv[0], strlen(argv[0]));
   argc = 1;
   while(token!=NULL)
   {
@@ -77,23 +77,30 @@ start_process (void *file_name_)
     if(token == NULL) break;
     argv[argc] = token;
     //test
-    printf("argv: %s, argc : %d\n", argv[argc], argc);
+    //printf("argv: %s, argc : %d\n", argv[argc], argc);
     argc++;
   }
   //test
-  printf("%d\n", argc);
+  int i;
+  printf("argc = %d\n", argc);
+  for(i=0;i<argc;i++)
+  {
+    printf("argv[i] = %s\n",argv[i]);
+  }
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   //test
-  printf("Before load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+  //printf("Before load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
   success = load (argv[0], &if_.eip, &if_.esp);
+  //test
+  printf("After load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
   if(success)
   {
     //test
-    printf("Before argu_stack : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+    //printf("Before argu_stack : %s, %d in start_process\n", argv[0], strlen(argv[0]));
     argu_stack(argv, argc, &if_.esp);
   }
   /* If load failed, quit. */
@@ -508,12 +515,14 @@ void argu_stack(char **argv, int argc, void **esp)
 {
   int i,j;
   char **argv_addr;
+  //test
   printf("%s, %d\n", argv[0], strlen(argv[0]));
   argv_addr = (char**)malloc(sizeof(char*)*argc);
   for(i = argc - 1 ; i >= 0 ; i -- )
   {
     for(j=strlen(argv[i]); j >=0; j--)
     {
+      //test
       printf("i: %d, j: %d, argv[i] = %s\n",i,j,argv[i]);
       *esp-=1;
       printf("esp-1 success\n");
