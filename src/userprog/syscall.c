@@ -37,12 +37,12 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_EXEC:{
       is_valid_address(f->esp, 4, 7);
-      exec((const char *)*(uint32_t *)(f->esp + 4));
+      f->eax = exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_WAIT:{
       is_valid_address(f->esp, 4, 7);
-      wait((pid_t)*(uint32_t *)(f->esp + 4));
+      f->eax = wait((pid_t)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_CREATE:{
