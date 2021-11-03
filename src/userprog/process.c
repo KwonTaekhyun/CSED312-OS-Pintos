@@ -506,7 +506,10 @@ void argu_stack(char **argv, int argc, void **esp)
   {
     for(j=strlen(argv[i]); j >=0; j--)
     {
+      printf("i: %d, j: %d, argv[i] = %s\n",i,j,argv[i]);
       *esp-=1;
+      printf("esp-1 success\n");
+      pritnf("argv[i][j] : %c\n",argv[i][j]);
       **(char**)esp = argv[i][j];
     }
     /* *esp-=strlen(argv[i])+1;
