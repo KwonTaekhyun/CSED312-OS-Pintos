@@ -538,7 +538,7 @@ void argu_stack(char **argv, int argc, void **esp)
   memcpy(*esp,&argv_pointer,sizeof(char**));
   *esp-=sizeof(int);
   //how about this?
-  memcpy(*esp,argc,sizeof(int));
+  memcpy(*esp,&argc,sizeof(int));
   *esp-=sizeof(void*);
   void *ret = 0;
   memcpy(*esp,&ret,sizeof(void*));
