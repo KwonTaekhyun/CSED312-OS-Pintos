@@ -47,6 +47,11 @@ process_execute (const char *file_name)
   strlcpy (arg_copy, fn_copy, PGSIZE);
   char *argv;
   arg_copy = strtok_r(arg_copy," ",&argv);
+
+  if (filesys_open(arg_copy) == NULL) {
+    return -1;
+  }
+
   //test
   //printf("at process_exec : %s\n",arg_copy);
   /* Create a new thread to execute FILE_NAME. */
