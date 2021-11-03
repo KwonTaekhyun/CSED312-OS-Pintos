@@ -90,7 +90,7 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
   if (!success) 
     thread_exit ();
-  
+  printf("%s, %d in start_process\n", argv[0], strlen(argv[0]));
   argu_stack(argv, argc, &if_.esp);
   hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
   /* Start the user process by simulating a return from an
@@ -252,7 +252,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-
   /* Open executable file. */
   file = filesys_open (file_name);
   if (file == NULL) 
@@ -501,6 +500,7 @@ void argu_stack(char **argv, int argc, void **esp)
 {
   int i,j;
   char **argv_addr;
+  printf("%s, %d\n", argv[0], strlen(argv[0]));
   argv_addr = (char**)malloc(sizeof(char*)*argc);
   for(i = argc - 1 ; i >= 0 ; i -- )
   {
