@@ -3,7 +3,8 @@
     "stddef.h": "c",
     "__availability": "c",
     "atomic": "c",
-    "__config": "c"
+    "__config": "c",
+    "ostream": "c"
   },
   "C_Cpp.errorSquiggles": "Disabled"
 }
