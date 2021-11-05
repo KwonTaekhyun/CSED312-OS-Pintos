@@ -167,8 +167,16 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-
-  /* Destroy the current process's page directory and switch back
+  while(!list_empty(&cur->file_descriptor_list))
+  {
+    struct list_elem *e;
+    e = list_pop_front(&cur->file_descriptor_list);
+    struct file_descriptor *fd;
+    fd = list_entry(e, struct file_descriptor, elem);
+    file_close(fd->index);
+    palloc_free_page(fd);
+  } 
+ /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
   if (pd != NULL) 
@@ -585,5 +593,22 @@ void argu_stack(char **argv, int argc, void **esp)
   memcpy(*esp,&ret,sizeof(void*));
 
 
+
+}
+int process_add_file (struct file *f)
+{
+  struct thread *t = thread_current ();
+  struct file_descriptor *fd;
+  fd->index = t->max_fd;
+  fd->file_pt = f;
+  list_push_back(&t->file_descriptor_list, &fd);
+  t->max_fd++;
+}
+struct file *process_get_file (int fd)
+{
+
+}
+void process_close_file (int fd)
+{
 
 }

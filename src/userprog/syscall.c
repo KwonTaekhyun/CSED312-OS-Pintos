@@ -136,3 +136,8 @@ int read_argument (void *SP, void *arg, int bytes){
   return true;
 }
 
+bool create(const char *file , unsigned initial_size)
+{
+  return filesys_create (file, initial_size);
+
+}

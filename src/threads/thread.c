@@ -197,6 +197,9 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
+  //p2-3
+  t->max_fd = 2;
+  list_init(&t->file_descriptor_list);
   /* Add to run queue. */
   thread_unblock (t);
 
@@ -462,7 +465,9 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
-
+  //p2-3
+  list_init(&t->file_descriptor_list);
+  
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
