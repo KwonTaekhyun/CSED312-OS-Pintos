@@ -46,6 +46,13 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_CREATE:{
+      char *file;
+      unsigned int initial_size;
+      is_valid_address(f->esp, 4, sizeof(char*));
+      is_valid_address(f->esp, 8, sizeof(unsigned int));
+      read_argument(&f->esp+4,&file,sizeof(char*));
+      read_argument(&f->esp+8,&file,sizeof(unsigned int));
+      f->eax = sys_create(file, initial_size);
       break;
     }
     case SYS_REMOVE:{
@@ -138,6 +145,7 @@ int read_argument (void *SP, void *arg, int bytes){
 
 bool sys_create(const char *file , unsigned initial_size)
 {
+  if(file == NULL) exit(-1);
   return filesys_create (file, initial_size);
 }
 bool sys_remove (const char *file) 
