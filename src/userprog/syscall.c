@@ -50,11 +50,8 @@ syscall_handler (struct intr_frame *f)
       unsigned int initial_size;
       //is_valid_address(f->esp, 4, sizeof(char*));
       //is_valid_address(f->esp, 8, sizeof(unsigned int));
-      printf("i'm in sys_create\n");
       read_argument(f->esp+4,&file,sizeof(char*));
-      printf("%s, I read this!\n",file);
       read_argument(f->esp+8,&initial_size,sizeof(unsigned int));
-      printf("%d, I read this!\n",initial_size);
       f->eax = sys_create(file, initial_size);
       break;
     }
