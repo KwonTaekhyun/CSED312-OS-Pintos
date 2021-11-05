@@ -48,10 +48,10 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:{
       char *file;
       unsigned int initial_size;
-      is_valid_address(f->esp, 4, sizeof(char*));
-      is_valid_address(f->esp, 8, sizeof(unsigned int));
-      read_argument(&f->esp+4,&file,sizeof(char*));
-      read_argument(&f->esp+8,&file,sizeof(unsigned int));
+      //is_valid_address(f->esp, 4, sizeof(char*));
+      //is_valid_address(f->esp, 8, sizeof(unsigned int));
+      read_argument(f->esp+4,&file,sizeof(char*));
+      read_argument(f->esp+8,&file,sizeof(unsigned int));
       f->eax = sys_create(file, initial_size);
       break;
     }
