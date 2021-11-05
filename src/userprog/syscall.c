@@ -10,6 +10,7 @@
 #include "devices/shutdown.h"
 #include "userprog/process.h"
 #include "filesys/filesys.h"
+#include "lib/kernel/list.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -59,6 +60,8 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_OPEN:{
+      is_valid_address(f->esp, 4, 7);
+      f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_FILESIZE:{
@@ -81,6 +84,8 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_CLOSE:{
+      is_valid_address(f->esp, 4, 7);
+      sys_close((int)*(uint32_t *)(f->esp + 4));
       break;
     }
   }
@@ -151,4 +156,50 @@ bool sys_create(const char *file , unsigned initial_size)
 bool sys_remove (const char *file) 
 {
   return filesys_remove(file);
+}
+
+int sys_open(char *file_name){
+  struct file *file_ptr = filesys_open(file_name);
+
+  if(!file_ptr){
+    return -1;
+  }
+
+  struct file_descriptor *fd;
+  fd = palloc_get_page(0);
+  fd->file_pt = file_ptr;
+
+  struct list *fd_list_ptr = &(thread_current()->file_descriptor_list);
+  if(list_empty(fd_list_ptr)){
+    fd->index = 3;
+  }
+  else{
+    fd->index = (list_entry(list_back(fd_list_ptr), struct file_descriptor, elem)->index) + 1;
+  }
+  list_push_back(fd_list_ptr, &fd->elem);
+
+  return fd->index;
+}
+
+void sys_close(int fd_idx){
+  if(fd_idx < 3){
+    return;
+  }
+
+  struct file_descriptor *fd;
+  struct list_elem *fd_elem = list_begin(&thread_current()->file_descriptor_list);
+  int i;
+  for(i = 3; i < fd_idx; i++){
+    if(fd_elem == NULL){
+      return;
+    }
+    fd_elem = list_next(fd_elem);
+  }
+  fd = list_entry(fd_elem, struct file_descriptor, elem);
+
+  if(fd->file_pt) {
+    file_close(fd->file_pt);
+    list_remove(&(fd->elem));
+    palloc_free_page(fd);
+  }
 }

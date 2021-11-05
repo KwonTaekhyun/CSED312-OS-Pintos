@@ -20,6 +20,8 @@ int read_argument (void *SP, void *arg, int bytes);
 struct lock file_lock;
 bool sys_create(const char *file , unsigned initial_size);
 bool sys_remove (const char *file);
+int sys_open(char *file_name);
+void sys_close(int fd_idx);
 
 
 #endif /* userprog/syscall.h */
