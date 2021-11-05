@@ -136,8 +136,11 @@ int read_argument (void *SP, void *arg, int bytes){
   return true;
 }
 
-bool create(const char *file , unsigned initial_size)
+bool sys_create(const char *file , unsigned initial_size)
 {
   return filesys_create (file, initial_size);
-
+}
+bool sys_remove (const char *file) 
+{
+  return filesys_remove(file);
 }

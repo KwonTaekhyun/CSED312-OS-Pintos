@@ -606,9 +606,29 @@ int process_add_file (struct file *f)
 }
 struct file *process_get_file (int fd)
 {
-
+  struct thread *t = thread_current ();
+  struct file_descriptor *file;
+  struct list_elem *e;
+  for(e = list_begin(&t->file_descriptor_list);e!=list_end(&t->file_descriptor_list); e = list_next(e))
+  {
+    file = list_entry(e, struct file_descriptor, elem);
+    if(file->index == fd) return file->file_pt;
+  }
+  return NULL;
 }
 void process_close_file (int fd)
 {
+  struct thread *t = thread_current ();
+  struct file_descriptor *file;
+  struct list_elem *e;
+  for(e = list_begin(&t->file_descriptor_list);e!=list_end(&t->file_descriptor_list); e = list_next(e))
+  {
+    file = list_entry(e, struct file_descriptor, elem);
+    if(file->index == fd) 
+    {
+      file_close(file->file_pt);
+      list_remove(e);
+    }
+  }
 
 }

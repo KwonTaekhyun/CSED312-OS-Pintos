@@ -16,5 +16,10 @@ void is_valid_address(void *esp, int start, int end);
 
 int read_argument (void *SP, void *arg, int bytes);
 
+//fd
+struct lock file_lock;
+bool sys_create(const char *file , unsigned initial_size);
+bool sys_remove (const char *file);
+
 
 #endif /* userprog/syscall.h */
