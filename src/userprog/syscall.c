@@ -96,6 +96,16 @@ syscall_handler (struct intr_frame *f)
 void exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
+
+  struct list_elem *fd_elem;
+  for(fd_elem = list_begin(&current_thread->file_descriptor_list); fd_elem != list_end(&current_thread->file_descriptor_list); fd_elem = list_next(fd_elem)){
+    struct file_descriptor *fd;
+    fd = list_entry(fd_elem, struct file_descriptor, elem);
+    file_close(fd->file_pt);
+    list_remove(&(fd->elem));
+    palloc_free_page(fd);
+  }
+
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
 }
