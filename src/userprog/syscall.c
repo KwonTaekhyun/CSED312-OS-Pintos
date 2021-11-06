@@ -70,8 +70,14 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_READ:{
-      is_valid_address(f->esp, 4, 15);
-      read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      //is_valid_address(f->esp, 4, 15);
+      int fd;
+      void *buffer;
+      int size;
+      read_argument(f->esp+4,&fd,sizeof(int));
+      read_argument(f->esp+8,&buffer,sizeof(void*));
+      read_argument(f->esp+12,&fd,sizeof(int));
+      read(fd,buffer,size);
       break;
     }
     case SYS_WRITE:{
