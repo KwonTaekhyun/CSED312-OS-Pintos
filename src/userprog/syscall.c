@@ -30,7 +30,7 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   //test
-  //printf("syscall-nr: %d", *(uint32_t *)(f->esp));
+  //printf("syscall-nr: %d\n", *(uint32_t *)(f->esp));
 
   is_valid_address(f->esp, 0, 3);
   switch (*(uint32_t *)(f->esp)) {
@@ -110,6 +110,7 @@ void exit(int exit_status){
 
   //test
   //debug_backtrace();
+  //printf("\n");
 
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
@@ -188,14 +189,14 @@ int sys_read (int fd, void* buffer, unsigned size) {
   else if(fd > 2)
   {
     struct file *f = find_fd_by_idx(fd)->file_pt;
-    if(f==NULL) 
+    if(f == NULL || !is_user_vaddr(buffer)) 
     {
       exit(-1);
     }
 
-    off_t temp = file_read(f, buffer, size);
+    off_t read_bytes = file_read(f, buffer, size);
 
-    return temp;
+    return read_bytes;
   }
 
   return -1;
@@ -209,7 +210,7 @@ int sys_write (int fd, const void *buffer, unsigned size) {
   }
   else if(fd > 2){
     struct file *f = find_fd_by_idx(fd)->file_pt;
-    if(f==NULL) 
+    if(f == NULL) 
     {
       exit(-1);
     }
