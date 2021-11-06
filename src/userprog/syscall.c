@@ -141,7 +141,7 @@ int sys_open(char *file_name){
 
   struct file *file_ptr = filesys_open(file_name);
 
-  if(!file_ptr || !is_user_vaddr(file_ptr)){
+  if(!file_ptr){
     return -1;
   }
 
