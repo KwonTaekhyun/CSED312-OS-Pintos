@@ -198,6 +198,9 @@ void sys_close(int fd_idx){
       return;
     }
     fd_elem = list_next(fd_elem);
+    if(fd_elem == list_end(&thread_current()->file_descriptor_list)){
+      exit(-1);
+    }
   }
   fd = list_entry(fd_elem, struct file_descriptor, elem);
 
