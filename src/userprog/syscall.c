@@ -192,7 +192,7 @@ void sys_close(int fd_idx){
 
   struct file_descriptor *fd;
   struct list_elem *fd_elem = list_begin(&thread_current()->file_descriptor_list);
-  int i;
+
   while(fd_elem != list_end(&thread_current()->file_descriptor_list)){
     fd = list_entry(fd_elem, struct file_descriptor, elem);
     if(fd_idx == fd->index){
@@ -205,9 +205,9 @@ void sys_close(int fd_idx){
   }
 
   list_remove(&(fd->elem));
-  palloc_free_page(fd);
 
   if(fd->file_pt) {
     file_close(fd->file_pt);
+    palloc_free_page(fd);
   }
 }
