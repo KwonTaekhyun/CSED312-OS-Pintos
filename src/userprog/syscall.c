@@ -224,7 +224,11 @@ int syscall_filesize(int fd)
 {
   struct file *f;
   f = process_get_file(fd);
+  //test
+  printf("I got file in filesize\n");
   if(f==NULL) return -1;
+  //test
+  printf("I passed filenull\n");
   return file_length(f);
 }
 
