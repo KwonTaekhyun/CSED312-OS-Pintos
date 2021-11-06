@@ -11,6 +11,7 @@
 #include "userprog/process.h"
 #include "filesys/filesys.h"
 #include "lib/kernel/list.h"
+#include "filesys/file.h"
 
 static void syscall_handler (struct intr_frame *);
 
@@ -111,15 +112,26 @@ int wait (pid_t pid) {
 }
 
 int read (int fd, void* buffer, unsigned size) {
-  int i;
-  if (fd == 0) {
-    for (i = 0; i < size; i ++) {
-      if (((char *)buffer)[i] == '\0') {
-        break;
-      }
+  struct file *file;
+  lock_acquire(&file_lock);
+  if (fd == 0)
+  {
+    int i;
+    for(i = 0; i < size; i++)
+    {
+      *(uint8_t*)buffer[i] = input_getc();
+      lock_release(&file_lock);
+      return size;
     }
   }
-  return i;
+  else
+  {
+    file = process_get_file(fd);
+    if(file==NULL) exit(-1);
+    size = file_read(file,buffer,size);
+    lock_release(&file_lock);
+    return size;
+  }
 }
 
 int write (int fd, const void *buffer, unsigned size) {
