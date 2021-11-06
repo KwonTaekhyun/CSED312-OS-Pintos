@@ -82,7 +82,7 @@ syscall_handler (struct intr_frame *f)
       read_argument(f->esp+12,&size,sizeof(unsigned));
       //test
       printf("fd : %d, size : %d\n",fd, size);
-      f->eax = read(fd,buffer,size);
+      f->eax = sys_read(fd,buffer,size);
       break;
     }
     case SYS_WRITE:{
@@ -122,7 +122,7 @@ int wait (pid_t pid) {
   return process_wait(pid);
 }
 
-int read (int fd, void* buffer, unsigned size) {
+int sys_read (int fd, void* buffer, unsigned size) {
   struct file *f;
   if (fd == 0)
   {
@@ -224,11 +224,9 @@ int syscall_filesize(int fd)
 {
   struct file *f;
   f = process_get_file(fd);
-  //test
-  printf("I got file in filesize\n");
   if(f==NULL) return -1;
   //test
-  printf("I passed filenull\n");
+  //printf("file length\n");
   return file_length(f);
 }
 
