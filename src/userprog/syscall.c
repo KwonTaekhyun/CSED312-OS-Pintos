@@ -67,6 +67,9 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_FILESIZE:{
+      int fd;
+      read_argument(f->esp+4,&fd,sizeof(int));
+      f->eax = filesize(fd);
       break;
     }
     case SYS_READ:{
@@ -78,7 +81,7 @@ syscall_handler (struct intr_frame *f)
       read_argument(f->esp+8,&buffer,sizeof(void*));
       read_argument(f->esp+12,&size,sizeof(unsigned));
       //test
-      printf("fd : %d, size : %d\n",fd, size);
+      //printf("fd : %d, size : %d\n",fd, size);
       f->eax = read(fd,buffer,size);
       break;
     }
@@ -140,10 +143,12 @@ int read (int fd, void* buffer, unsigned size) {
       exit(-1);
     }
     //test
-    printf("I got file!\n");
+    //printf("I got file!\n");
 
     lock_acquire(&file_lock);
     off_t temp = file_read(f,buffer,size);
+    //test
+    //printf("read bytes: %d\n",temp);
     lock_release(&file_lock);
     return temp;
   }
@@ -211,6 +216,14 @@ int sys_open(char *file_name){
   list_push_back(fd_list_ptr, &fd->elem);
 
   return fd->index;
+}
+
+int filesize(int fd)
+{
+  struct file *f;
+  f = process_get_file(fd);
+  if(f==NULL) return -1;
+  return file_length(f);
 }
 
 void sys_close(int fd_idx){
