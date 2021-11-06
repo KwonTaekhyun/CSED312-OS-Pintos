@@ -97,15 +97,6 @@ void exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
-  // struct list_elem *fd_elem;
-  // for(fd_elem = list_begin(&current_thread->file_descriptor_list); fd_elem != list_end(&current_thread->file_descriptor_list); fd_elem = list_next(fd_elem)){
-  //   struct file_descriptor *fd;
-  //   fd = list_entry(fd_elem, struct file_descriptor, elem);
-  //   file_close(fd->file_pt);
-  //   list_remove(&(fd->elem));
-  //   palloc_free_page(fd);
-  // }
-
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
 }
@@ -169,6 +160,9 @@ bool sys_remove (const char *file)
 }
 
 int sys_open(char *file_name){
+  if(!file_name){
+    return -1;
+  }
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
@@ -206,6 +200,10 @@ void sys_close(int fd_idx){
     fd_elem = list_next(fd_elem);
   }
   fd = list_entry(fd_elem, struct file_descriptor, elem);
+
+  if(!fd){
+    exit(-1);
+  }
 
   if(fd->file_pt) {
     file_close(fd->file_pt);

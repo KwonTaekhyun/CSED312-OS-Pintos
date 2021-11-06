@@ -167,17 +167,7 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-  // while(!list_empty(&cur->file_descriptor_list))
-  // {
-  //   struct list_elem *e;
-  //   e = list_pop_front(&cur->file_descriptor_list);
-  //   struct file_descriptor *fd;
-  //   fd = list_entry(e, struct file_descriptor, elem);
-  //   if(fd->file_pt){
-  //     file_close(fd->index);
-  //     palloc_free_page(fd);
-  //   }
-  // } 
+
  /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
