@@ -76,7 +76,7 @@ syscall_handler (struct intr_frame *f)
       int size;
       read_argument(f->esp+4,&fd,sizeof(int));
       read_argument(f->esp+8,&buffer,sizeof(void*));
-      read_argument(f->esp+12,&fd,sizeof(int));
+      read_argument(f->esp+12,&size,sizeof(int));
       read(fd,buffer,size);
       break;
     }
@@ -134,7 +134,11 @@ int read (int fd, void* buffer, unsigned size) {
   else
   {
     file = process_get_file(fd);
-    if(file==NULL) exit(-1);
+    if(file==NULL) 
+    {
+      lock_release(&file_lock);
+      exit(-1);
+    }
     size = file_read(file,buffer,size);
     lock_release(&file_lock);
     return size;

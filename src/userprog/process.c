@@ -612,6 +612,7 @@ struct file *process_get_file (int fd)
   struct thread *t = thread_current ();
   struct file_descriptor *file;
   struct list_elem *e;
+  if(list_empty(&t->file_descriptor_list)) exit(-1);
   for(e = list_begin(&t->file_descriptor_list);e!=list_end(&t->file_descriptor_list); e = list_next(e))
   {
     file = list_entry(e, struct file_descriptor, elem);
