@@ -30,7 +30,7 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   //test
-  printf("syscall-nr: %d", *(uint32_t *)(f->esp));
+  //printf("syscall-nr: %d", *(uint32_t *)(f->esp));
 
   is_valid_address(f->esp, 0, 3);
   switch (*(uint32_t *)(f->esp)) {
@@ -109,7 +109,7 @@ void exit(int exit_status){
   current_thread->exit_status = exit_status;
 
   //test
-  debug_backtrace();
+  //debug_backtrace();
 
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
