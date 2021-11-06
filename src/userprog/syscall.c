@@ -72,7 +72,9 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_READ:{
-      is_valid_address(f->esp, 4, 15);
+      is_valid_address(f->esp, 4, 7);
+      is_valid_address(f->esp, 8, 11);
+      is_valid_address(f->esp, 12, 15);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
@@ -100,6 +102,9 @@ syscall_handler (struct intr_frame *f)
 void exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
+
+  //test
+  debug_backtrace();
 
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();

@@ -170,12 +170,7 @@ process_exit (void)
   uint32_t *pd;
 
  /* Destroy the current process's page directory and switch back
-     to the kernel-only page directory. */
-    //  if(cur->cur_file!=NULL)
-    //  {
-    //    file_allow_write(cur->cur_file);
-    //    file_close(cur->cur_file);
-    //  }
+    to the kernel-only page directory. */
   pd = cur->pagedir;
   if (pd != NULL) 
     {
