@@ -235,7 +235,7 @@ int syscall_filesize(int fd)
   else
   {
     //printf("file length: %d\n",file_length(f));
-    off_t temp = file_length(&f);
+    off_t temp = file_length(f);
     return temp;
   }
 }
