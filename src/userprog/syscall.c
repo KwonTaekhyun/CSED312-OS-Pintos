@@ -117,9 +117,10 @@ int read (int fd, void* buffer, unsigned size) {
   if (fd == 0)
   {
     int i;
+    uint8_t *temp_buf = (uint8_t *) buffer;
     for(i = 0; i < size; i++)
     {
-      buffer[i] = input_getc();
+      temp_buf[i] = input_getc();
       lock_release(&file_lock);
       return size;
     }
