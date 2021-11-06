@@ -17,7 +17,8 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
-
+//p2-4
+#include "userprog/syscall.h"
 /*-------------P2-----------------*/
 #include "threads/synch.h"
 #include <list.h>
@@ -170,6 +171,11 @@ process_exit (void)
 
  /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
+     if(cur->cur_file!=NULL)
+     {
+       file_allow_write(cur->cur_file);
+       file_close(cur->cur_file);
+     }
   pd = cur->pagedir;
   if (pd != NULL) 
     {
@@ -293,14 +299,18 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
+  lock_acquire(&file_lock);
   /* Open executable file. */
   file = filesys_open (file_name);
   if (file == NULL) 
     {
+      lock_release(&file_lock);
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
-
+    t->cur_file = file;
+    file_deny_write(t->cur_file);
+    lock_release(&file_lock);
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
       || memcmp (ehdr.e_ident, "\177ELF\1\1\1", 7)

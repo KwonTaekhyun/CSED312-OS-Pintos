@@ -119,6 +119,8 @@ struct thread
     //p2-3 fd
     struct list file_descriptor_list;
     int max_fd;
+    //p2-4
+    struct file* cur_file;
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
