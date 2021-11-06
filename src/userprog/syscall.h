@@ -22,7 +22,7 @@ bool sys_create(const char *file , unsigned initial_size);
 bool sys_remove (const char *file);
 int sys_open(char *file_name);
 void sys_close(int fd_idx);
-struct file_descriptor* find_fd_by_idx(int fd_idx)
+struct file_descriptor* find_fd_by_idx(int fd_idx);
 
 
 #endif /* userprog/syscall.h */
