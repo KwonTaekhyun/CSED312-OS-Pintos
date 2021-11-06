@@ -70,8 +70,10 @@ syscall_handler (struct intr_frame *f)
       int fd;
       read_argument(f->esp+4,&fd,sizeof(int));
       //test
-      printf("fd : %d\n",fd);
+      //printf("fd : %d\n",fd);
       f->eax = syscall_filesize(fd);
+      //test
+      printf("i passed filesize\n");
       break;
     }
     case SYS_READ:{
@@ -229,8 +231,15 @@ int syscall_filesize(int fd)
   if(f==NULL) return -1;
   //test
   //printf("why exit???\n");
-  printf("file length: %d\n",file_length(f));
-  return file_length(f);
+  else
+  {
+    int temp;
+    lock_acquire(&file_lock);
+    temp = file_length(f);
+    printf("file length: %d\n",temp);
+    lock_release(&file_lock);
+    return temp;
+  }
 }
 
 void sys_close(int fd_idx){
