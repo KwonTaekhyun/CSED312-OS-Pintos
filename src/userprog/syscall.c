@@ -77,7 +77,7 @@ syscall_handler (struct intr_frame *f)
       read_argument(f->esp+4,&fd,sizeof(int));
       read_argument(f->esp+8,&buffer,sizeof(void*));
       read_argument(f->esp+12,&size,sizeof(unsigned));
-      read(fd,buffer,size);
+      f->eax = read(fd,buffer,size);
       break;
     }
     case SYS_WRITE:{
