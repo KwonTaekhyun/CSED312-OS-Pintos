@@ -138,7 +138,7 @@ int sys_open(char *file_name){
   if(!file_name){
     return -1;
   }
-  lock_acquire(&file_lock);
+
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr || !is_user_vaddr(file_ptr)){
@@ -158,8 +158,6 @@ int sys_open(char *file_name){
   }
   list_push_back(fd_list_ptr, &fd->elem);
 
-  lock_release(&file_lock);
-
   return fd->index;
 }
 
@@ -170,9 +168,7 @@ int syscall_filesize(int fd)
   if(f == NULL) return -1;
   else
   {
-    lock_acquire(&file_lock);
     off_t temp = file_length(f);
-    lock_release(&file_lock);
 
     return temp;
   }
@@ -197,9 +193,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
       exit(-1);
     }
 
-    lock_acquire(&file_lock);
     off_t temp = file_read(f, buffer, size);
-    lock_release(&file_lock);
 
     return temp;
   }
@@ -220,9 +214,7 @@ int sys_write (int fd, const void *buffer, unsigned size) {
       exit(-1);
     }
 
-    lock_acquire(&file_lock);
     off_t temp = file_write(f, buffer, size);
-    lock_release(&file_lock);
 
     return temp;
   }
