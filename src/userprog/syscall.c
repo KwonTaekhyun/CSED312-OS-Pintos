@@ -143,12 +143,12 @@ int read (int fd, void* buffer, unsigned size) {
       exit(-1);
     }
     //test
-    //printf("I got file!\n");
+    printf("I got file!\n");
 
     lock_acquire(&file_lock);
     off_t temp = file_read(f,buffer,size);
     //test
-    //printf("read bytes: %d\n",temp);
+    printf("read bytes: %d\n",temp);
     lock_release(&file_lock);
     return temp;
   }
