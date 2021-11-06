@@ -226,6 +226,7 @@ int syscall_filesize(int fd)
   f = process_get_file(fd);
   if(f==NULL) return -1;
   //test
+  printf("why exit???\n");
   printf("file length: %d\n",file_length(f));
   return file_length(f);
 }
