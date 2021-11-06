@@ -117,7 +117,7 @@ void exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
-  debug_bracktrace();
+  debug_backtrace();
 
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
