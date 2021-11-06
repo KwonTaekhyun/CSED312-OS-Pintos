@@ -82,7 +82,9 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_WRITE:{
-      is_valid_address(f->esp, 4, 15);
+      is_valid_address(f->esp, 4, 7);
+      is_valid_address(f->esp, 8, 11);
+      is_valid_address(f->esp, 12, 15);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
@@ -196,18 +198,35 @@ int sys_read (int fd, void* buffer, unsigned size) {
     }
 
     lock_acquire(&file_lock);
-    off_t temp = file_read(f,buffer,size);
+    off_t temp = file_read(f, buffer, size);
     lock_release(&file_lock);
 
     return temp;
   }
+
+  return -1;
 }
 
 int sys_write (int fd, const void *buffer, unsigned size) {
   if (fd == 1) {
+    int i;
     putbuf(buffer, size);
     return size;
   }
+  else if(fd > 2){
+    struct file *f = find_fd_by_idx(fd)->file_pt;
+    if(f==NULL) 
+    {
+      exit(-1);
+    }
+
+    lock_acquire(&file_lock);
+    off_t temp = file_write(f, buffer, size);
+    lock_release(&file_lock);
+
+    return temp;
+  }
+
   return -1; 
 }
 
