@@ -53,11 +53,8 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:{
       char *file;
       unsigned int initial_size;
-      //is_valid_address(f->esp, 4, sizeof(char*));
-      //is_valid_address(f->esp, 8, sizeof(unsigned int));
-      read_argument(f->esp+4,&file,sizeof(char*));
-      read_argument(f->esp+8,&initial_size,sizeof(unsigned int));
-      f->eax = sys_create(file, initial_size);
+      is_valid_address(f->esp, 4, 11);
+      f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
       break;
     }
     case SYS_REMOVE:{
@@ -80,21 +77,13 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_READ:{
-      //is_valid_address(f->esp, 4, 15);
-      int fd;
-      void *buffer;
-      unsigned size;
-      read_argument(f->esp+4,&fd,sizeof(int));
-      read_argument(f->esp+8,&buffer,sizeof(void*));
-      read_argument(f->esp+12,&size,sizeof(unsigned));
-      //test
-      //printf("fd : %d, size : %d\n",fd, size);
-      f->eax = sys_read(fd,buffer,size);
+      is_valid_address(f->esp, 4, 15);
+      f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
       is_valid_address(f->esp, 4, 15);
-      f->eax = write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_SEEK:{
@@ -165,7 +154,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
   }
 }
 
-int write (int fd, const void *buffer, unsigned size) {
+int sys_write (int fd, const void *buffer, unsigned size) {
   if (fd == 1) {
     putbuf(buffer, size);
     return size;
@@ -173,31 +162,6 @@ int write (int fd, const void *buffer, unsigned size) {
   return -1; 
 }
 
-// 유효한 주소를 가리키는지 확인하는 함수
-void is_valid_address(void *esp, int start, int end){
-  if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
-    exit(-1);
-  }
-}
-
-// esp에서 n개의 인자들을 읽어오는 함수
-int read_argument (void *SP, void *arg, int bytes){
-  if(!(is_user_vaddr(SP) && is_user_vaddr(SP + bytes))){
-    return false;
-  }
-
-  int i;
-  for(i = 0; i < bytes; i++){
-    *(char *)(arg + i) = *(char *)(SP + i);
-  }
-  return true;
-}
-
-bool sys_create(const char *file , unsigned initial_size)
-{
-  if(file == NULL) exit(-1);
-  return filesys_create (file, initial_size);
-}
 bool sys_remove (const char *file) 
 {
   return filesys_remove(file);
@@ -244,6 +208,13 @@ int syscall_filesize(int fd)
   }
 }
 
+bool sys_create(const char *file , unsigned initial_size)
+{
+  if(file == NULL) exit(-1);
+  return filesys_create (file, initial_size);
+}
+
+
 void sys_close(int fd_idx){
   if(fd_idx < 3){
     return;
@@ -269,4 +240,24 @@ void sys_close(int fd_idx){
     file_close(fd->file_pt);
     palloc_free_page(fd);
   }
+}
+
+// 유효한 주소를 가리키는지 확인하는 함수
+void is_valid_address(void *esp, int start, int end){
+  if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
+    exit(-1);
+  }
+}
+
+// esp에서 n개의 인자들을 읽어오는 함수
+int read_argument (void *SP, void *arg, int bytes){
+  if(!(is_user_vaddr(SP) && is_user_vaddr(SP + bytes))){
+    return false;
+  }
+
+  int i;
+  for(i = 0; i < bytes; i++){
+    *(char *)(arg + i) = *(char *)(SP + i);
+  }
+  return true;
 }

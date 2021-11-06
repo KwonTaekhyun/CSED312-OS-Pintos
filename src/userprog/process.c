@@ -616,7 +616,7 @@ struct file *process_get_file (int fd)
   for(e = list_begin(&t->file_descriptor_list);e!=list_end(&t->file_descriptor_list); e = list_next(e))
   {
     file = list_entry(e, struct file_descriptor, elem);
-    if(file->index == fd) return file;
+    if(file->index == fd) return file->file_pt;
   }
   return NULL;
 }
