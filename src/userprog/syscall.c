@@ -73,10 +73,10 @@ syscall_handler (struct intr_frame *f)
       //is_valid_address(f->esp, 4, 15);
       int fd;
       void *buffer;
-      int size;
+      unsigned size;
       read_argument(f->esp+4,&fd,sizeof(int));
       read_argument(f->esp+8,&buffer,sizeof(void*));
-      read_argument(f->esp+12,&size,sizeof(int));
+      read_argument(f->esp+12,&size,sizeof(unsigned));
       read(fd,buffer,size);
       break;
     }
@@ -122,14 +122,14 @@ int read (int fd, void* buffer, unsigned size) {
   lock_acquire(&file_lock);
   if (fd == 0)
   {
-    int i;
+    unsigned i;
     uint8_t *temp_buf = (uint8_t *) buffer;
     for(i = 0; i < size; i++)
     {
       temp_buf[i] = input_getc();
-      lock_release(&file_lock);
-      return size;
     }
+    lock_release(&file_lock);
+    return size;
   }
   else
   {
@@ -139,9 +139,9 @@ int read (int fd, void* buffer, unsigned size) {
       lock_release(&file_lock);
       exit(-1);
     }
-    size = file_read(file,buffer,size);
+    off_t temp = file_read(file,buffer,size);
     lock_release(&file_lock);
-    return size;
+    return temp;
   }
 }
 
