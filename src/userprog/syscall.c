@@ -118,8 +118,7 @@ int wait (pid_t pid) {
 }
 
 int read (int fd, void* buffer, unsigned size) {
-  struct file *file;
-  lock_acquire(&file_lock);
+  struct file *f;
   if (fd == 0)
   {
     unsigned i;
@@ -133,13 +132,15 @@ int read (int fd, void* buffer, unsigned size) {
   }
   else
   {
-    file = process_get_file(fd);
-    if(file==NULL) 
+    f = process_get_file(fd);
+    //test
+    printf("I got file!\n");
+    if(f==NULL) 
     {
-      lock_release(&file_lock);
       exit(-1);
     }
-    off_t temp = file_read(file,buffer,size);
+    lock_acquire(&file_lock);
+    off_t temp = file_read(f,buffer,size);
     lock_release(&file_lock);
     return temp;
   }
