@@ -139,7 +139,7 @@ int sys_open(char *file_name){
   lock_acquire(&file_lock);
   struct file *file_ptr = filesys_open(file_name);
 
-  if(!file_ptr){
+  if(!file_ptr || !is_user_vaddr(file_ptr)){
     return -1;
   }
 
@@ -164,8 +164,8 @@ int sys_open(char *file_name){
 int syscall_filesize(int fd)
 {
   struct file *f;
-  f = process_get_file(fd);
-  if(f==NULL) return -1;
+  f = find_fd_by_idx(fd)->file_pt;
+  if(f == NULL) return -1;
   else
   {
     lock_acquire(&file_lock);
