@@ -176,7 +176,6 @@ int sys_read (int fd, void* buffer, unsigned size) {
     {
       temp_buf[i] = input_getc();
     }
-    lock_release(&file_lock);
     return size;
   }
   else if(fd > 2)
@@ -187,9 +186,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
       exit(-1);
     }
 
-    lock_acquire(&file_lock);
     off_t temp = file_read(f,buffer,size);
-    lock_release(&file_lock);
 
     return temp;
   }
