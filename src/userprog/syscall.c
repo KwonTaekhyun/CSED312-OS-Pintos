@@ -119,7 +119,7 @@ int read (int fd, void* buffer, unsigned size) {
     int i;
     for(i = 0; i < size; i++)
     {
-      *(uint8_t*)buffer[i] = input_getc();
+      (uint8_t*)buffer[i] = input_getc();
       lock_release(&file_lock);
       return size;
     }
