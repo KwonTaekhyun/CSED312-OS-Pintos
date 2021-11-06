@@ -69,7 +69,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_FILESIZE:{
       int fd;
       read_argument(f->esp+4,&fd,sizeof(int));
-      f->eax = sys_filesize(fd);
+      f->eax = syscall_filesize(fd);
       break;
     }
     case SYS_READ:{
@@ -220,7 +220,7 @@ int sys_open(char *file_name){
   return fd->index;
 }
 
-int sys_filesize(int fd)
+int syscall_filesize(int fd)
 {
   struct file *f;
   f = process_get_file(fd);
