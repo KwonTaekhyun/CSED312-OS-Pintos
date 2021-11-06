@@ -67,13 +67,8 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_FILESIZE:{
       int fd;
-      is_valid_address(f->esp, 4, 7);
-      read_argument(f->esp+4,&fd,sizeof(int));
-      //test
-      //printf("fd : %d\n",fd);
-      f->eax = syscall_filesize(fd);
-      //test
-      //printf("i passed filesize\n");
+      is_valid_address(f->esp, 4, 7); 
+      f->eax = syscall_filesize((int)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_READ:{
@@ -118,46 +113,10 @@ int wait (pid_t pid) {
   return process_wait(pid);
 }
 
-int sys_read (int fd, void* buffer, unsigned size) {
-  struct file *f;
-  if (fd == 0)
-  {
-    unsigned i;
-    uint8_t *temp_buf = (uint8_t *) buffer;
-    for(i = 0; i < size; i++)
-    {
-      temp_buf[i] = input_getc();
-    }
-    lock_release(&file_lock);
-    return size;
-  }
-  else
-  {
-    f = process_get_file(fd);
-    //test
-    //printf("I got file!\n");
-    if(f==NULL) 
-    {
-      exit(-1);
-    }
-    //test
-    //printf("I got file!\n");
-
-    lock_acquire(&file_lock);
-    off_t temp = file_read(f,buffer,size);
-    //test
-    //printf("read bytes: %d\n",temp);
-    lock_release(&file_lock);
-    return temp;
-  }
-}
-
-int sys_write (int fd, const void *buffer, unsigned size) {
-  if (fd == 1) {
-    putbuf(buffer, size);
-    return size;
-  }
-  return -1; 
+bool sys_create(const char *file , unsigned initial_size)
+{
+  if(file == NULL) exit(-1);
+  return filesys_create (file, initial_size);
 }
 
 bool sys_remove (const char *file) 
@@ -195,42 +154,56 @@ int syscall_filesize(int fd)
 {
   struct file *f;
   f = process_get_file(fd);
-  //test
-  //printf("why exit??? fd : %d\n",fd);
   if(f==NULL) return -1;
   else
   {
-    //printf("file length: %d\n",file_length(f));
     off_t temp = file_length(f);
     return temp;
   }
 }
 
-bool sys_create(const char *file , unsigned initial_size)
-{
-  if(file == NULL) exit(-1);
-  return filesys_create (file, initial_size);
+int sys_read (int fd, void* buffer, unsigned size) {
+  if (fd == 0)
+  {
+    int i;
+    uint8_t *temp_buf = (uint8_t *) buffer;
+    for(i = 0; i < size; i++)
+    {
+      temp_buf[i] = input_getc();
+    }
+    lock_release(&file_lock);
+    return size;
+  }
+  else if(fd > 2)
+  {
+    struct file *f = find_fd_by_idx(fd)->file_pt;
+    if(f==NULL) 
+    {
+      exit(-1);
+    }
+
+    lock_acquire(&file_lock);
+    off_t temp = file_read(f,buffer,size);
+    lock_release(&file_lock);
+
+    return temp;
+  }
 }
 
+int sys_write (int fd, const void *buffer, unsigned size) {
+  if (fd == 1) {
+    putbuf(buffer, size);
+    return size;
+  }
+  return -1; 
+}
 
 void sys_close(int fd_idx){
   if(fd_idx < 3){
     return;
   }
 
-  struct file_descriptor *fd;
-  struct list_elem *fd_elem = list_begin(&thread_current()->file_descriptor_list);
-
-  while(fd_elem != list_end(&thread_current()->file_descriptor_list)){
-    fd = list_entry(fd_elem, struct file_descriptor, elem);
-    if(fd_idx == fd->index){
-       break;
-    }
-    fd_elem = list_next(fd_elem);
-    if(fd_elem == list_end(&thread_current()->file_descriptor_list)){
-      exit(-1);
-    }
-  }
+  struct file_descriptor *fd = find_fd_by_idx(fd_idx);
 
   list_remove(&(fd->elem));
 
@@ -258,4 +231,21 @@ int read_argument (void *SP, void *arg, int bytes){
     *(char *)(arg + i) = *(char *)(SP + i);
   }
   return true;
+}
+
+struct file_descriptor* find_fd_by_idx(int fd_idx){
+  struct file_descriptor *fd;
+  struct list_elem *fd_elem = list_begin(&thread_current()->file_descriptor_list);
+
+  while(fd_elem != list_end(&thread_current()->file_descriptor_list)){
+    fd = list_entry(fd_elem, struct file_descriptor, elem);
+    if(fd_idx == fd->index){
+       break;
+    }
+    fd_elem = list_next(fd_elem);
+    if(fd_elem == list_end(&thread_current()->file_descriptor_list)){
+      exit(-1);
+    }
+  }
+  return fd;
 }
