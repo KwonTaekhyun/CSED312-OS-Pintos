@@ -13,6 +13,8 @@
 #include "lib/kernel/list.h"
 #include "filesys/file.h"
 
+#include "debug.h"
+
 static void syscall_handler (struct intr_frame *);
 
 void
@@ -114,6 +116,8 @@ syscall_handler (struct intr_frame *f)
 void exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
+
+  bracktrace();
 
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
