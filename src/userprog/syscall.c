@@ -229,12 +229,13 @@ int syscall_filesize(int fd)
   struct file *f;
   f = process_get_file(fd);
   //test
-  printf("why exit??? fd : %d\n",fd);
+  //printf("why exit??? fd : %d\n",fd);
   if(f==NULL) return -1;
   else
   {
-    printf("file length: %d\n",file_length(f));
-    return file_length(f);
+    //printf("file length: %d\n",file_length(f));
+    off_t temp = file_length(f);
+    return temp;
   }
 }
 
