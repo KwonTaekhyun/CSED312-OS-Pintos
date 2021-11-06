@@ -144,11 +144,7 @@ file_allow_write (struct file *file)
 off_t
 file_length (struct file *file) 
 {
-  //test
-     printf("befpre assert\n");
   ASSERT (file != NULL);
-  //test
-     printf("after assert\n");
   return inode_length (file->inode);
 }
 

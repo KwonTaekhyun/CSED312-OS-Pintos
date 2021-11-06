@@ -68,6 +68,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_FILESIZE:{
       int fd;
+      is_valid_address(f->esp, 4, 7);
       read_argument(f->esp+4,&fd,sizeof(int));
       //test
       //printf("fd : %d\n",fd);
@@ -234,7 +235,7 @@ int syscall_filesize(int fd)
   else
   {
     //printf("file length: %d\n",file_length(f));
-    off_t temp = file_length(f);
+    off_t temp = file_length(&f);
     return temp;
   }
 }
