@@ -29,6 +29,9 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
+  //test
+  printf("syscall-nr: %d", *(uint32_t *)(f->esp));
+
   is_valid_address(f->esp, 0, 3);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
