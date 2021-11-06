@@ -81,7 +81,7 @@ syscall_handler (struct intr_frame *f)
       read_argument(f->esp+8,&buffer,sizeof(void*));
       read_argument(f->esp+12,&size,sizeof(unsigned));
       //test
-      //printf("fd : %d, size : %d\n",fd, size);
+      printf("fd : %d, size : %d\n",fd, size);
       f->eax = read(fd,buffer,size);
       break;
     }
@@ -138,17 +138,19 @@ int read (int fd, void* buffer, unsigned size) {
   else
   {
     f = process_get_file(fd);
+    //test
+    printf("I got file!\n");
     if(f==NULL) 
     {
       exit(-1);
     }
     //test
-    printf("I got file!\n");
+    //printf("I got file!\n");
 
     lock_acquire(&file_lock);
     off_t temp = file_read(f,buffer,size);
     //test
-    printf("read bytes: %d\n",temp);
+    //printf("read bytes: %d\n",temp);
     lock_release(&file_lock);
     return temp;
   }
