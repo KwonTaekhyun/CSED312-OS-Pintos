@@ -158,10 +158,6 @@ int sys_open(char *file_name){
     fd->index = (list_entry(list_back(fd_list_ptr), struct file_descriptor, elem)->index) + 1;
   }
 
-  if (strcmp(thread_current()->name, file_name) == 0) {
-    file_deny_write(fd->file_pt);
-  }
-
   list_push_back(fd_list_ptr, &fd->elem);
 
   return fd->index;
@@ -218,10 +214,6 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     if(f == NULL) 
     {
       exit(-1);
-    }
-
-    if(f->deny_write){
-      file_deny_write(f);
     }
 
     off_t temp = file_write(f, buffer, size);

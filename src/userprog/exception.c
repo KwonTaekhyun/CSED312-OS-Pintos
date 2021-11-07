@@ -148,7 +148,7 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
 
-  if(!user || not_present) {
+  if(!user) {
    exit(-1);    
   }
 

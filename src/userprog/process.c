@@ -185,6 +185,13 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+
+  struct list *fd_list = &cur->file_descriptor_list;
+  while (!list_empty(fd_list)) {
+    struct list_elem *e = list_pop_front (fd_list);
+    struct file_descriptor *fd = list_entry(e, struct file_desc, elem);
+    file_close(fd->file_pt);
+  }
   
   sema_up(&(cur->sema_wait));
   sema_down(&(cur->sema_exit));
@@ -205,7 +212,6 @@ process_activate (void)
      interrupts. */
   tss_update ();
 }
-
 /* We load ELF binaries.  The following definitions are taken
    from the ELF specification, [ELF1], more-or-less verbatim.  */
 

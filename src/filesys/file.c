@@ -43,7 +43,7 @@ file_reopen (struct file *file)
 
 /* Closes FILE. */
 void
-file_close (struct file *file) 
+ file_close (struct file *file) 
 {
   if (file != NULL)
     {
