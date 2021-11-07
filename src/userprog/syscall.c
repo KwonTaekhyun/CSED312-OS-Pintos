@@ -165,6 +165,10 @@ int sys_open(char *file_name){
     fd->index = (list_entry(list_back(fd_list_ptr), struct file_descriptor, elem)->index) + 1;
   }
 
+  if(thread_current()->name == file_name){
+    file_deny_write(fd->file_pt);
+  }
+
   list_push_back(fd_list_ptr, &fd->elem);
 
   return fd->index;
