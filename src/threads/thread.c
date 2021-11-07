@@ -200,7 +200,7 @@ thread_create (const char *name, int priority,
   //p2-3
   t->max_fd = 2;
   t->parent = thread_current();
-  t->exit_status = -1;
+  // t->exit_status = -1;
   list_init(&t->file_descriptor_list);
   /* Add to run queue. */
   thread_unblock (t);

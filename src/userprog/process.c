@@ -138,8 +138,6 @@ start_process (void *file_name_)
   /* If load failed, quit. */
   palloc_free_page (file_name);
 
-  //test
-  printf("load end\nparent thread: %s\n", thread_current()->parent->name);
   sema_up(&thread_current()->parent->sema_load);
 
   if (!success){
