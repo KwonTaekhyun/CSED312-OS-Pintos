@@ -168,6 +168,9 @@ int sys_open(char *file_name){
   }
 
   printf("file_name: %s\n", *file_name);
+    if(thread_current()->name == file_name){
+    file_deny_write(fd->file_pt);
+  }
 
   list_push_back(fd_list_ptr, &fd->elem);
   // lock_release(&file_lock);
