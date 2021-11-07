@@ -136,9 +136,7 @@ void exit(int exit_status){
 }
 
 pid_t exec (const char *cmd) {
-  lock_acquire (&filesys_lock);
   return process_execute(cmd);
-  lock_release (&filesys_lock);
 }
 
 int wait (pid_t pid) {
@@ -148,17 +146,13 @@ int wait (pid_t pid) {
 bool sys_create(const char *file , unsigned initial_size)
 {
   if(file == NULL) exit(-1);
-  lock_acquire (&filesys_lock);
   bool create_rt_code = filesys_create (file, initial_size);
-  lock_release (&filesys_lock);
   return create_rt_code;
 }
 
 bool sys_remove (const char *file) 
 {
-  lock_acquire (&filesys_lock);
   bool create_rm_code =  filesys_remove(file);
-  lock_release (&filesys_lock);
   return create_rm_code;
 }
 
@@ -205,17 +199,14 @@ int sys_open(char *file_name){
 
 int syscall_filesize(int fd)
 {
-  lock_acquire (&filesys_lock);
   struct file *f;
   f = find_fd_by_idx(fd)->file_pt;
   if(f == NULL){
-    lock_release (&filesys_lock);
     return -1;
   }
   else
   {
     off_t temp = file_length(f);
-    lock_release (&filesys_lock);
     return temp;
   }
 }
@@ -276,15 +267,11 @@ int sys_write (int fd, const void *buffer, unsigned size) {
 }
 
 void sys_seek (int fd_idx, unsigned pos){
-  lock_acquire (&filesys_lock);
   file_seek(find_fd_by_idx(fd_idx)->file_pt, pos);
-  lock_release (&filesys_lock);
 }
 
 unsigned sys_tell (int fd_idx){
-  lock_acquire (&filesys_lock);
   bool tell_rt_code = file_tell(find_fd_by_idx(fd_idx)->file_pt);
-  lock_release (&filesys_lock);
   return tell_rt_code;
 }
 
@@ -293,7 +280,6 @@ void sys_close(int fd_idx){
     return;
   }
 
-  lock_acquire (&filesys_lock);
   struct file_descriptor *fd = find_fd_by_idx(fd_idx);
 
   list_remove(&(fd->elem));
@@ -304,7 +290,6 @@ void sys_close(int fd_idx){
   if(fd->file_pt) {
     file_close(fd->file_pt);
   }
-  lock_release (&filesys_lock);
 }
 
 // 유효한 주소를 가리키는지 확인하는 함수
