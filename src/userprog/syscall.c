@@ -162,15 +162,40 @@ int sys_open(char *file_name){
     return -1;
   }
 
+  sema_down(&read_mutex);
+  read_count++;
+  //test
+  printf("read_count: %d", read_count);
+  if(read_count == 1){
+    sema_down(&rw_mutex);
+  }
+  sema_up(&read_mutex);
+
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
+    sema_down(&read_mutex);
+    read_count--;
+    //test
+    printf("read_count: %d", read_count);
+    if(read_count == 0){
+      sema_up(&rw_mutex);
+    }
+    sema_up(&read_mutex);
     return -1;
   }
 
   struct file_descriptor *fd;
   fd = palloc_get_page(0);
   if (!fd) {
+    sema_down(&read_mutex);
+    read_count--;
+    //test
+    printf("read_count: %d", read_count);
+    if(read_count == 0){
+      sema_up(&rw_mutex);
+    }
+    sema_up(&read_mutex);
     return -1;
   }
   fd->file_pt = file_ptr;
@@ -191,6 +216,14 @@ int sys_open(char *file_name){
 
   list_push_back(fd_list_ptr, &fd->elem);
 
+  sema_down(&read_mutex);
+  read_count--;
+  //test
+  printf("read_count: %d", read_count);
+  if(read_count == 0){
+    sema_up(&rw_mutex);
+  }
+  sema_up(&read_mutex);
   return fd->index;
 }
 
