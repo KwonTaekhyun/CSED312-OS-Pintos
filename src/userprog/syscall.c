@@ -269,6 +269,7 @@ void sys_close(int fd_idx){
   list_remove(&(fd->elem));
 
   if(fd->file_pt) {
+    printf("syscall-close-file_close\n");
     file_close(fd->file_pt);
     palloc_free_page(fd);
   }
