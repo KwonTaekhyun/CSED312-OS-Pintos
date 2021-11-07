@@ -275,7 +275,7 @@ void sys_close(int fd_idx){
     //test
     printf("syscall-close-file_close\n");
     file_close(fd->file_pt);
-    printf("closed file writing flag: %d\n", fd->file_pt->deny_write);
+    printf("closed file writing flag: %d\n", &fd->file_pt->deny_write);
   }
 }
 
