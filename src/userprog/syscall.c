@@ -112,6 +112,13 @@ void exit(int exit_status){
   // debug_backtrace();
   // printf("\n");
 
+  struct list *fd_list = &current_thread->file_descriptor_list;
+  while (!list_empty(fd_list)) {
+    struct list_elem *e = list_pop_front (fd_list);
+    struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
+    file_close(fd->file_pt);
+  }
+
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
   thread_exit();
 }
