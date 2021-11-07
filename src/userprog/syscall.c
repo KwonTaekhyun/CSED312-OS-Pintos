@@ -147,9 +147,11 @@ int sys_open(char *file_name){
     return -1;
   }
 
+  lock_acquire(&file_lock);
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
+    lock_release(&file_lock);
     return -1;
   }
 
@@ -170,6 +172,7 @@ int sys_open(char *file_name){
   }
 
   list_push_back(fd_list_ptr, &fd->elem);
+  lock_release(&file_lock);
 
   return fd->index;
 }
@@ -192,10 +195,12 @@ int sys_read (int fd, void* buffer, unsigned size) {
   {
     int i;
     uint8_t *temp_buf = (uint8_t *) buffer;
+    lock_acquire(&file_lock);
     for(i = 0; i < size; i++)
     {
       temp_buf[i] = input_getc();
     }
+    lock_release(&file_lock);
     return size;
   }
   else if(fd > 2)
@@ -203,11 +208,12 @@ int sys_read (int fd, void* buffer, unsigned size) {
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL || !is_user_vaddr(buffer)) 
     {
+      lock_release(&file_lock);
       exit(-1);
     }
 
     off_t read_bytes = file_read(f, buffer, size);
-
+    lock_release(&file_lock);
     return read_bytes;
   }
 
@@ -215,23 +221,28 @@ int sys_read (int fd, void* buffer, unsigned size) {
 }
 
 int sys_write (int fd, const void *buffer, unsigned size) {
+  lock_acquire(&file_lock);
   if (fd == 1) {
     int i;
     putbuf(buffer, size);
+    lock_release(&file_lock);
     return size;
   }
   else if(fd > 2){
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL) 
     {
+      lock_release(&file_lock);
       exit(-1);
     }
 
     off_t temp = file_write(f, buffer, size);
 
+    lock_release(&file_lock);
     return temp;
   }
 
+  lock_release(&file_lock);
   return -1; 
 }
 
