@@ -60,7 +60,9 @@ process_execute (const char *file_name)
   //printf("at process_exec : %s\n",arg_copy);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
+
   sema_down(&thread_current()->sema_load);
+
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
 
@@ -131,7 +133,11 @@ start_process (void *file_name_)
   }
   /* If load failed, quit. */
   palloc_free_page (file_name);
+
+  //test
+  printf("parent thread: %s", thread_current()->parent->name);
   sema_up(&thread_current()->parent->sema_load);
+
   if (!success){
     thread_exit ();
   }
