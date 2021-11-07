@@ -236,6 +236,7 @@ int sys_write (int fd, const void *buffer, unsigned size) {
       exit(-1);
     }
 
+    printf("current thread: %s\n", thread_current()->name);
     off_t temp = file_write(f, buffer, size);
 
     // lock_release(&file_lock);
