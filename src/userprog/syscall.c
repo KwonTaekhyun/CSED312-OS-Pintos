@@ -167,6 +167,9 @@ int sys_open(char *file_name){
 
   struct file_descriptor *fd;
   fd = palloc_get_page(0);
+  if (!fd) {
+    return -1;
+  }
   fd->file_pt = file_ptr;
 
   struct list *fd_list_ptr = &(thread_current()->file_descriptor_list);
