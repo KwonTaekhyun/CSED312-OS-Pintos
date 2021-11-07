@@ -120,6 +120,8 @@ void exit(int exit_status){
   // debug_backtrace();
   // printf("\n");
 
+  file_close(current_thread->cur_file);
+
   struct list *fd_list = &current_thread->file_descriptor_list;
   while (!list_empty(fd_list)) {
     struct list_elem *e = list_pop_front (fd_list);
