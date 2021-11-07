@@ -117,8 +117,8 @@ void exit(int exit_status){
   current_thread->exit_status = exit_status;
 
   //test
-  // debug_backtrace();
-  // printf("\n");
+  debug_backtrace();
+  printf("\n");
 
   file_close(current_thread->cur_file);
 
