@@ -137,6 +137,7 @@ file_allow_write (struct file *file)
 {
   ASSERT (file != NULL);
   printf("file_allow_write!!!\n");
+  printf("allowing file writing flag: %d\n", file->deny_write);
   if (file->deny_write) 
     {
       file->deny_write = false;
