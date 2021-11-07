@@ -167,8 +167,8 @@ int sys_open(char *file_name){
     fd->index = (list_entry(list_back(fd_list_ptr), struct file_descriptor, elem)->index) + 1;
   }
 
-  printf("file_name: %s\n", *file_name);
-    if(thread_current()->name == file_name){
+  printf("file_name: %s\n", file_name);
+  if(thread_current()->name == file_name){
     file_deny_write(fd->file_pt);
   }
 
