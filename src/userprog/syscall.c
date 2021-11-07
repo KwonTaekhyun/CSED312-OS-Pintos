@@ -24,7 +24,7 @@ struct file
   };
 
 struct semaphore rw_mutext, read_mutex;
-int read_count;
+static int read_count = 0;
 
 static void syscall_handler (struct intr_frame *);
 
