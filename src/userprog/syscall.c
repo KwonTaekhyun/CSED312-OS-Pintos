@@ -23,7 +23,7 @@ struct file
     bool deny_write;            /* Has file_deny_write() been called? */
   };
 
-struct semaphore rw_mutext, read_mutex;
+struct semaphore rw_mutex, read_mutex;
 static int read_count = 0;
 
 static void syscall_handler (struct intr_frame *);
@@ -32,7 +32,7 @@ void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-  sema_init(&rw_mutext, 1);
+  sema_init(&rw_mutex, 1);
   sema_init(&read_mutex, 1);
   read_count = 0;
 }
@@ -213,7 +213,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
   //test
   printf("read_count: %d", read_count);
   if(read_count == 1){
-    sema_down(&rw_mutext);
+    sema_down(&rw_mutex);
   }
   sema_up(&read_mutex);
 
@@ -231,7 +231,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
     //test
     printf("read_count: %d", read_count);
     if(read_count == 0){
-      sema_up(&rw_mutext);
+      sema_up(&rw_mutex);
     }
     sema_up(&read_mutex);
 
@@ -245,7 +245,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
       sema_down(&read_mutex);
       read_count--;
       if(read_count == 0){
-        sema_up(&rw_mutext);
+        sema_up(&rw_mutex);
       }
       sema_up(&read_mutex);
 
@@ -256,7 +256,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
     sema_down(&read_mutex);
     read_count--;
     if(read_count == 0){
-      sema_up(&rw_mutext);
+      sema_up(&rw_mutex);
     }
     sema_up(&read_mutex);
     return read_bytes;
@@ -265,26 +265,26 @@ int sys_read (int fd, void* buffer, unsigned size) {
   sema_down(&read_mutex);
   read_count--;
   if(read_count == 0){
-    sema_up(&rw_mutext);
+    sema_up(&rw_mutex);
   }
   sema_up(&read_mutex);
   return -1;
 }
 
 int sys_write (int fd, const void *buffer, unsigned size) {
-  sema_down(&rw_mutext);
+  sema_down(&rw_mutex);
 
   if (fd == 1) {
     int i;
     putbuf(buffer, size);
-    sema_up(&rw_mutext);
+    sema_up(&rw_mutex);
     return size;
   }
   else if(fd > 2){
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL) 
     {
-      sema_up(&rw_mutext);
+      sema_up(&rw_mutex);
       exit(-1);
     }
 
@@ -292,11 +292,11 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     // printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
     off_t temp = file_write(f, buffer, size);
     // printf("writen bytes: %d", temp);
-    sema_up(&rw_mutext);
+    sema_up(&rw_mutex);
     return temp;
   }
 
-  sema_up(&rw_mutext);
+  sema_up(&rw_mutex);
   return -1; 
 }
 
