@@ -116,7 +116,6 @@ void exit(int exit_status){
   while (!list_empty(fd_list)) {
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-    file_allow_write(fd->file_pt);
     file_close(fd->file_pt);
   }
 
