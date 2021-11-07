@@ -215,9 +215,6 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     {
       exit(-1);
     }
-    if(!f->deny_write){
-      return -1;
-    }
 
     off_t temp = file_write(f, buffer, size);
 
