@@ -38,7 +38,7 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   //test
-  printf("syscall-nr: %d\n", *(uint32_t *)(f->esp));
+  // printf("syscall-nr: %d\n", *(uint32_t *)(f->esp));
 
   is_valid_address(f->esp, 0, 3);
   switch (*(uint32_t *)(f->esp)) {
