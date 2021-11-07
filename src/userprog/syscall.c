@@ -114,6 +114,7 @@ void exit(int exit_status){
 
   struct list *fd_list = &current_thread->file_descriptor_list;
   while (!list_empty(fd_list)) {
+    printf("syscall-exit-file_close\n");
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
     file_close(fd->file_pt);
