@@ -249,9 +249,9 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     }
 
     //test
-    printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
+    // printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
     off_t temp = file_write(f, buffer, size);
-    printf("writen bytes: %d", temp);
+    // printf("writen bytes: %d", temp);
 
     // lock_release(&file_lock);
     return temp;
