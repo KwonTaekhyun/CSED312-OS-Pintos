@@ -215,9 +215,7 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     {
       exit(-1);
     }
-    if(f->deny_write){
-      //test
-      printf("deny wirtie 시도\n");
+    if(!f->deny_write){
       return -1;
     }
 
