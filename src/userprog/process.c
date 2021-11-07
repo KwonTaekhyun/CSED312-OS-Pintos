@@ -294,18 +294,15 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-  lock_acquire(&file_lock);
   /* Open executable file. */
   file = filesys_open (file_name);
   if (file == NULL) 
     {
-      lock_release(&file_lock);
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
     t->cur_file = file;
     file_deny_write(t->cur_file);
-    lock_release(&file_lock);
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
       || memcmp (ehdr.e_ident, "\177ELF\1\1\1", 7)
@@ -392,7 +389,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
   //file_close (file);
   return success;
 }
-
 /* load() helpers. */
 
 static bool install_page (void *upage, void *kpage, bool writable);

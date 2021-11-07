@@ -85,9 +85,13 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_SEEK:{
+      is_valid_address(f->esp, 4, 11);
+      sys_seek((int)*(uint32_t *)(f->esp + 4), (unsigned)*(uint32_t *)(f->esp + 8));
       break;
     }
     case SYS_TELL:{
+      is_valid_address(f->esp, 4, 7);
+      f->eax = sys_tell((int)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_CLOSE:{
@@ -210,6 +214,9 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     {
       exit(-1);
     }
+    if(f->deny_write){
+      return -1;
+    }
 
     off_t temp = file_write(f, buffer, size);
 
@@ -217,6 +224,14 @@ int sys_write (int fd, const void *buffer, unsigned size) {
   }
 
   return -1; 
+}
+
+void sys_seek (int fd_idx, unsigned pos){
+  file_seek(find_fd_by_idx(fd_idx)->file_pt, pos);
+}
+
+unsigned sys_tell (int fd_idx){
+  return file_tell(find_fd_by_idx(fd_idx)->file_pt);
 }
 
 void sys_close(int fd_idx){
