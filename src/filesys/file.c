@@ -48,7 +48,6 @@ void
 {
   if (file != NULL)
     {
-      printf("file_close!!!\n");
       file_allow_write (file);
       inode_close (file->inode);
       free (file); 
