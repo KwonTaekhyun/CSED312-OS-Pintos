@@ -224,6 +224,7 @@ int sys_open(char *file_name){
     sema_up(&rw_mutex);
   }
   sema_up(&read_mutex);
+  
   return fd->index;
 }
 
