@@ -210,6 +210,8 @@ int syscall_filesize(int fd)
 int sys_read (int fd, void* buffer, unsigned size) {
   sema_down(&read_mutex);
   read_count++;
+  //test
+  printf("read_count: %d", read_count);
   if(read_count == 1){
     sema_down(&rw_mutext);
   }
@@ -226,6 +228,8 @@ int sys_read (int fd, void* buffer, unsigned size) {
 
     sema_down(&read_mutex);
     read_count--;
+    //test
+    printf("read_count: %d", read_count);
     if(read_count == 0){
       sema_up(&rw_mutext);
     }
@@ -238,12 +242,12 @@ int sys_read (int fd, void* buffer, unsigned size) {
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL || !is_user_vaddr(buffer)) 
     {
-    sema_down(&read_mutex);
-    read_count--;
-    if(read_count == 0){
-      sema_up(&rw_mutext);
-    }
-    sema_up(&read_mutex);
+      sema_down(&read_mutex);
+      read_count--;
+      if(read_count == 0){
+        sema_up(&rw_mutext);
+      }
+      sema_up(&read_mutex);
 
       exit(-1);
     }
