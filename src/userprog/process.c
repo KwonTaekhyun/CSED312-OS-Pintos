@@ -62,10 +62,10 @@ process_execute (const char *file_name)
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
 
   //test
-  printf("waiting\nparent thread: %s\n", thread_current()->parent->name);
+  printf("waiting\nparent thread: %s\n", thread_current()->parent ? thread_current()->parent->name : 'null');
   sema_down(&thread_current()->sema_load);
   //test
-  printf("awakening\nparent thread: %s\n", thread_current()->parent->name);
+  printf("awakening\nparent thread: %s\n", thread_current()->parent ? thread_current()->parent->name : 'null');
 
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
