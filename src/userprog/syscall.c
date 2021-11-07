@@ -15,6 +15,7 @@
 
 #include "lib/debug.h"
 #include "lib/user/syscall.h"
+#include "threads/palloc.h"
 
 struct file 
   {
@@ -129,6 +130,7 @@ void exit(int exit_status){
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
     file_close(fd->file_pt);
+    palloc_free_page(fd);
   }
 
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
@@ -273,8 +275,7 @@ void sys_seek (int fd_idx, unsigned pos){
 }
 
 unsigned sys_tell (int fd_idx){
-  bool tell_rt_code = file_tell(find_fd_by_idx(fd_idx)->file_pt);
-  return tell_rt_code;
+  return file_tell(find_fd_by_idx(fd_idx)->file_pt);
 }
 
 void sys_close(int fd_idx){
@@ -291,6 +292,7 @@ void sys_close(int fd_idx){
 
   if(fd->file_pt) {
     file_close(fd->file_pt);
+    palloc_free_page(fd);
   }
 }
 
