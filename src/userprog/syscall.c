@@ -23,13 +23,18 @@ struct file
     bool deny_write;            /* Has file_deny_write() been called? */
   };
 
+struct semaphore rw_mutext, read_mutex;
+int read_count;
+
 static void syscall_handler (struct intr_frame *);
 
 void
 syscall_init (void) 
 {
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-  lock_init(&file_lock);
+  sema_init(&rw_mutext, 1);
+  sema_init(&read_mutex, 1);
+  read_count = 0;
 }
 
 /* P2-3 */
@@ -157,11 +162,9 @@ int sys_open(char *file_name){
     return -1;
   }
 
-  // lock_acquire(&file_lock);
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
-    // lock_release(&file_lock);
     return -1;
   }
 
@@ -187,7 +190,6 @@ int sys_open(char *file_name){
   }
 
   list_push_back(fd_list_ptr, &fd->elem);
-  // lock_release(&file_lock);
 
   return fd->index;
 }
@@ -206,16 +208,29 @@ int syscall_filesize(int fd)
 }
 
 int sys_read (int fd, void* buffer, unsigned size) {
+  sema_down(&read_mutex);
+  read_count++;
+  if(read_count == 1){
+    sema_down(&rw_mutext);
+  }
+  sema_up(&read_mutex);
+
   if (fd == 0)
   {
     int i;
     uint8_t *temp_buf = (uint8_t *) buffer;
-    // lock_acquire(&file_lock);
     for(i = 0; i < size; i++)
     {
       temp_buf[i] = input_getc();
     }
-    // lock_release(&file_lock);
+
+    sema_down(&read_mutex);
+    read_count--;
+    if(read_count == 0){
+      sema_up(&rw_mutext);
+    }
+    sema_up(&read_mutex);
+
     return size;
   }
   else if(fd > 2)
@@ -223,31 +238,49 @@ int sys_read (int fd, void* buffer, unsigned size) {
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL || !is_user_vaddr(buffer)) 
     {
-      // lock_release(&file_lock);
+    sema_down(&read_mutex);
+    read_count--;
+    if(read_count == 0){
+      sema_up(&rw_mutext);
+    }
+    sema_up(&read_mutex);
+
       exit(-1);
     }
 
     off_t read_bytes = file_read(f, buffer, size);
-    // lock_release(&file_lock);
+    sema_down(&read_mutex);
+    read_count--;
+    if(read_count == 0){
+      sema_up(&rw_mutext);
+    }
+    sema_up(&read_mutex);
     return read_bytes;
   }
 
+  sema_down(&read_mutex);
+  read_count--;
+  if(read_count == 0){
+    sema_up(&rw_mutext);
+  }
+  sema_up(&read_mutex);
   return -1;
 }
 
 int sys_write (int fd, const void *buffer, unsigned size) {
-  // lock_acquire(&file_lock);
+  sema_down(&rw_mutext);
+
   if (fd == 1) {
     int i;
     putbuf(buffer, size);
-    // lock_release(&file_lock);
+    sema_up(&rw_mutext);
     return size;
   }
   else if(fd > 2){
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL) 
     {
-      // lock_release(&file_lock);
+      sema_up(&rw_mutext);
       exit(-1);
     }
 
@@ -255,12 +288,11 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     // printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
     off_t temp = file_write(f, buffer, size);
     // printf("writen bytes: %d", temp);
-
-    // lock_release(&file_lock);
+    sema_up(&rw_mutext);
     return temp;
   }
 
-  // lock_release(&file_lock);
+  sema_up(&rw_mutext);
   return -1; 
 }
 
