@@ -48,6 +48,7 @@ void
 {
   if (file != NULL)
     {
+      printf("file_close!!!\n");
       file_allow_write (file);
       inode_close (file->inode);
       free (file); 
@@ -135,6 +136,7 @@ void
 file_allow_write (struct file *file) 
 {
   ASSERT (file != NULL);
+  printf("file_allow_write!!!\n");
   if (file->deny_write) 
     {
       file->deny_write = false;
