@@ -122,7 +122,6 @@ void exit(int exit_status){
 
   struct list *fd_list = &current_thread->file_descriptor_list;
   while (!list_empty(fd_list)) {
-    printf("syscall-exit-file_close\n");
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
     file_close(fd->file_pt);
@@ -248,7 +247,7 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     }
 
     //test
-    printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
+    // printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
     off_t temp = file_write(f, buffer, size);
 
     // lock_release(&file_lock);
@@ -280,10 +279,7 @@ void sys_close(int fd_idx){
   }
 
   if(fd->file_pt) {
-    //test
-    printf("syscall-close-file_close\n");
     file_close(fd->file_pt);
-    printf("closed file writing flag: %d\n", fd->file_pt->deny_write);
   }
 }
 

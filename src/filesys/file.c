@@ -124,7 +124,6 @@ file_deny_write (struct file *file)
   if (!file->deny_write) 
     {
       file->deny_write = true;
-      printf("denying file writing flag: %d\n", file->deny_write);
       inode_deny_write (file->inode);
     }
 }
@@ -136,12 +135,9 @@ void
 file_allow_write (struct file *file) 
 {
   ASSERT (file != NULL);
-  printf("file_allow_write!!!\n");
-  printf("allowing file writing flag: %d\n", file->deny_write);
   if (file->deny_write) 
     {
       file->deny_write = false;
-      printf("allowing file writing flag: %d\n", file->deny_write);
       inode_allow_write (file->inode);
     }
 }
