@@ -23,18 +23,15 @@ struct file
     bool deny_write;            /* Has file_deny_write() been called? */
   };
 
-struct semaphore rw_mutex, read_mutex;
-static int read_count = 0;
+struct lock filesys_lock;
 
 static void syscall_handler (struct intr_frame *);
 
 void
 syscall_init (void) 
 {
+  lock_init (&filesys_lock);
   intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
-  sema_init(&rw_mutex, 1);
-  sema_init(&read_mutex, 1);
-  read_count = 0;
 }
 
 /* P2-3 */
@@ -139,7 +136,9 @@ void exit(int exit_status){
 }
 
 pid_t exec (const char *cmd) {
+  lock_acquire (&filesys_lock);
   return process_execute(cmd);
+  lock_release (&filesys_lock);
 }
 
 int wait (pid_t pid) {
@@ -149,12 +148,18 @@ int wait (pid_t pid) {
 bool sys_create(const char *file , unsigned initial_size)
 {
   if(file == NULL) exit(-1);
-  return filesys_create (file, initial_size);
+  lock_acquire (&filesys_lock);
+  bool create_rt_code = filesys_create (file, initial_size);
+  lock_release (&filesys_lock);
+  return create_rt_code;
 }
 
 bool sys_remove (const char *file) 
 {
-  return filesys_remove(file);
+  lock_acquire (&filesys_lock);
+  bool create_rm_code =  filesys_remove(file);
+  lock_release (&filesys_lock);
+  return create_rm_code;
 }
 
 int sys_open(char *file_name){
@@ -162,40 +167,18 @@ int sys_open(char *file_name){
     return -1;
   }
 
-  sema_down(&read_mutex);
-  read_count++;
-  //test
-  printf("read_count: %d", read_count);
-  if(read_count == 1){
-    sema_down(&rw_mutex);
-  }
-  sema_up(&read_mutex);
-
+  lock_acquire (&filesys_lock);
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
-    sema_down(&read_mutex);
-    read_count--;
-    //test
-    printf("read_count: %d", read_count);
-    if(read_count == 0){
-      sema_up(&rw_mutex);
-    }
-    sema_up(&read_mutex);
     return -1;
   }
 
   struct file_descriptor *fd;
   fd = palloc_get_page(0);
   if (!fd) {
-    sema_down(&read_mutex);
-    read_count--;
-    //test
-    printf("read_count: %d", read_count);
-    if(read_count == 0){
-      sema_up(&rw_mutex);
-    }
-    sema_up(&read_mutex);
+    palloc_free_page (fd);
+    lock_release (&filesys_lock);
     return -1;
   }
   fd->file_pt = file_ptr;
@@ -216,41 +199,29 @@ int sys_open(char *file_name){
 
   list_push_back(fd_list_ptr, &fd->elem);
 
-  sema_down(&read_mutex);
-  read_count--;
-  //test
-  printf("read_count: %d", read_count);
-  if(read_count == 0){
-    sema_up(&rw_mutex);
-  }
-  sema_up(&read_mutex);
-  
+  lock_release (&filesys_lock);
   return fd->index;
 }
 
 int syscall_filesize(int fd)
 {
+  lock_acquire (&filesys_lock);
   struct file *f;
   f = find_fd_by_idx(fd)->file_pt;
-  if(f == NULL) return -1;
+  if(f == NULL){
+    lock_release (&filesys_lock);
+    return -1;
+  }
   else
   {
     off_t temp = file_length(f);
-
+    lock_release (&filesys_lock);
     return temp;
   }
 }
 
 int sys_read (int fd, void* buffer, unsigned size) {
-  sema_down(&read_mutex);
-  read_count++;
-  //test
-  printf("read_count: %d", read_count);
-  if(read_count == 1){
-    sema_down(&rw_mutex);
-  }
-  sema_up(&read_mutex);
-
+  lock_acquire (&filesys_lock);
   if (fd == 0)
   {
     int i;
@@ -259,16 +230,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
     {
       temp_buf[i] = input_getc();
     }
-
-    sema_down(&read_mutex);
-    read_count--;
-    //test
-    printf("read_count: %d", read_count);
-    if(read_count == 0){
-      sema_up(&rw_mutex);
-    }
-    sema_up(&read_mutex);
-
+    lock_release (&filesys_lock);
     return size;
   }
   else if(fd > 2)
@@ -276,49 +238,29 @@ int sys_read (int fd, void* buffer, unsigned size) {
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL || !is_user_vaddr(buffer)) 
     {
-      sema_down(&read_mutex);
-      read_count--;
-      if(read_count == 0){
-        sema_up(&rw_mutex);
-      }
-      sema_up(&read_mutex);
-
+      lock_release (&filesys_lock);
       exit(-1);
     }
 
     off_t read_bytes = file_read(f, buffer, size);
-    sema_down(&read_mutex);
-    read_count--;
-    if(read_count == 0){
-      sema_up(&rw_mutex);
-    }
-    sema_up(&read_mutex);
+    lock_release (&filesys_lock);
     return read_bytes;
   }
-
-  sema_down(&read_mutex);
-  read_count--;
-  if(read_count == 0){
-    sema_up(&rw_mutex);
-  }
-  sema_up(&read_mutex);
+  lock_release (&filesys_lock);
   return -1;
 }
 
 int sys_write (int fd, const void *buffer, unsigned size) {
-  sema_down(&rw_mutex);
-
+  lock_acquire (&filesys_lock);
   if (fd == 1) {
-    int i;
     putbuf(buffer, size);
-    sema_up(&rw_mutex);
     return size;
   }
   else if(fd > 2){
     struct file *f = find_fd_by_idx(fd)->file_pt;
     if(f == NULL) 
     {
-      sema_up(&rw_mutex);
+      lock_release (&filesys_lock);
       exit(-1);
     }
 
@@ -326,20 +268,24 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     // printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
     off_t temp = file_write(f, buffer, size);
     // printf("writen bytes: %d", temp);
-    sema_up(&rw_mutex);
+    lock_release (&filesys_lock);
     return temp;
   }
-
-  sema_up(&rw_mutex);
+  lock_release (&filesys_lock);
   return -1; 
 }
 
 void sys_seek (int fd_idx, unsigned pos){
+  lock_acquire (&filesys_lock);
   file_seek(find_fd_by_idx(fd_idx)->file_pt, pos);
+  lock_release (&filesys_lock);
 }
 
 unsigned sys_tell (int fd_idx){
-  return file_tell(find_fd_by_idx(fd_idx)->file_pt);
+  lock_acquire (&filesys_lock);
+  bool tell_rt_code = file_tell(find_fd_by_idx(fd_idx)->file_pt);
+  lock_release (&filesys_lock);
+  return tell_rt_code;
 }
 
 void sys_close(int fd_idx){
@@ -347,6 +293,7 @@ void sys_close(int fd_idx){
     return;
   }
 
+  lock_acquire (&filesys_lock);
   struct file_descriptor *fd = find_fd_by_idx(fd_idx);
 
   list_remove(&(fd->elem));
@@ -357,6 +304,7 @@ void sys_close(int fd_idx){
   if(fd->file_pt) {
     file_close(fd->file_pt);
   }
+  lock_release (&filesys_lock);
 }
 
 // 유효한 주소를 가리키는지 확인하는 함수
