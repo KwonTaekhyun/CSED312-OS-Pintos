@@ -5,13 +5,6 @@
 
 struct inode;
 
-struct file 
-  {
-    struct inode *inode;        /* File's inode. */
-    off_t pos;                  /* Current position. */
-    int deny_write;            /* Has file_deny_write() been called? */
-  };
-
 /* Opening and closing files. */
 struct file *file_open (struct inode *);
 struct file *file_reopen (struct file *);

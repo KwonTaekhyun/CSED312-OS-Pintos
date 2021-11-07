@@ -14,6 +14,14 @@
 #include "filesys/file.h"
 
 #include "lib/debug.h"
+#include "lib/user/syscall.h"
+
+struct file 
+  {
+    struct inode *inode;        /* File's inode. */
+    off_t pos;                  /* Current position. */
+    bool deny_write;            /* Has file_deny_write() been called? */
+  };
 
 static void syscall_handler (struct intr_frame *);
 
