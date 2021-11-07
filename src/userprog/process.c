@@ -141,7 +141,7 @@ start_process (void *file_name_)
   sema_up(&thread_current()->parent->sema_load);
 
   if (!success){
-    thread_exit ();
+    exit(-1);
   }
   //test
   // hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
@@ -217,15 +217,6 @@ process_exit (void)
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
     file_close(fd->file_pt);
     palloc_free_page(fd);
-  }
-
-  struct list_elem* e;
-  struct thread* t;
-  for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
-    t = list_entry(e, struct thread, child);
-    if (t->exit_status == -1) {
-      return process_wait(t->tid);
-    }
   }
   
   sema_up(&(cur->sema_wait));
