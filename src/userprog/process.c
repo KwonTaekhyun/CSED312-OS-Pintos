@@ -73,6 +73,8 @@ process_execute (const char *file_name)
     }
   }
 
+  palloc_free_page (arg_copy); 
+
   return tid;
 }
 
@@ -207,6 +209,7 @@ process_exit (void)
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
     file_close(fd->file_pt);
+    palloc_free_page(fd);
   }
   
   sema_up(&(cur->sema_wait));
