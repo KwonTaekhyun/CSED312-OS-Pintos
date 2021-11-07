@@ -267,6 +267,9 @@ void sys_close(int fd_idx){
   struct file_descriptor *fd = find_fd_by_idx(fd_idx);
 
   list_remove(&(fd->elem));
+  if(thread_current()->cur_file == fd->file_pt){
+    thread_current()->cur_file == NULL;
+  }
 
   if(fd->file_pt) {
     printf("syscall-close-file_close\n");

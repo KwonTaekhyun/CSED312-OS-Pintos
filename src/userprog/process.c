@@ -388,7 +388,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
-  file_deny_write(t->cur_file);
+  file_deny_write(file);
 
   success = true;
 
