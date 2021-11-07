@@ -199,6 +199,7 @@ thread_create (const char *name, int priority,
 
   //p2-3
   t->max_fd = 2;
+  t->parent = thread_current();
   list_init(&t->file_descriptor_list);
   /* Add to run queue. */
   thread_unblock (t);
@@ -477,6 +478,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&(t->children));
   sema_init(&(t->sema_wait), 0);
   sema_init(&(t->sema_exit), 0);
+  sema_init(&(t->sema_load), 0);
   list_push_back(&(running_thread()->children), &(t->child));
   #endif
 }

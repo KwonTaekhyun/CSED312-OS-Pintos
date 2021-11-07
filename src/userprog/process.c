@@ -53,12 +53,24 @@ process_execute (const char *file_name)
     return -1;
   }
 
+
   //test
   //printf("at process_exec : %s\n",arg_copy);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
+  sema_down(&thread_current()->sema_load);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
+
+  struct list_elem* e;
+  struct thread* t;
+  for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
+    t = list_entry(e, struct thread, child);
+    if (t->exit_status == -1) {
+      return process_wait(tid);
+    }
+  }
+
   return tid;
 }
 
@@ -115,6 +127,7 @@ start_process (void *file_name_)
   }
   /* If load failed, quit. */
   palloc_free_page (file_name);
+  sema_up(&thread_current()->parent->sema_load);
   if (!success){
     thread_exit ();
   }

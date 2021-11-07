@@ -272,9 +272,9 @@ void sys_close(int fd_idx){
   }
 
   if(fd->file_pt) {
+    //test
     printf("syscall-close-file_close\n");
     file_close(fd->file_pt);
-    palloc_free_page(fd);
   }
 }
 

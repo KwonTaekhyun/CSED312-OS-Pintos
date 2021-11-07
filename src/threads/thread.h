@@ -110,10 +110,12 @@ struct thread
     /*---------P2--------*/
     struct list children;
     struct list_elem child;
+    struct thread *parent;
     int exit_status;
 
     struct semaphore sema_wait;
     struct semaphore sema_exit;
+    struct semaphore sema_load;
 // #endif
 
     //p2-3 fd
