@@ -165,6 +165,7 @@ int sys_open(char *file_name){
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
+    lock_release (&filesys_lock);
     return -1;
   }
 
@@ -245,6 +246,7 @@ int sys_write (int fd, const void *buffer, unsigned size) {
   lock_acquire (&filesys_lock);
   if (fd == 1) {
     putbuf(buffer, size);
+    lock_release (&filesys_lock);
     return size;
   }
   else if(fd > 2){
