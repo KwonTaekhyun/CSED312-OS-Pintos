@@ -120,7 +120,7 @@ start_process (void *file_name_)
   sema_up(&thread_current()->parent->sema_load);
 
   if (!success){
-    exit(-1);
+    sys_exit(-1);
   }
 
   /* Start the user process by simulating a return from an
