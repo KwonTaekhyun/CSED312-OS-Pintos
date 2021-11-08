@@ -10,9 +10,6 @@ void process_activate (void);
 
 //2-2
 void argu_stack(char **argv, int argc, void **esp);
-//2-3 fd
-int process_add_file (struct file *f);
-struct file *process_get_file (int fd);
-void process_close_file (int fd);
+
 
 #endif /* userprog/process.h */
