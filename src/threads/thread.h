@@ -87,7 +87,7 @@ typedef int tid_t;
    struct file_descriptor
    {
       int index;
-      struct file *file_pt;
+      struct file *file_ptr;
       struct list_elem elem;
    };
 struct thread

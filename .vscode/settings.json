@@ -8,6 +8,8 @@
     "cstdlib": "c",
     "locale": "c",
     "version": "cpp",
-    "__hash_table": "c"
+    "__hash_table": "c",
+    "*.inc": "c",
+    "__mutex_base": "c"
   }
 }

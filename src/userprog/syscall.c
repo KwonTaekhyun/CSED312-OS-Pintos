@@ -18,13 +18,11 @@
 #include "threads/palloc.h"
 
 struct file 
-  {
-    struct inode *inode;        /* File's inode. */
-    off_t pos;                  /* Current position. */
-    bool deny_write;            /* Has file_deny_write() been called? */
-  };
-
-struct lock filesys_lock;
+{
+  struct inode *inode;        /* File's inode. */
+  off_t pos;                  /* Current position. */
+  bool deny_write;            /* Has file_deny_write() been called? */
+};
 
 static void syscall_handler (struct intr_frame *);
 
@@ -40,9 +38,6 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
-  //test
-  // printf("syscall-nr: %d\n", *(uint32_t *)(f->esp));
-
   is_valid_address(f->esp, 0, 3);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
@@ -51,17 +46,17 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_EXIT:{
       is_valid_address(f->esp, 4, 7);
-      exit(*(uint32_t *)(f->esp + 4));
+      sys_exit(*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_EXEC:{
       is_valid_address(f->esp, 4, 7);
-      f->eax = exec((const char *)*(uint32_t *)(f->esp + 4));
+      f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_WAIT:{
       is_valid_address(f->esp, 4, 7);
-      f->eax = wait((pid_t)*(uint32_t *)(f->esp + 4));
+      f->eax = sys_wait((pid_t)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_CREATE:{
@@ -79,7 +74,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_FILESIZE:{
       is_valid_address(f->esp, 4, 7); 
-      f->eax = syscall_filesize((int)*(uint32_t *)(f->esp + 4));
+      f->eax = sys_filesize((int)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_READ:{
@@ -112,13 +107,9 @@ syscall_handler (struct intr_frame *f)
 
 // system call 구현 함수들
 
-void exit(int exit_status){
+void sys_exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
-
-  //test
-  // debug_backtrace();
-  // printf("\n");
 
   file_close(current_thread->cur_file);
 
@@ -126,7 +117,8 @@ void exit(int exit_status){
   while (!list_empty(fd_list)) {
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-    file_close(fd->file_pt);
+    
+    file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
 
@@ -134,25 +126,25 @@ void exit(int exit_status){
   thread_exit();
 }
 
-pid_t exec (const char *cmd) {
+pid_t sys_exec (const char *cmd) {
   return process_execute(cmd);
 }
 
-int wait (pid_t pid) {
+int sys_wait (pid_t pid) {
   return process_wait(pid);
 }
 
 bool sys_create(const char *file , unsigned initial_size)
 {
-  if(file == NULL) exit(-1);
-  bool create_rt_code = filesys_create (file, initial_size);
-  return create_rt_code;
+  if(file == NULL){
+    sys_exit(-1);
+  }
+  return filesys_create (file, initial_size);
 }
 
 bool sys_remove (const char *file) 
 {
-  bool create_rm_code =  filesys_remove(file);
-  return create_rm_code;
+  return  filesys_remove(file);
 }
 
 int sys_open(char *file_name){
@@ -161,6 +153,7 @@ int sys_open(char *file_name){
   }
 
   lock_acquire (&filesys_lock);
+
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
@@ -168,14 +161,15 @@ int sys_open(char *file_name){
     return -1;
   }
 
-  struct file_descriptor *fd;
-  fd = palloc_get_page(0);
+  struct file_descriptor *fd = palloc_get_page(0);
+
   if (!fd) {
     palloc_free_page (fd);
     lock_release (&filesys_lock);
     return -1;
   }
-  fd->file_pt = file_ptr;
+
+  fd->file_ptr = file_ptr;
 
   struct list *fd_list_ptr = &(thread_current()->file_descriptor_list);
   if(list_empty(fd_list_ptr)){
@@ -185,40 +179,36 @@ int sys_open(char *file_name){
     fd->index = (list_entry(list_back(fd_list_ptr), struct file_descriptor, elem)->index) + 1;
   }
 
-  //test
-  // printf("file_name: %s\n", file_name);
   if(thread_current()->name == file_name){
-    file_deny_write(fd->file_pt);
+    file_deny_write(fd->file_ptr);
   }
 
   list_push_back(fd_list_ptr, &fd->elem);
-
   lock_release (&filesys_lock);
   return fd->index;
 }
 
-int syscall_filesize(int fd)
+int sys_filesize(int fd)
 {
   struct file *f;
-  f = find_fd_by_idx(fd)->file_pt;
+  f = find_fd_by_idx(fd)->file_ptr;
+
   if(f == NULL){
     return -1;
   }
   else
   {
-    off_t temp = file_length(f);
-    return temp;
+    return (int) file_length(f);
   }
 }
 
 int sys_read (int fd, void* buffer, unsigned size) {
   lock_acquire (&filesys_lock);
-  if (fd == 0)
-  {
-    int i;
+
+  if (fd == 0){
     uint8_t *temp_buf = (uint8_t *) buffer;
-    for(i = 0; i < size; i++)
-    {
+    int i;
+    for(i = 0; i < size; i++){
       temp_buf[i] = input_getc();
     }
     lock_release (&filesys_lock);
@@ -226,53 +216,54 @@ int sys_read (int fd, void* buffer, unsigned size) {
   }
   else if(fd > 2)
   {
-    struct file *f = find_fd_by_idx(fd)->file_pt;
-    if(f == NULL || !is_user_vaddr(buffer)) 
-    {
+    struct file *f = find_fd_by_idx(fd)->file_ptr;
+    if(f == NULL || !is_user_vaddr(buffer)){
       lock_release (&filesys_lock);
-      exit(-1);
+      sys_exit(-1);
     }
 
-    off_t read_bytes = file_read(f, buffer, size);
+    int read_bytes = (int) file_read(f, buffer, size);
+
     lock_release (&filesys_lock);
     return read_bytes;
   }
+
   lock_release (&filesys_lock);
   return -1;
 }
 
 int sys_write (int fd, const void *buffer, unsigned size) {
   lock_acquire (&filesys_lock);
+
   if (fd == 1) {
     putbuf(buffer, size);
     lock_release (&filesys_lock);
     return size;
   }
   else if(fd > 2){
-    struct file *f = find_fd_by_idx(fd)->file_pt;
+    struct file *f = find_fd_by_idx(fd)->file_ptr;
     if(f == NULL) 
     {
       lock_release (&filesys_lock);
-      exit(-1);
+      sys_exit(-1);
     }
 
-    //test
-    // printf("current thread: %s, denying: %d\n", thread_current()->name, thread_current()->cur_file->deny_write);
-    off_t temp = file_write(f, buffer, size);
-    // printf("writen bytes: %d", temp);
+    int temp = (int) file_write(f, buffer, size);
+
     lock_release (&filesys_lock);
     return temp;
   }
+
   lock_release (&filesys_lock);
   return -1; 
 }
 
 void sys_seek (int fd_idx, unsigned pos){
-  file_seek(find_fd_by_idx(fd_idx)->file_pt, pos);
+  file_seek(find_fd_by_idx(fd_idx)->file_ptr, pos);
 }
 
 unsigned sys_tell (int fd_idx){
-  return file_tell(find_fd_by_idx(fd_idx)->file_pt);
+  return file_tell(find_fd_by_idx(fd_idx)->file_ptr);
 }
 
 void sys_close(int fd_idx){
@@ -283,12 +274,13 @@ void sys_close(int fd_idx){
   struct file_descriptor *fd = find_fd_by_idx(fd_idx);
 
   list_remove(&(fd->elem));
-  if(thread_current()->cur_file == fd->file_pt){
+
+  if(thread_current()->cur_file == fd->file_ptr){
     thread_current()->cur_file == NULL;
   }
 
-  if(fd->file_pt) {
-    file_close(fd->file_pt);
+  if(fd->file_ptr) {
+    file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
 }
@@ -296,23 +288,9 @@ void sys_close(int fd_idx){
 // 유효한 주소를 가리키는지 확인하는 함수
 void is_valid_address(void *esp, int start, int end){
   if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
-    exit(-1);
+    sys_exit(-1);
   }
 }
-
-// esp에서 n개의 인자들을 읽어오는 함수
-int read_argument (void *SP, void *arg, int bytes){
-  if(!(is_user_vaddr(SP) && is_user_vaddr(SP + bytes))){
-    return false;
-  }
-
-  int i;
-  for(i = 0; i < bytes; i++){
-    *(char *)(arg + i) = *(char *)(SP + i);
-  }
-  return true;
-}
-
 struct file_descriptor* find_fd_by_idx(int fd_idx){
   struct file_descriptor *fd;
   struct list_elem *fd_elem = list_begin(&thread_current()->file_descriptor_list);
@@ -322,9 +300,10 @@ struct file_descriptor* find_fd_by_idx(int fd_idx){
     if(fd_idx == fd->index){
        break;
     }
+
     fd_elem = list_next(fd_elem);
     if(fd_elem == list_end(&thread_current()->file_descriptor_list)){
-      exit(-1);
+      sys_exit(-1);
     }
   }
   return fd;

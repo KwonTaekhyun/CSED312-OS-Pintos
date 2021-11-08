@@ -34,20 +34,20 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
-  char *arg_copy; //2-2
+  char *arg_copy;
   tid_t tid;
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
-  arg_copy = palloc_get_page (0); //2-2
+  arg_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
   if (arg_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
-  //2-2
   strlcpy (arg_copy, fn_copy, PGSIZE);
+
   char *argv;
   arg_copy = strtok_r(arg_copy," ",&argv);
 
@@ -55,17 +55,9 @@ process_execute (const char *file_name)
     return -1;
   }
 
-
-  //test
-  //printf("at process_exec : %s\n",arg_copy);
-  /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
 
-  //test
-  // printf("waiting\nparent thread: %s\n", thread_current()->parent ? thread_current()->parent->name : 'null');
   sema_down(&thread_current()->sema_load);
-  //test
-  // printf("awakening\nparent thread: %s\n", thread_current()->parent ? thread_current()->parent->name : 'null');
 
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
@@ -93,48 +85,35 @@ start_process (void *file_name_)
   struct intr_frame if_;
   bool success;
 
-  //2-2
   char *argv[64];
   int argc;
   char *token;
   char *save_ptr;
+
   token = strtok_r(file_name, " ", &save_ptr);
   argv[0] = token;
-  //test
-  //printf("filename in start_process : %s, len : %d\n", argv[0], strlen(argv[0]));
   argc = 1;
   while(token!=NULL)
   {
     token = strtok_r(NULL, " ", &save_ptr);
     if(token == NULL) break;
     argv[argc] = token;
-    //test
-    // printf("argv: %s, argc : %d\n", argv[argc], argc);
     argc++;
   }
-  //test
-  //int i;
-  // printf("argc = %d\n", argc);
-  // for(i=0;i<argc;i++)
-  // {
-  //   printf("argv[i] = %s\n",argv[i]);
-  // }
+
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  //test
-  //printf("Before load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+
   success = load (argv[0], &if_.eip, &if_.esp);
-  //test
-  // printf("After load : %s, %d in start_process\n", argv[0], strlen(argv[0]));
+
   if(success)
   {
-    //test
-    //printf("Before argu_stack : %s, %d in start_process\n", argv[0], strlen(argv[0]));
     argu_stack(argv, argc, &if_.esp);
   }
+
   /* If load failed, quit. */
   palloc_free_page (file_name);
 
@@ -143,8 +122,6 @@ start_process (void *file_name_)
   if (!success){
     exit(-1);
   }
-  //test
-  // hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
@@ -172,13 +149,14 @@ process_wait (tid_t child_tid)
   struct thread *current_thread = thread_current();
   int exit_status = -1;
 
-  for(child_elem = list_begin(&(current_thread->children)); 
-        child_elem != list_end(&(current_thread->children)); child_elem = list_next(child_elem)){
+  for(child_elem = list_begin(&(current_thread->children)); child_elem != list_end(&(current_thread->children)); child_elem = list_next(child_elem)){
     struct thread *thr = list_entry(child_elem, struct thread, child);
     if(thr->tid == child_tid){
       sema_down(&(thr->sema_wait));
+
       list_remove(child_elem);
       exit_status = thr->exit_status;
+
       sema_up(&(thr->sema_exit));
       break;
     }
@@ -215,7 +193,8 @@ process_exit (void)
   while (!list_empty(fd_list)) {
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-    file_close(fd->file_pt);
+
+    file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
   
@@ -569,54 +548,44 @@ install_page (void *upage, void *kpage, bool writable)
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
 }
 
-//2-2
+/* P2 */
 void argu_stack(char **argv, int argc, void **esp)
 {
   int i,j;
   char **argv_addr;
-  //test
-  // printf("%s, %d\n", argv[0], strlen(argv[0]));
   argv_addr = (char**)malloc(sizeof(char*)*argc);
+
   for(i = argc - 1 ; i >= 0 ; i -- )
   {
-    for(j=strlen(argv[i]); j >=0; j--)
+    for(j = strlen(argv[i]); j >= 0; j--)
     {
-      //test
-      // printf("i: %d, j: %d, argv[i] = %s\n",i,j,argv[i]);
-      *esp-=1;
-      //test
-      // printf("esp-1 success\n");
-      // printf("argv[i][j] : %c\n",argv[i][j]);
+      *esp -= 1;
       **(char**)esp = argv[i][j];
     }
-    /* *esp-=strlen(argv[i])+1;
-    memcpy(*esp, argv[i], strlen(argv[i]) + 1); */
     argv_addr[i] = (char*) *esp;
   }
-  while((int)*esp%4!= 0)
+
+  while((int)*esp % 4 != 0)
   {
-    *esp-=sizeof(char);
+    *esp -= sizeof(char);
     char temp = 0;
     memcpy(*esp, &temp, sizeof(char));
   }
+
   char* argv_null = 0;
-  *esp-=sizeof(char*);
+  *esp -= sizeof(char*);
   memcpy(*esp, &argv_null, sizeof(char*));
-  for (i=argc-1;i>=0;i--)
+  for (i = argc - 1; i >= 0; i--)
   {
-    *esp-=sizeof(char**);
+    *esp -= sizeof(char**);
     memcpy(*esp, &argv_addr[i], sizeof(char**));
   }
   char **argv_pointer = *esp;
-  *esp-=sizeof(char**);
-  memcpy(*esp,&argv_pointer,sizeof(char**));
-  *esp-=sizeof(int);
-  //how about this?
-  memcpy(*esp,&argc,sizeof(int));
-  *esp-=sizeof(void*);
+  *esp -= sizeof(char**);
+  memcpy(*esp, &argv_pointer, sizeof(char**));
+  *esp -= sizeof(int);
+  memcpy(*esp, &argc, sizeof(int));
+  *esp -= sizeof(void*);
   void *ret = 0;
-  memcpy(*esp,&ret,sizeof(void*));
-
-
-
+  memcpy(*esp, &ret, sizeof(void*));
 }
