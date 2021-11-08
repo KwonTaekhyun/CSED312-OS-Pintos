@@ -65,8 +65,6 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_CREATE:{
-      char *file;
-      unsigned int initial_size;
       is_valid_address(f->esp, 4, 11);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
       break;
@@ -80,7 +78,6 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_FILESIZE:{
-      int fd;
       is_valid_address(f->esp, 4, 7); 
       f->eax = syscall_filesize((int)*(uint32_t *)(f->esp + 4));
       break;

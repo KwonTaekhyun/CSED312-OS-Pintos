@@ -113,7 +113,7 @@ start_process (void *file_name_)
     argc++;
   }
   //test
-  int i;
+  //int i;
   // printf("argc = %d\n", argc);
   // for(i=0;i<argc;i++)
   // {
