@@ -172,15 +172,15 @@ int sys_open(char *file_name){
   }
 
   fd->file_ptr = file_ptr;
-
   struct list *fd_list_ptr = &(thread_current()->file_descriptor_list);
+  /* struct list *fd_list_ptr = &(thread_current()->file_descriptor_list);
   if(list_empty(fd_list_ptr)){
     fd->index = 3;
   }
   else{
     fd->index = (list_entry(list_back(fd_list_ptr), struct file_descriptor, elem)->index) + 1;
-  }
-
+  } */
+  fd->index = thread_current()->max_fd;
   if(thread_current()->name == file_name){
     file_deny_write(fd->file_ptr);
   }
