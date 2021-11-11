@@ -65,6 +65,8 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_REMOVE:{
+      is_valid_address(f->esp, 4, 7);
+      f->eax = sys_remove((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_OPEN:{
