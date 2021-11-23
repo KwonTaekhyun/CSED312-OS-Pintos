@@ -7,6 +7,8 @@
 
 /*----------P2----------*/
 #include "threads/synch.h"
+//p3
+#include"src/lib/kernel/hash.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -122,6 +124,10 @@ struct thread
     struct list file_descriptor_list;
     //p2-4
     struct file* cur_file;
+
+    //p3
+    struct hash page_table;
+
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };

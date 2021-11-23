@@ -22,6 +22,8 @@
 /*-------------P2-----------------*/
 #include "threads/synch.h"
 #include <list.h>
+//p3
+#include "vm/page.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -100,7 +102,9 @@ start_process (void *file_name_)
     argv[argc] = token;
     argc++;
   }
-
+  //p3
+  pt_init(&thread_current()->page_table);
+  
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
