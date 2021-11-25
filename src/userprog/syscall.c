@@ -306,3 +306,12 @@ struct file_descriptor* find_fd_by_idx(int fd_idx){
   }
   return fd;
 }
+
+/* P3-5 */
+mapid_t sys_mmap(int fd, void *vaddr){
+
+}
+
+void sys_mumap(mapid_t mapid){
+  
+}
