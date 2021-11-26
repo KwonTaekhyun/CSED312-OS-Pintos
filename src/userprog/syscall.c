@@ -104,6 +104,16 @@ syscall_handler (struct intr_frame *f)
       sys_close((int)*(uint32_t *)(f->esp + 4));
       break;
     }
+    case SYS_MMAP: {
+      is_valid_address(f->esp, 4, 11);
+      f->eax = sys_mmap((mapid_t)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8));
+      break;
+    }
+    case SYS_MUNMAP: {
+      is_valid_address(f->esp, 4, 7); 
+      sys_munmap((mapid_t)*(uint32_t *)(f->esp + 4));
+      break;
+    }
   }
 }
 
@@ -308,10 +318,24 @@ struct file_descriptor* find_fd_by_idx(int fd_idx){
 }
 
 /* P3-5 */
-mapid_t sys_mmap(int fd, void *vaddr){
+mapid_t sys_mmap(int fd_idx, void *addr){
 
+  if(fd_idx < 2 || !addr || pg_ofs(addr) != 0 || !is_user_vaddr(addr)){
+    return -1;
+  }
+
+  struct file_descriptor* fd = find_fd_by_idx(fd_idx);
+
+  struct file* file_ptr = file_reopen(fd->file_ptr);
+  if(!file_ptr){
+    return -1;
+  }
+
+  /* file ptr를 addr에 lazy loading */
+
+  
 }
 
 void sys_mumap(mapid_t mapid){
-  
+
 }
