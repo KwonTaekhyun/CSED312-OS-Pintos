@@ -16,6 +16,8 @@
 #include "lib/debug.h"
 #include "lib/user/syscall.h"
 #include "threads/palloc.h"
+//p3
+#include "vm/page.h"
 
 struct file 
 {
@@ -81,6 +83,8 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_READ:{
       is_valid_address(f->esp, 4, 15);
+      //p3
+      //check_buffer(f->esp + 8, 4, esp,)
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
@@ -306,3 +310,15 @@ struct file_descriptor* find_fd_by_idx(int fd_idx){
   }
   return fd;
 }
+struct pte *check_addr(void *addr)
+{
+    return pte_find(addr);
+}
+/* void check_buffer(void *buf, unsigned size)
+{
+  uint8_t *i;
+  for(i = buf; i<(uint8_t)buf+size; (uint8_t)buf+=PGSIZE)
+  {
+    if(check_addr(i)->writable == false) sys_exit(-1); 
+  }
+} */

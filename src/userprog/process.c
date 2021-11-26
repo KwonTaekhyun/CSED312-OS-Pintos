@@ -488,7 +488,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       struct pte *page = malloc(sizeof(struct pte));
       if(page != NULL)
       {
-        //page->type = ?
+        page->type = VM_BIN;
         page->file = file;
         page->writable = writable;
         page->vaddr = upage;
@@ -526,7 +526,22 @@ setup_stack (void **esp)
       else
         palloc_free_page (kpage);
     }
-    
+    //p3
+      struct pte *page = malloc(sizeof(struct pte));
+      if(page != NULL)
+      {
+        page->vaddr = ((uint8_t *)PHYS_BASE)-PGSIZE; 
+        page->writable = true; 
+        page->type = VM_ANON; 
+        page->is_loaded = true;
+        page->file = NULL;
+        page->offset = 0;
+        page->read_bytes = 0;
+        page->zero_bytes = 0;
+        page->frame = NULL;
+        pte_insert(&thread_current()->page_table, &page->elem);
+      }
+
   return success;
 }
 
