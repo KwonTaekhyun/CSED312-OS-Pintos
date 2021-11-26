@@ -17,6 +17,8 @@
 #include "lib/user/syscall.h"
 #include "threads/palloc.h"
 
+/* P2-3 */
+#include "threads/malloc.h"
 struct file 
 {
   struct inode *inode;        /* File's inode. */
@@ -332,10 +334,48 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   }
 
   /* file ptr를 addr에 lazy loading */
+  int i;
+  int file_bytes = file_length(file_ptr);
+  if(!file_bytes){
+    return -1;
+  }
+  int file_page = file_bytes / PGSIZE;
+  for(i = 0; i < file_page; i++){
+    // ** 페이지 단위로 pte 생성 (pte_create_with_file) **
+  }
+  // ** 남은 파일의 데이터로 pte를 생성하고 나머지를 0으로 채운다. (pte_create_with_file_and_zero) **
 
-  
+  struct thread *current_thread = thread_current();
+  struct file_mapping* file_mapping_entry = malloc(sizeof(struct file_mapping));
+  file_mapping_entry->file_ptr = file_ptr;
+  file_mapping_entry->mapid = current_thread->file_mapping_num++;
+  list_push_back(&(current_thread->file_mapping_table), file_mapping_entry);
+
+  return file_mapping_entry->mapid;
 }
 
 void sys_mumap(mapid_t mapid){
+  struct thread *current_thread = thread_current();
+  struct list_elem *e;
+  struct file_mapping *file_mapping_entry;
+  for (e = list_begin (current_thread->file_mapping_table); e != list_end (list); e = list_next (e)){
+    file_mapping_entry = list_entry (e, struct file_mapping, file_mapping_elem);
+    if (file_mapping_entry->mapid == id){
+      break;
+    }
+  }
+  if(!file_mapping_entry){
+    return;
+  }
 
+  int file_bytes = file_length(file_mapping_entry->file_ptr);
+  int file_page = file_bytes / PGSIZE + 1;
+  for(i = 0; i < file_page; i++){
+    // ** 페이지 단위로 pte 할당해제 **
+    // ** 만약 frame이 할당되어 있다면 frame 제거하고 dirty할 경우 disk에 작성한다. **
+  }
+  
+  list_remove(&(file_mapping_entry->file_mapping_elem));
+  file_close(file_mapping_entry->file_ptr);
+  free(file_mapping_entry);
 }

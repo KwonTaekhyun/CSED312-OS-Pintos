@@ -129,6 +129,7 @@ struct thread
     /*---------P3--------*/
     struct hash page_table;
 
+   mapid_t file_mapping_num;
    struct list file_mapping_table;
 
     /* Owned by thread.c. */
