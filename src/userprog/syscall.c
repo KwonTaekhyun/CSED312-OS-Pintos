@@ -53,6 +53,8 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_EXEC:{
       is_valid_address(f->esp, 4, 7);
+      //p3
+      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -63,6 +65,8 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_CREATE:{
       is_valid_address(f->esp, 4, 11);
+      //p3
+      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
       break;
     }
@@ -73,6 +77,8 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_OPEN:{
       is_valid_address(f->esp, 4, 7);
+      //p3
+      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -84,12 +90,14 @@ syscall_handler (struct intr_frame *f)
     case SYS_READ:{
       is_valid_address(f->esp, 4, 15);
       //p3
-      //check_buffer(f->esp + 8, 4, esp,)
+      check_buffer((void *)*(uint32_t *)(f->esp + 8), 4, f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
       is_valid_address(f->esp, 4, 15);
+      //p3
+      check_buffer((void *)*(uint32_t *)(f->esp + 8), 4, f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
@@ -314,11 +322,24 @@ struct pte *check_addr(void *addr)
 {
     return pte_find(addr);
 }
-/* void check_buffer(void *buf, unsigned size)
+void check_buffer(void *buf, unsigned size, void *esp, bool to_write)
 {
   uint8_t *i;
-  for(i = buf; i<(uint8_t)buf+size; (uint8_t)buf+=PGSIZE)
+  struct pte *page;
+  for(i = buf; i<(uint8_t)buf+size; i++)
   {
-    if(check_addr(i)->writable == false) sys_exit(-1); 
+    page = check_addr(i);
+    if((page==NULL) || (!page->writable && to_write)) sys_exit(-1); 
   }
-} */
+}
+void check_valid_string(const void *str, void *esp)
+{
+  uint8_t *i;
+  struct pte *page;
+  char *str_temp = str;
+  for(i = 0; i<strlen(str_temp); i++)
+  {
+    page = check_addr(i);
+    if(page==NULL) sys_exit(-1); 
+  }
+}
