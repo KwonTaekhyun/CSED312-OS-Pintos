@@ -26,3 +26,7 @@ bool pte_insert(struct hash *pt, struct pte *pte);
 bool pte_delete(struct hash *pt, struct pte *pte);
 struct pte *pte_find(void *vaddr);
 void pt_destroy(struct hash *pt);
+void pt_destory_by_addr (void* addr);
+bool pte_create_by_file(void* addr, struct file* file, 
+    off_t offset, uint32_t read_bytes, uint32_t zero_bytes, 
+    bool writable);

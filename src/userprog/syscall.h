@@ -34,8 +34,14 @@ struct file_descriptor* find_fd_by_idx(int fd_idx);
 struct file_mapping{
     mapid_t mapid;
     struct file *file_ptr;
+    void *addr;
     struct list_elem file_mapping_elem;
     struct list pte_list;
-}
+    int file_page_num;
+};
+
+typedef int mapid_t;
+mapid_t sys_mmap(int fd_idx, void *addr);
+void sys_munmap(mapid_t mapid);
 
 #endif /* userprog/syscall.h */

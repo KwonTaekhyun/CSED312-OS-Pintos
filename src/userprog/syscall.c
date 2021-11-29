@@ -18,7 +18,7 @@
 #include "threads/palloc.h"
 
 /* P2-3 */
-#include "threads/malloc.h"
+#include "vm/page.h"
 struct file 
 {
   struct inode *inode;        /* File's inode. */
@@ -326,41 +326,66 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     return -1;
   }
 
+  lock_acquire (&filesys_lock);
+
   struct file_descriptor* fd = find_fd_by_idx(fd_idx);
 
   struct file* file_ptr = file_reopen(fd->file_ptr);
   if(!file_ptr){
+    lock_release (&filesys_lock);
     return -1;
   }
 
   /* file ptr를 addr에 lazy loading */
   int i;
+  off_t offset = 0;
   int file_bytes = file_length(file_ptr);
   if(!file_bytes){
+    lock_release (&filesys_lock);
     return -1;
   }
-  int file_page = file_bytes / PGSIZE;
-  for(i = 0; i < file_page; i++){
+  int file_page_num = file_bytes / PGSIZE;
+  for(i = 0; i < file_page_num; i++){
     // ** 페이지 단위로 pte 생성 (pte_create_with_file) **
+    size_t read_bytes = file_bytes - (i * PGSIZE) > PGSIZE ? PGSIZE : file_bytes - (i * PGSIZE);
+
+    bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
+      read_bytes, PGSIZE - read_bytes, true);
+
+    if(!pte_created){
+        int j;
+        for(j = i ; j > -1; j--){
+          pt_destory_by_addr (addr + (j * PGSIZE));
+        }
+        file_close(file_ptr);
+        lock_release (&filesys_lock);
+        return -1;
+    }
+
+    offset += read_bytes;
   }
-  // ** 남은 파일의 데이터로 pte를 생성하고 나머지를 0으로 채운다. (pte_create_with_file_and_zero) **
 
   struct thread *current_thread = thread_current();
   struct file_mapping* file_mapping_entry = malloc(sizeof(struct file_mapping));
   file_mapping_entry->file_ptr = file_ptr;
+  file_mapping_entry->addr = addr;
   file_mapping_entry->mapid = current_thread->file_mapping_num++;
+  file_mapping_entry->file_page_num = file_page_num;
   list_push_back(&(current_thread->file_mapping_table), file_mapping_entry);
+
+  lock_release (&filesys_lock);
 
   return file_mapping_entry->mapid;
 }
 
-void sys_mumap(mapid_t mapid){
+void sys_munmap(mapid_t mapid){
   struct thread *current_thread = thread_current();
   struct list_elem *e;
   struct file_mapping *file_mapping_entry;
-  for (e = list_begin (current_thread->file_mapping_table); e != list_end (list); e = list_next (e)){
+  for (e = list_begin (&current_thread->file_mapping_table); 
+        e != list_end (&current_thread->file_mapping_table); e = list_next (e)){
     file_mapping_entry = list_entry (e, struct file_mapping, file_mapping_elem);
-    if (file_mapping_entry->mapid == id){
+    if (file_mapping_entry->mapid == mapid){
       break;
     }
   }
@@ -368,14 +393,30 @@ void sys_mumap(mapid_t mapid){
     return;
   }
 
-  int file_bytes = file_length(file_mapping_entry->file_ptr);
-  int file_page = file_bytes / PGSIZE + 1;
-  for(i = 0; i < file_page; i++){
+  lock_acquire (&filesys_lock);
+
+  int i;
+  int file_page_num = file_mapping_entry->file_page_num;
+  for(i = 0; i < file_page_num; i++){
     // ** 페이지 단위로 pte 할당해제 **
     // ** 만약 frame이 할당되어 있다면 frame 제거하고 dirty할 경우 disk에 작성한다. **
+    struct pte* page = pte_find(file_mapping_entry->addr + (i * PGSIZE));
+    if(!page){
+      continue;
+    }
+    if(page->frame)
+    {
+      if(pagedir_is_dirty (current_thread->pagedir, page->vaddr))
+          file_write_at(page->file, page->frame->kpage, PGSIZE, i * PGSIZE);
+      frame_remove(page->frame);
+    }
+    pagedir_clear_page (current_thread->pagedir, page->vaddr);
+    hash_delete (current_thread->page_table, &page->elem);
   }
   
   list_remove(&(file_mapping_entry->file_mapping_elem));
   file_close(file_mapping_entry->file_ptr);
   free(file_mapping_entry);
+
+  lock_release (&filesys_lock);
 }
