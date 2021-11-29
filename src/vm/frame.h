@@ -2,6 +2,8 @@
 #define FRAME_H
 #include "lib/kernel/list.h"
 #include "threads/palloc.h"
+//p3
+#include "vm/page.h"
 
 struct frame
 {

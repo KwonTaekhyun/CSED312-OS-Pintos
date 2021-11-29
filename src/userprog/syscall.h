@@ -3,8 +3,7 @@
 
 
 #include "lib/user/syscall.h"
-//p3
-#include "vm/page.h"
+
 void syscall_init (void);
 
 /* P2-3 */

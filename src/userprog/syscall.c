@@ -17,7 +17,9 @@
 #include "lib/user/syscall.h"
 #include "threads/palloc.h"
 
-#include"vm/frame.h"
+//p3
+#include "vm/page.h"
+#include "vm/frame.h"
 
 struct file 
 {
