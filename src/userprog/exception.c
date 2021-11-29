@@ -152,11 +152,11 @@ page_fault (struct intr_frame *f)
   not_present = (f->error_code & PF_P) == 0;
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
-  if(not_present&&is_user_vaddr(fault_addr)) 
+  /* if(not_present&&is_user_vaddr(fault_addr)) 
   {
      struct pte *page = pte_find(fault_addr);
      handle_mm_fault(page);
-  }
+  } */
   if(!user || !not_present || is_kernel_vaddr(fault_addr)) {
    sys_exit(-1);    
   }
@@ -169,5 +169,5 @@ page_fault (struct intr_frame *f)
           not_present ? "not present" : "rights violation",
           write ? "writing" : "reading",
           user ? "user" : "kernel");
-  /* kill (f); */
+  kill (f);
 }
