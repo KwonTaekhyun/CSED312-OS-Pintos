@@ -506,7 +506,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->zero_bytes = zero_bytes;
         page->frame = NULL;
         //p3
-        printf("%s\n",&page);
+        printf("%s\n",*page);
         pte_insert(thread_current()->page_table, &page->elem);
       }
 
@@ -550,7 +550,7 @@ setup_stack (void **esp)
         page->zero_bytes = 0;
         page->frame = NULL;
         //p3
-        printf("%s\n",&page);
+        printf("%s\n",*page);
         pte_insert(thread_current()->page_table, &page->elem);
       }
 
