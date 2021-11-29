@@ -104,6 +104,7 @@ start_process (void *file_name_)
     argc++;
   }
   //p3
+  printf("pt_init\n");
   pt_init(&thread_current()->page_table);
   
   /* Initialize interrupt frame and load executable. */
@@ -488,6 +489,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
       //p3
+      printf("load_seg\n");
       struct pte *page = malloc(sizeof(struct pte));
       if(page != NULL)
       {
@@ -529,6 +531,7 @@ setup_stack (void **esp)
         palloc_free_page (kpage);
     }
     //p3
+    printf("setup_stack\n");
       struct pte *page = malloc(sizeof(struct pte));
       if(page != NULL)
       {
