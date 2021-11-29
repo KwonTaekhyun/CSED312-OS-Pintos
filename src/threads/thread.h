@@ -8,7 +8,7 @@
 /*----------P2----------*/
 #include "threads/synch.h"
 //p3
-#include"src/lib/kernel/hash.h"
+#include"lib/kernel/hash.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
