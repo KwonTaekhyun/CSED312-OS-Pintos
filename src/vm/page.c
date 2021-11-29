@@ -39,7 +39,7 @@ struct pte *pte_find(void *vaddr)
     if(e==NULL) return NULL;
     else return hash_entry(e,struct pte, elem);
 }
-/* void pt_destroy(struct hash *pt)
+ void pt_destroy(struct hash *pt)
 {
     hash_destroy(pt, pt_destroy_func);
 }
@@ -47,9 +47,9 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 {
     struct pte *page;
     page = hash_entry(e,struct pte, elem);
-    if(page->frame!=NULL)  frame_deallocate();
+    if(page->frame!=NULL) frame_deallocate(page->frame->addr);
     free(page);
-} */
+} 
 bool load_file(void *addr, struct pte *p)
 {
     if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes)
