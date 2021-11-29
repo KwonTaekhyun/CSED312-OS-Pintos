@@ -1,7 +1,8 @@
 #include "page.h"
 #include "threads/vaddr.h"
 #include "threads/thread.h"
-
+#include "filesys/file.h"
+#include "lib/string.h"
 bool pt_init(struct hash *pt)
 {
     return hash_init(pt, pt_hash_func, pt_less_func, NULL);
@@ -47,3 +48,10 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
     if(page->frame!=NULL)  frame_deallocate();
     free(page);
 } */
+bool load_file(void *addr, struct pte *p)
+{
+    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes)
+    return false;
+    memset((uint8_t*)addr+p->read_bytes, 0, p->zero_bytes);
+    return true;
+}

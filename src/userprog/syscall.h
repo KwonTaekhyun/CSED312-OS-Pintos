@@ -3,7 +3,8 @@
 
 
 #include "lib/user/syscall.h"
-
+//p3
+#include "vm/page.h"
 void syscall_init (void);
 
 /* P2-3 */
@@ -26,5 +27,7 @@ void sys_close(int fd_idx);
 
 void is_valid_address(void *esp, int start, int end);
 struct file_descriptor* find_fd_by_idx(int fd_idx);
-
+struct pte *check_addr(void *addr);
+void check_buffer(void *buf, unsigned size, void *esp, bool to_write);
+void check_valid_string(const void *str, void *esp);
 #endif /* userprog/syscall.h */

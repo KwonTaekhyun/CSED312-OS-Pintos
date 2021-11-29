@@ -24,6 +24,7 @@
 #include <list.h>
 //p3
 #include "vm/page.h"
+#include "vm/frame.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -605,4 +606,19 @@ void argu_stack(char **argv, int argc, void **esp)
   *esp -= sizeof(void*);
   void *ret = 0;
   memcpy(*esp, &ret, sizeof(void*));
+}
+bool handle_mm_fault(struct pte *p)
+{
+   struct frame *f = palloc_get_page(PAL_USER);
+   p->frame = f;
+   switch(p->type)
+   {
+    case 0 : 
+      bool ret = load_file(f->addr, p);
+      install_page(p->vaddr,p->frame->addr,p->writable);
+      return ret;
+    case 1 : return false;
+    case 2 : return false;
+
+   }
 }

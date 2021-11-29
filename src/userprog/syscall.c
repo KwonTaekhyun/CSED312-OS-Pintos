@@ -16,8 +16,7 @@
 #include "lib/debug.h"
 #include "lib/user/syscall.h"
 #include "threads/palloc.h"
-//p3
-#include "vm/page.h"
+
 
 struct file 
 {
