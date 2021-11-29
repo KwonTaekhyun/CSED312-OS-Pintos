@@ -1,3 +1,5 @@
+#ifndef FRAME_H
+#define FRAME_H
 #include "lib/kernel/list.h"
 #include "threads/palloc.h"
 
@@ -13,3 +15,5 @@ struct list frame_table;
 struct list_elem *clock_hand;
 struct frame *frame_allocate(enum palloc_flags flags);
 void frame_deallocate(void *addr);
+
+#endif

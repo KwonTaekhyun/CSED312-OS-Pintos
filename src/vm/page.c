@@ -1,8 +1,10 @@
-#include "page.h"
+#include "vm/page.h"
+#include "vm/frame.h"
 #include "threads/vaddr.h"
 #include "threads/thread.h"
 #include "filesys/file.h"
 #include "lib/string.h"
+
 bool pt_init(struct hash *pt)
 {
     return hash_init(pt, pt_hash_func, pt_less_func, NULL);

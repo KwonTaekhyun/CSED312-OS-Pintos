@@ -1,11 +1,13 @@
+#ifndef PAGE_H
+#define PAGE_H
+
 #include <hash.h>
 
 
 #define VM_BIN 0
 #define VM_FILE 1
 #define VM_ANON 2
-#ifndef PAGE_H
-#define PAGE_H
+
 struct pte
 {
 	struct file* file;   
