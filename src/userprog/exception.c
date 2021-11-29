@@ -156,6 +156,7 @@ page_fault (struct intr_frame *f)
   if(not_present&&is_user_vaddr(fault_addr)) 
   {
      struct pte *page = pte_find(pg_round_down(fault_addr));
+     if(page == NULL) printf("null page!!!!!!!\n");
      if(!handle_mm_fault(page)) sys_exit(-1);
   }
   /* if(!user || !not_present || is_kernel_vaddr(fault_addr)) {
