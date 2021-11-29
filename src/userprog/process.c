@@ -23,7 +23,6 @@
 #include "threads/synch.h"
 #include <list.h>
 //p3
-#include "vm/page.h"
 #include "vm/frame.h"
 
 static thread_func start_process NO_RETURN;
