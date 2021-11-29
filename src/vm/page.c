@@ -50,10 +50,10 @@ void pt_destroy(struct hash *pt)
 }
 void pt_destroy_func(struct hash_elem *e, void *aux)
 {
-    struct pte *page;
+    /* struct pte *page;
     page = hash_entry(e,struct pte, elem);
     if(page->is_loaded && (page->frame!=NULL)) palloc_free_page(page->frame->addr);
-    //free(page);
+    free(page); */
 } 
 bool load_file(void *addr, struct pte *p)
 {
