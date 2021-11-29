@@ -12,5 +12,5 @@ void process_activate (void);
 void argu_stack(char **argv, int argc, void **esp);
 
 //p3
-bool handle_mm_fault(struct pte *p);
+
 #endif /* userprog/process.h */

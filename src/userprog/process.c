@@ -613,7 +613,8 @@ bool handle_mm_fault(struct pte *p)
    switch(p->type)
    {
     case 0 : 
-      bool ret = load_file(f->addr, p);
+      bool ret;
+      ret = load_file(f->addr, p);
       install_page(p->vaddr,p->frame->addr,p->writable);
       return ret;
     case 1 : return false;
