@@ -505,8 +505,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->read_bytes = read_bytes;
         page->zero_bytes = zero_bytes;
         page->frame = NULL;
-        //p3
-        printf("%s\n",*page);
         pte_insert(thread_current()->page_table, &page->elem);
       }
 
@@ -549,8 +547,7 @@ setup_stack (void **esp)
         page->read_bytes = 0;
         page->zero_bytes = 0;
         page->frame = NULL;
-        //p3
-        printf("%s\n",*page);
+
         pte_insert(thread_current()->page_table, &page->elem);
       }
 
@@ -624,18 +621,19 @@ bool handle_mm_fault(struct pte *p)
   struct frame *f = palloc_get_page(PAL_USER);
   if(p!=NULL) 
   {
-    p->frame = f;
+    bool ret;
     switch(p->type)
     {
       case VM_BIN : 
       {
-        bool ret;
         ret = load_file(f->addr, p);
         install_page(p->vaddr,f->addr,p->writable);
-        return ret;
+        break;
       }
       case VM_FILE : return false;
       case VM_ANON : return false;
     }
+    p->frame = f;
+    return ret;
   }
 }

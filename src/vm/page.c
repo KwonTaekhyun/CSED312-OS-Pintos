@@ -46,7 +46,7 @@ struct pte *pte_find(void *vaddr)
 }
 void pt_destroy(struct hash *pt)
 {
-    hash_destroy(pt, pt_destroy_func);
+    if(pt!=NULL) hash_destroy(pt, pt_destroy_func);
 }
 void pt_destroy_func(struct hash_elem *e, void *aux)
 {
