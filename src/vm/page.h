@@ -29,5 +29,6 @@ bool pte_insert(struct hash *pt, struct pte *pte);
 bool pte_delete(struct hash *pt, struct pte *pte);
 struct pte *pte_find(void *vaddr);
 void pt_destroy(struct hash *pt);
+void pt_destroy_func(struct hash_elem *e, void *aux);
 bool load_file(void *addr, struct pte *p);
 #endif
