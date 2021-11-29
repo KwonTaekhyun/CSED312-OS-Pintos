@@ -108,7 +108,7 @@ start_process (void *file_name_)
   struct thread *t = thread_current();
   struct hash *pt = malloc (sizeof(struct hash));
   t->page_table = pt;
-  pt_init(&t->page_table);
+  pt_init(t->page_table);
   
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -181,8 +181,8 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   //p3
-  pt_destroy(&cur->page_table);
-  free(&cur->page_table);
+  pt_destroy(cur->page_table);
+  free(cur->page_table);
  /* Destroy the current process's page directory and switch back
     to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -505,7 +505,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->read_bytes = read_bytes;
         page->zero_bytes = zero_bytes;
         page->frame = NULL;
-        pte_insert(&thread_current()->page_table, &page->elem);
+        pte_insert(thread_current()->page_table, &page->elem);
       }
 
       /* Advance. */
@@ -547,7 +547,7 @@ setup_stack (void **esp)
         page->read_bytes = 0;
         page->zero_bytes = 0;
         page->frame = NULL;
-        pte_insert(&thread_current()->page_table, &page->elem);
+        pte_insert(thread_current()->page_table, &page->elem);
       }
 
   return success;
