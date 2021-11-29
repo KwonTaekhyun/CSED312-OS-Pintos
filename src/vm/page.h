@@ -1,9 +1,11 @@
-#include"lib/kernel/hash.h"
+#include <hash.h>
+
 
 #define VM_BIN 0
 #define VM_FILE 1
 #define VM_ANON 2
-
+#ifndef PAGE_H
+#define PAGE_H
 struct pte
 {
 	struct file* file;   
@@ -27,3 +29,4 @@ bool pte_delete(struct hash *pt, struct pte *pte);
 struct pte *pte_find(void *vaddr);
 void pt_destroy(struct hash *pt);
 bool load_file(void *addr, struct pte *p);
+#endif
