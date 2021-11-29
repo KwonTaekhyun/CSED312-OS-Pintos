@@ -178,6 +178,7 @@ process_exit (void)
   uint32_t *pd;
   //p3
   pt_destroy(&cur->page_table);
+  free(&cur->page_table);
  /* Destroy the current process's page directory and switch back
     to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -500,7 +501,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->zero_bytes = zero_bytes;
         page->frame = NULL;
         pte_insert(&thread_current()->page_table, &page->elem);
-      
       }
 
       /* Advance. */

@@ -4,7 +4,7 @@
 #include "threads/thread.h"
 #include "filesys/file.h"
 #include "lib/string.h"
-
+#include "threads/malloc.h"
 bool pt_init(struct hash *pt)
 {
     return hash_init(pt, pt_hash_func, pt_less_func, NULL);
@@ -23,23 +23,28 @@ static bool pt_less_func(const struct hash_elem *a, const struct hash_elem *b, v
 }
 bool pte_insert(struct hash *pt, struct pte *pte)
 {
-    hash_insert(pt, &pte->elem);
+    struct hash_elem *ret;
+    ret = hash_insert(pt, &pte->elem);
+    if (ret==NULL) return true;
+    else return false;
 }
 bool pte_delete(struct hash *pt, struct pte *pte)
 {
-    pte_delete(pt, &pte->elem);
-
+    struct hash_elem *ret;
+    ret = hash_delete(pt, &pte->elem);
+    if (ret==NULL) return false;
+    else return true;
 }
 struct pte *pte_find(void *vaddr)
 {
     struct pte *page;
     struct hash_elem *e;
     page->vaddr = pg_round_down(vaddr);
-    hash_find(&thread_current()->page_table, &page->elem);
+    e = hash_find(&thread_current()->page_table, &page->elem);
     if(e==NULL) return NULL;
     else return hash_entry(e,struct pte, elem);
 }
- void pt_destroy(struct hash *pt)
+void pt_destroy(struct hash *pt)
 {
     hash_destroy(pt, pt_destroy_func);
 }
@@ -47,7 +52,7 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 {
     struct pte *page;
     page = hash_entry(e,struct pte, elem);
-    if(page->frame!=NULL) frame_deallocate(page->frame->addr);
+    if(page->is_loaded && (page->frame!=NULL)) frame_deallocate(page->frame->addr);
     free(page);
 } 
 bool load_file(void *addr, struct pte *p)
