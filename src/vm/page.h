@@ -1,4 +1,4 @@
-#include"src/lib/kernel/hash.h"
+#include"lib/kernel/hash.h"
 
 #define VM_BIN 0
 #define VM_FILE 1
