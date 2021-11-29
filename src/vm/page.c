@@ -59,6 +59,6 @@ bool load_file(void *addr, struct pte *p)
 {
     if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes)
     return false;
-    memset((uint8_t*)addr+p->read_bytes, 0, p->zero_bytes);
+    memset((uint8_t*)addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
 }

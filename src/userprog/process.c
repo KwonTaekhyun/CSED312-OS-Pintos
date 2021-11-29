@@ -608,21 +608,24 @@ void argu_stack(char **argv, int argc, void **esp)
   void *ret = 0;
   memcpy(*esp, &ret, sizeof(void*));
 }
+
 bool handle_mm_fault(struct pte *p)
 {
-   struct frame *f = palloc_get_page(PAL_USER);
-   p->frame = f;
-   switch(p->type)
-   {
-    case 0 : 
+  struct frame *f = palloc_get_page(PAL_USER);
+  if(p!=NULL) 
+  {
+    p->frame = f;
+    switch(p->type)
     {
-      bool ret;
-      ret = load_file(f->addr, p);
-      install_page(p->vaddr,p->frame->addr,p->writable);
-      return ret;
+      case VM_BIN : 
+      {
+        bool ret;
+        ret = load_file(f->addr, p);
+        install_page(p->vaddr,f->addr,p->writable);
+        return ret;
+      }
+      case VM_FILE : return false;
+      case VM_ANON : return false;
     }
-    case 1 : return false;
-    case 2 : return false;
-
-   }
+  }
 }
