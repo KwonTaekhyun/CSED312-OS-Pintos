@@ -4,9 +4,12 @@
 
 #include "lib/user/syscall.h"
 
+/* P3 */
+#include "vm/page.h"
+
 void syscall_init (void);
 
-/* P2-3 */
+/* P2 */
 void sys_exit(int exit_status);
 pid_t sys_exec (const char *cmd);
 int sys_wait (pid_t pid);
@@ -26,5 +29,19 @@ void sys_close(int fd_idx);
 
 void is_valid_address(void *esp, int start, int end);
 struct file_descriptor* find_fd_by_idx(int fd_idx);
+
+/* P3 */
+struct file_mapping{
+    mapid_t mapid;
+    struct file *file_ptr;
+    void *addr;
+    struct list_elem file_mapping_elem;
+    struct list pte_list;
+    int file_page_num;
+};
+
+typedef int mapid_t;
+mapid_t sys_mmap(int fd_idx, void *addr);
+void sys_munmap(mapid_t mapid);
 
 #endif /* userprog/syscall.h */
