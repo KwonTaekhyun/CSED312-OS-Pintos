@@ -7,6 +7,7 @@
 #include "threads/malloc.h"
 bool pt_init(struct hash *pt)
 {
+    if(pt == NULL) return NULL;
     return hash_init(pt, pt_hash_func, pt_less_func, NULL);
 }
 static unsigned pt_hash_func(const struct hash_elem *e, void *aux)
@@ -57,8 +58,48 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 } 
 bool load_file(void *addr, struct pte *p)
 {
-    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes)
-    return false;
+    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes) return false;
     memset((uint8_t*)addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
+}
+bool pte_create_file(void* upage, struct file* file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable, bool is_mmap)
+{
+    if(pte_find(upage) != NULL) return false;
+    struct pte* page = malloc(sizeof(struct pte));
+    if(page != NULL)
+    {
+        page->type = VM_BIN;
+        page->file = file;
+        page->writable = writable;
+        page->vaddr = upage;
+        page->is_loaded = false;
+        page->offset = ofs;
+        page->read_bytes = read_bytes;
+        page->zero_bytes = zero_bytes;
+        page->frame = NULL;
+        pte_insert(thread_current()->page_table, &page->elem);
+        return true;
+    }
+    else return false;
+}
+
+bool pte_create_zero(void *upage)
+{
+    if(pte_find(upage) != NULL) return false;
+    struct pte* page = malloc(sizeof(struct pte));    
+    if(page != NULL)
+    {
+        page->type = VM_ANON;
+        page->file = NULL;
+        page->writable = true;
+        page->vaddr = upage;
+        page->is_loaded = false;
+        page->offset = 0;
+        page->read_bytes = 0;
+        page->zero_bytes = 0;
+        page->frame = NULL;
+        pte_insert(thread_current()->page_table, &page->elem);
+        return true;
+    }
+    else return false;
 }

@@ -637,21 +637,31 @@ void argu_stack(char **argv, int argc, void **esp)
 bool handle_mm_fault(struct pte *p)
 {
   struct frame *f = palloc_get_page(PAL_USER);
+  f->pte = p;
+  if(p->is_loaded) palloc_free_page(f);
   if(p!=NULL) 
   {
-    bool ret;
     switch(p->type)
     {
       case VM_BIN : 
       {
-        ret = load_file(f->addr, p);
-        install_page(p->vaddr,f->addr,p->writable);
+        if(!load_file(f->addr, p))
+        {
+          palloc_free_page(f);
+          return false;
+        }
         break;
       }
       case VM_FILE : return false;
       case VM_ANON : return false;
     }
+    if(!install_page(p->vaddr, f->addr, p->writable))
+    {
+      palloc_free_page(f);
+      return false;
+    }
     p->frame = f;
-    return ret;
+    p->is_loaded = true;
+    return true;
   }
 }

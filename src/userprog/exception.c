@@ -158,7 +158,7 @@ page_fault (struct intr_frame *f)
    sys_exit(-1);    
   }
   //p3
-  if(not_present&&is_user_vaddr(fault_addr)) 
+  if(not_present&&is_user_vaddr(fault_addr)&&fault_addr>0) 
   {
      struct pte *page = pte_find(pg_round_down(fault_addr));
      if(!handle_mm_fault(page)) sys_exit(-1);
