@@ -20,7 +20,7 @@ static bool pt_less_func(const struct hash_elem *a, const struct hash_elem *b, v
 {
     struct pte *page_a = hash_entry(a,struct pte, elem);
     struct pte *page_b = hash_entry(b,struct pte, elem);
-    if(page_a->vaddr > page_b->vaddr) return true;
+    if(page_a->vaddr < page_b->vaddr) return true;
     else return false;
 }
 bool pte_insert(struct hash *pt, struct pte *pte)

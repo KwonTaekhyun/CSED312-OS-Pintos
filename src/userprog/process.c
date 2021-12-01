@@ -485,7 +485,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
   ASSERT ((read_bytes + zero_bytes) % PGSIZE == 0);
   ASSERT (pg_ofs (upage) == 0);
   ASSERT (ofs % PGSIZE == 0);
-
   file_seek (file, ofs);
   while (read_bytes > 0 || zero_bytes > 0) 
     {
@@ -547,17 +546,17 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 static bool
 setup_stack (void **esp) 
 {
-  struct frame *kpage;
+  uint8_t *kpage;
   bool success = false;
 
-  kpage = frame_allocate (PAL_USER | PAL_ZERO);
+  kpage = palloc_get_page(PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
-      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), kpage->addr, true);
+      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), kpage, true);
       if (success)
         *esp = PHYS_BASE;
       else
-        frame_deallocate (kpage->addr);
+        palloc_free_page(kpage);
     }
     //p3
       struct pte *page = malloc(sizeof(struct pte));
@@ -573,7 +572,6 @@ setup_stack (void **esp)
         page->read_bytes = 0;
         page->zero_bytes = 0;
         page->pinned = true;
-        kpage->pte = page;
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
@@ -645,40 +643,47 @@ void argu_stack(char **argv, int argc, void **esp)
 
 bool handle_mm_fault(struct pte *p)
 {
-  struct frame *f = frame_allocate(PAL_USER);
-  f->pte = p;
+  /* struct frame *f = frame_allocate(PAL_USER);
+  f->pte = p; */
+  uint8_t *addr = palloc_get_page(PAL_USER);
   p->pinned = true;
   if(p->is_loaded) {
-    frame_deallocate(f->addr);
+    //frame_deallocate(f->addr);
     return false;
   }
+  if(addr==NULL) return false;
   if(p!=NULL) 
   {
     switch(p->type)
     {
       case VM_BIN : 
       {
-        if(!load_file(f->addr, p))
+        if(!load_file(addr, p))
         {
-          frame_deallocate(f->addr);
+          //frame_deallocate(f->addr);
+          printf("load file error\n");
+          palloc_free_page(addr);
           return false;
         }
         break;
       }
       case VM_FILE : 
       {
-        if(!load_file(f->addr, p))
+        if(!load_file(addr, p))
         {
-          frame_deallocate(f->addr);
+          //frame_deallocate(f->addr);
+          printf("load file error\n");
+          palloc_free_page(addr);
           return false;
         }
         break;
       }
       case VM_ANON : return false;
     }
-    if(!install_page(p->vaddr, f->addr, p->writable))
+    if(!install_page(p->vaddr, addr, p->writable))
     {
-      frame_deallocate(f->addr);
+      palloc_free_page(addr);
+      //frame_deallocate(f->addr);
       return false;
     }
     p->is_loaded = true;
