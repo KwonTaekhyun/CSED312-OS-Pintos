@@ -370,7 +370,6 @@ void check_address(void *addr, void *esp)
 	else
 	{
     //p3
-    printf("exit in check addr\n");
 		sys_exit(-1);
 	}
 }
