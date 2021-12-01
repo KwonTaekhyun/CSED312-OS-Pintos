@@ -9,11 +9,29 @@ void frame_init()
 struct frame *frame_allocate(enum palloc_flags flags)
 {
     struct frame *f;
-    void *page = palloc_get_page(flags);
-    if(page == NULL)
-    {
-        
-    }
+	void *addr;
+	if((flags & PAL_USER) == 0)
+		return NULL;
+	/* allocate physical memory */
+	addr = palloc_get_page(flags);
+	/* if fail, free physical memory and retry physical memory allocate*/
+	while(addr == NULL)
+	{
+		//try_to_free_pages();
+		addr = palloc_get_page(flags);
+	}
+	f = malloc(sizeof(struct frame));
+	if(f == NULL)
+	{
+		palloc_free_page(addr);
+		return NULL;
+	}
+	/* initialize page */
+	f->addr  = addr;
+	f->thread = thread_current();
+	/* insert page to lru list */
+	//add_page_to_lru_list(f);
+	return f;
 }
 void frame_deallocate(void *addr)
 {
