@@ -57,7 +57,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_EXEC:{
       is_valid_address(f->esp, 4, 7);
       //p3
-      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
+      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -82,7 +82,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_OPEN:{
       is_valid_address(f->esp, 4, 7);
       //p3
-      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
+      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -328,12 +328,12 @@ struct pte *check_addr(void *addr)
 }
 void check_buffer(void *buf, unsigned size, void *esp, bool to_write)
 {
-  uint8_t *i;
+  unsigned *i;
   struct pte *page;
-  for(i = buf; i<(uint8_t)buf+size; i++)
+  for(i = (void*)buf; i<(void*)buf+size; i++)
   {
-    check_address(i,esp);
-    page = pte_find(buf);
+    check_address((void*)i,esp);
+    page = pte_find((void*)i);
     if((page!=NULL) && (!page->writable && to_write)) sys_exit(-1); 
   }
 }
@@ -342,6 +342,7 @@ void check_valid_string(const void *str, void *esp)
   uint8_t *i;
   struct pte *page;
   char *str_temp = (char*) str;
+  check_address((void*)str_temp, esp);
   while(*str_temp != 0)
 	{
 		str_temp += 1;
