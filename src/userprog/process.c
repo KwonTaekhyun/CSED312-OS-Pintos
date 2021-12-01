@@ -104,7 +104,7 @@ start_process (void *file_name_)
     argc++;
   }
   //p3
-  //printf("pt_init\n");
+  printf("pt_init\n");
   struct thread *t = thread_current();
   pt_init(&t->page_table);
   
@@ -128,7 +128,7 @@ start_process (void *file_name_)
 
   if (!success){
     //p3
-    printf("exit in start process\n");
+    //printf("exit in start process\n");
     sys_exit(-1);
   }
 

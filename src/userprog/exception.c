@@ -164,7 +164,7 @@ page_fault (struct intr_frame *f)
         if(!handle_mm_fault(page)&&!page->is_loaded)
         {
            //p3
-           printf("exit in upper page fault!\n");
+           //printf("exit in upper page fault!\n");
            sys_exit(-1);
         }
      }
@@ -172,7 +172,7 @@ page_fault (struct intr_frame *f)
   }
   if(fault_addr == NULL || !not_present || is_kernel_vaddr(fault_addr)) {
    //p3
-   printf("exit in page fault!\n");
+   //printf("exit in page fault!\n");
    sys_exit(-1);    
   }
   /* To implement virtual memory, delete the rest of the function
