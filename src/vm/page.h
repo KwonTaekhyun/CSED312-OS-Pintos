@@ -34,4 +34,9 @@ struct pte *pte_find(void *vaddr);
 void pt_destroy(struct hash *pt);
 void pt_destroy_func(struct hash_elem *e, void *aux);
 bool load_file(void *addr, struct pte *p);
+
+/* P3-5. File memory mapping */
+void pt_destory_by_addr (void* addr);
+bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable);
+
 #endif
