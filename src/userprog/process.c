@@ -106,9 +106,7 @@ start_process (void *file_name_)
   //p3
   //printf("pt_init\n");
   struct thread *t = thread_current();
-  struct hash *pt = malloc (sizeof(struct hash));
-  t->page_table = pt;
-  pt_init(t->page_table);
+  pt_init(&t->page_table);
   
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -181,8 +179,7 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   //p3
-  /* pt_destroy(cur->page_table);
-  free(cur->page_table); */
+  pt_destroy(&cur->page_table);
  /* Destroy the current process's page directory and switch back
     to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -522,14 +519,15 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->offset = ofs;
         page->read_bytes = read_bytes;
         page->zero_bytes = zero_bytes;
-        page->frame = NULL;
-        pte_insert(thread_current()->page_table, &page->elem);
+        page->pinned = false;
+        pte_insert(&thread_current()->page_table, page);
       }
 
       /* Advance. */
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
+      ofs+=page_read_bytes;
     }
   return true;
 }
@@ -553,10 +551,10 @@ setup_stack (void **esp)
     }
     //p3
     //printf("setup_stack\n");
-      /* struct pte *page = malloc(sizeof(struct pte));
+      struct pte *page = malloc(sizeof(struct pte));
       if(page != NULL)
       {
-        page->vaddr = ((uint8_t *)PHYS_BASE)-PGSIZE; 
+        page->vaddr = pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE); 
         page->writable = true; 
         page->type = VM_ANON; 
         page->is_loaded = true;
@@ -564,10 +562,9 @@ setup_stack (void **esp)
         page->offset = 0;
         page->read_bytes = 0;
         page->zero_bytes = 0;
-        page->frame = NULL;
-
-        pte_insert(thread_current()->page_table, &page->elem);
-      } */
+        page->pinned = true;
+        success = pte_insert(&thread_current()->page_table, page);
+      }
 
   return success;
 }
@@ -636,9 +633,13 @@ void argu_stack(char **argv, int argc, void **esp)
 
 bool handle_mm_fault(struct pte *p)
 {
-  struct frame *f = palloc_get_page(PAL_USER);
+  struct frame *f = frame_allocate(PAL_USER);
   f->pte = p;
-  if(p->is_loaded) palloc_free_page(f);
+  p->pinned = true;
+  if(p->is_loaded) {
+    frame_deallocate(f->addr);
+    return false;
+  }
   if(p!=NULL) 
   {
     switch(p->type)
@@ -647,21 +648,29 @@ bool handle_mm_fault(struct pte *p)
       {
         if(!load_file(f->addr, p))
         {
-          palloc_free_page(f);
+          frame_deallocate(f->addr);
           return false;
         }
         break;
       }
-      case VM_FILE : return false;
+      case VM_FILE : 
+      {
+        if(!load_file(f->addr, p))
+        {
+          frame_deallocate(f->addr);
+          return false;
+        }
+        break;
+      }
       case VM_ANON : return false;
     }
     if(!install_page(p->vaddr, f->addr, p->writable))
     {
-      palloc_free_page(f);
+      frame_deallocate(f->addr);
       return false;
     }
-    p->frame = f;
     p->is_loaded = true;
     return true;
   }
+  else return false;
 }

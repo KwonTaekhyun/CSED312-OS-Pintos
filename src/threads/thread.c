@@ -468,8 +468,6 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
   //p2-3
   list_init(&t->file_descriptor_list);
-  //p3
-  t->page_table = NULL;
   old_level = intr_disable ();
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);

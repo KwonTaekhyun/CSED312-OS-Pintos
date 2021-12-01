@@ -154,16 +154,20 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
 
+  //p3
+  check_address(fault_addr, f->esp);
+  if(not_present) 
+  {
+     struct pte *page = pte_find(fault_addr);
+     if(page!=NULL)
+     {
+        if(!handle_mm_fault(page)&&!page->is_loaded) sys_exit(-1);
+     }
+     
+  }
   if(fault_addr == NULL || !not_present || is_kernel_vaddr(fault_addr)) {
    sys_exit(-1);    
   }
-  //p3
-  if(not_present&&is_user_vaddr(fault_addr)&&fault_addr>0) 
-  {
-     struct pte *page = pte_find(pg_round_down(fault_addr));
-     if(!handle_mm_fault(page)) sys_exit(-1);
-  }
-
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to
      which fault_addr refers. */

@@ -13,11 +13,11 @@ struct pte
 	uint8_t type;      //0:VM_BIN, 1:VM_FILE, 2:VM_ANON
 	bool writable;    
 	void *vaddr;     
-	bool is_loaded;     
+	bool is_loaded;
+	bool pinned;
 	size_t offset;    
 	size_t read_bytes;     
 	size_t zero_bytes; 
-    struct frame *frame;
 
 	struct hash_elem elem;   
 };

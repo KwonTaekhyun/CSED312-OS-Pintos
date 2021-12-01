@@ -5,6 +5,7 @@
 #include "filesys/file.h"
 #include "lib/string.h"
 #include "threads/malloc.h"
+#include "userprog/pagedir.h"
 bool pt_init(struct hash *pt)
 {
     if(pt == NULL) return NULL;
@@ -33,6 +34,7 @@ bool pte_delete(struct hash *pt, struct pte *pte)
 {
     struct hash_elem *ret;
     ret = hash_delete(pt, &pte->elem);
+    free(pte);
     if (ret==NULL) return false;
     else return true;
 }
@@ -41,7 +43,7 @@ struct pte *pte_find(void *vaddr)
     struct pte *page;
     struct hash_elem *e;
     page->vaddr = pg_round_down(vaddr);
-    e = hash_find(thread_current()->page_table, &page->elem);
+    e = hash_find(&thread_current()->page_table, &page->elem);
     if(e==NULL) return NULL;
     else return hash_entry(e,struct pte, elem);
 }
@@ -53,16 +55,23 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 {
     struct pte *page;
     page = hash_entry(e,struct pte, elem);
-    if(page->is_loaded && (page->frame!=NULL)) palloc_free_page(page->frame->addr);
+    void *addr;
+    if(page->is_loaded)
+    {
+        addr = pagedir_get_page(thread_current()->pagedir,page->vaddr);
+        frame_deallocate(addr);
+        pagedir_clear_page(thread_current()->pagedir, page->vaddr);
+    }
     free(page);
 } 
 bool load_file(void *addr, struct pte *p)
 {
-    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes) return false;
-    memset((uint8_t*)addr+(p->read_bytes), 0, p->zero_bytes);
+    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes)
+        return false;
+    memset(addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
 }
-bool pte_create_file(void* upage, struct file* file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable, bool is_mmap)
+/* bool pte_create_file(void* upage, struct file* file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable, bool is_mmap)
 {
     if(pte_find(upage) != NULL) return false;
     struct pte* page = malloc(sizeof(struct pte));
@@ -76,7 +85,7 @@ bool pte_create_file(void* upage, struct file* file, off_t ofs, uint32_t read_by
         page->offset = ofs;
         page->read_bytes = read_bytes;
         page->zero_bytes = zero_bytes;
-        page->frame = NULL;
+        //page->frame = NULL;
         pte_insert(thread_current()->page_table, &page->elem);
         return true;
     }
@@ -97,9 +106,41 @@ bool pte_create_zero(void *upage)
         page->offset = 0;
         page->read_bytes = 0;
         page->zero_bytes = 0;
-        page->frame = NULL;
+        //page->frame = NULL;
         pte_insert(thread_current()->page_table, &page->elem);
         return true;
     }
     else return false;
 }
+bool
+page_load(void *upage)
+{
+    struct pte* page = pte_find(upage);
+    if (page == NULL) return false;
+    struct frame* f = frame_allocate(page);
+    if(f == NULL) return false;
+    bool success;
+    switch (page->type)
+    {
+    case VM_BIN:
+        success = load_file(f, page);
+        break;
+    case VM_FILE:
+        break;
+    
+    case VM_ANON:
+        success = memset(f->addr, 0, PGSIZE) != NULL;
+        break;
+
+    default:
+        NOT_REACHED();
+        break;
+    }
+    
+    if(!success || !pagedir_set_page(thread_current ()->pagedir, upage, f->addr, page->writable))
+    {
+        frame_deallocate(f, true);
+        return false;
+    }
+    return true;
+} */

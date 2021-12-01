@@ -20,7 +20,7 @@
 //p3
 #include "vm/page.h"
 #include "vm/frame.h"
-
+#define STACK_HEURISTIC 32
 struct file 
 {
   struct inode *inode;        /* File's inode. */
@@ -344,4 +344,31 @@ void check_valid_string(const void *str, void *esp)
     page = check_addr(i);
     if(page==NULL) sys_exit(-1); 
   }
+}
+void check_address(void *addr, void *esp)
+{
+	struct pte *page;
+	uint32_t address=(unsigned int)addr;
+	uint32_t lowest_address=0x8048000;
+	uint32_t highest_address=0xc0000000;
+	/* if address is user_address */
+	if(address >= lowest_address && address < highest_address)
+	{
+		/* find vm_entry if can't find vm_entry, exit the process */
+		page = pte_find(addr);
+		/* if can't find vm_entry */
+		if(page == NULL)
+		{
+			if(addr >= esp-STACK_HEURISTIC){
+				if(expand_stack(addr) == false)
+					exit(-1);
+			}
+			else
+				exit(-1);
+		}
+	}
+	else
+	{
+		exit(-1);
+	}
 }

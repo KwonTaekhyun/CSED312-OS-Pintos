@@ -29,4 +29,5 @@ struct file_descriptor* find_fd_by_idx(int fd_idx);
 struct pte *check_addr(void *addr);
 void check_buffer(void *buf, unsigned size, void *esp, bool to_write);
 void check_valid_string(const void *str, void *esp);
+void check_address(void *addr, void *esp);
 #endif /* userprog/syscall.h */

@@ -127,7 +127,7 @@ struct thread
     struct file* cur_file;
 
     //p3
-    struct hash *page_table;
+    struct hash page_table;
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
