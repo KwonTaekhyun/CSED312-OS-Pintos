@@ -357,7 +357,7 @@ void check_address(void *addr, void *esp)
 		/* find vm_entry if can't find vm_entry, exit the process */
 		page = pte_find(addr);
 		/* if can't find vm_entry */
-		if(page == NULL)
+		/* if(page == NULL)
 		{
 			if(addr >= esp-STACK_HEURISTIC){
 				if(expand_stack(addr) == false)
@@ -365,7 +365,7 @@ void check_address(void *addr, void *esp)
 			}
 			else
 				sys_exit(-1);
-		}
+		} */
 	}
 	else
 	{
