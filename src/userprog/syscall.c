@@ -361,14 +361,14 @@ void check_address(void *addr, void *esp)
 		{
 			if(addr >= esp-STACK_HEURISTIC){
 				if(expand_stack(addr) == false)
-					exit(-1);
+					sys_exit(-1);
 			}
 			else
-				exit(-1);
+				sys_exit(-1);
 		}
 	}
 	else
 	{
-		exit(-1);
+		sys_exit(-1);
 	}
 }
