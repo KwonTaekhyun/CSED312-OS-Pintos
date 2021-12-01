@@ -156,25 +156,27 @@ page_fault (struct intr_frame *f)
 
   //p3
   //check_address(fault_addr, f->esp);
-  if(not_present) 
-  {
-     struct pte *page = pte_find(fault_addr);
-     if(page!=NULL)
-     {
-        printf("i'm not present!\n");
-        if(!handle_mm_fault(page)&&!page->is_loaded)
-        {
-           //p3
-           printf("exit in upper page fault!\n");
-           sys_exit(-1);
-        }
-     }
-     
-  }
-  if(fault_addr == NULL || !not_present || is_kernel_vaddr(fault_addr)) {
-   //p3
-   //printf("exit in page fault!\n");
-   sys_exit(-1);    
+  check_address(fault_addr, f->esp);
+	if(not_present==false)
+		exit(-1);
+bool load = false;
+  	struct pte *page = pte_find(fault_addr);
+  	if(page != NULL)
+  	{
+	  	load = handle_mm_fault(page);
+	  	if(page->is_loaded == true)
+	  	{
+			page->pinned = false;
+			load = true;
+	  	}
+	}
+   if(load == false){
+	  printf ("Page fault at %p: %s error %s page in %s context.\n",
+      	    fault_addr,
+       	    not_present ? "not present" : "rights violation",
+            write ? "writing" : "reading",
+            user ? "user" : "kernel");
+	  kill (f);
   }
   /* To implement virtual memory, delete the rest of the function
      body, and replace it with code that brings in the page to

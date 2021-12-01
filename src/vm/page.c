@@ -39,10 +39,10 @@ bool pte_delete(struct hash *pt, struct pte *pte)
 }
 struct pte *pte_find(void *vaddr)
 {
-    struct pte *page;
+    struct pte page;
     struct hash_elem *e;
-    page->vaddr = pg_round_down(vaddr);
-    e = hash_find(&thread_current()->page_table, &page->elem);
+    page.vaddr = pg_round_down(vaddr);
+    e = hash_find(&thread_current()->page_table, &page.elem);
     if(e==NULL) return NULL;
     else return hash_entry(e,struct pte, elem);
 }
