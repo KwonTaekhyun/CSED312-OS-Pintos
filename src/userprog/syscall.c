@@ -42,7 +42,8 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
-  is_valid_address(f->esp, 0, 3);
+  //is_valid_address(f->esp, 0, 3);
+  check_address(f->esp,f->esp);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
       shutdown_power_off();
@@ -74,6 +75,7 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_REMOVE:{
       is_valid_address(f->esp, 4, 7);
+      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_remove((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -92,14 +94,14 @@ syscall_handler (struct intr_frame *f)
     case SYS_READ:{
       is_valid_address(f->esp, 4, 15);
       //p3
-      check_buffer((void *)*(uint32_t *)(f->esp + 8), 4, f->esp, 1);
+      check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
       is_valid_address(f->esp, 4, 15);
       //p3
-      check_buffer((void *)*(uint32_t *)(f->esp + 8), 4, f->esp, 0);
+      check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
@@ -330,20 +332,21 @@ void check_buffer(void *buf, unsigned size, void *esp, bool to_write)
   struct pte *page;
   for(i = buf; i<(uint8_t)buf+size; i++)
   {
-    page = check_addr(i);
-    if((page==NULL) || (!page->writable && to_write)) sys_exit(-1); 
+    check_address(i,esp);
+    page = pte_find(buf);
+    if((page!=NULL) && (!page->writable && to_write)) sys_exit(-1); 
   }
 }
 void check_valid_string(const void *str, void *esp)
 {
   uint8_t *i;
   struct pte *page;
-  char *str_temp = str;
-  for(i = 0; i<strlen(str_temp); i++)
-  {
-    page = check_addr(i);
-    if(page==NULL) sys_exit(-1); 
-  }
+  char *str_temp = (char*) str;
+  while(*str_temp != 0)
+	{
+		str_temp += 1;
+		check_address(str_temp, esp);
+	}
 }
 void check_address(void *addr, void *esp)
 {
