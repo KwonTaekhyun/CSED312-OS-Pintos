@@ -368,7 +368,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   return file_mapping_entry->mapid;
 }
 
-void sys_munmap(mapid_t mapid){
+void sys_munmap(int mapid){
   struct thread *current_thread = thread_current();
   struct list_elem *e;
   struct file_mapping *file_mapping_entry;
