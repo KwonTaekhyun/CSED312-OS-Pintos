@@ -170,7 +170,8 @@ bool load = false;
 			load = true;
 	  	}
 	}
-   if(load == false){
+   if(load == false) sys_exit(-1);
+   /* if(load == false){
 	  printf ("Page fault at %p: %s error %s page in %s context.\n",
       	    fault_addr,
        	    not_present ? "not present" : "rights violation",
@@ -178,13 +179,5 @@ bool load = false;
             user ? "user" : "kernel");
 	  kill (f);
   }
-  /* To implement virtual memory, delete the rest of the function
-     body, and replace it with code that brings in the page to
-     which fault_addr refers. */
-  /* printf ("Page fault at %p: %s error %s page in %s context.\n",
-          fault_addr,
-          not_present ? "not present" : "rights violation",
-          write ? "writing" : "reading",
-          user ? "user" : "kernel");
-  kill (f); */
+   */
 }

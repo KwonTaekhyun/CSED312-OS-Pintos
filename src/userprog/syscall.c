@@ -69,7 +69,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_CREATE:{
       is_valid_address(f->esp, 4, 11);
       //p3
-      //check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
+      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
       break;
     }
