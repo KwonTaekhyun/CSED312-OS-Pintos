@@ -4,6 +4,9 @@
 
 #include "lib/user/syscall.h"
 
+/* P3-5. File memory mapping */
+#include "filesys/off_t.h"
+
 void syscall_init (void);
 
 /* P2-3 */

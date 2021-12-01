@@ -130,7 +130,7 @@ struct thread
     struct hash page_table;
 
     /* P3-5. File memory mapping */
-   mapid_t file_mapping_num;
+   int file_mapping_num;
    struct list file_mapping_table;
 
     /* Owned by thread.c. */
