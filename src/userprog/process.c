@@ -128,7 +128,7 @@ start_process (void *file_name_)
 
   sema_up(&thread_current()->parent->sema_load);
   //p3
-  printf("start_process done\n");
+  //printf("start_process done\n");
   if (!success){
     //p3
     //printf("exit in start process\n");
@@ -553,7 +553,7 @@ setup_stack (void **esp)
   kpage = frame_allocate (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage->addr, true);
+      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), kpage->addr, true);
       if (success)
         *esp = PHYS_BASE;
       else
@@ -573,6 +573,7 @@ setup_stack (void **esp)
         page->read_bytes = 0;
         page->zero_bytes = 0;
         page->pinned = true;
+        kpage->pte = page;
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
