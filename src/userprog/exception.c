@@ -155,16 +155,17 @@ page_fault (struct intr_frame *f)
   user = (f->error_code & PF_U) != 0;
 
   //p3
-  check_address(fault_addr, f->esp);
+  //check_address(fault_addr, f->esp);
   if(not_present) 
   {
      struct pte *page = pte_find(fault_addr);
      if(page!=NULL)
      {
+        printf("i'm not present!\n");
         if(!handle_mm_fault(page)&&!page->is_loaded)
         {
            //p3
-           //printf("exit in upper page fault!\n");
+           printf("exit in upper page fault!\n");
            sys_exit(-1);
         }
      }
