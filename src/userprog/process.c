@@ -184,9 +184,9 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   //p3
-  printf("i'm in exit\n");
+  //printf("i'm in exit\n");
   pt_destroy(&cur->page_table);
-  printf("pt_destroy complete\n");
+  //printf("pt_destroy complete\n");
  /* Destroy the current process's page directory and switch back
     to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -547,17 +547,17 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 static bool
 setup_stack (void **esp) 
 {
-  uint8_t *kpage;
+  struct frame *kpage;
   bool success = false;
 
-  kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+  kpage = frame_allocate (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
-      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
+      success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage->addr, true);
       if (success)
         *esp = PHYS_BASE;
       else
-        palloc_free_page (kpage);
+        frame_deallocate (kpage->addr);
     }
     //p3
       struct pte *page = malloc(sizeof(struct pte));
