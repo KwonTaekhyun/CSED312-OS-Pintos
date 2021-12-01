@@ -157,8 +157,8 @@ page_fault (struct intr_frame *f)
   //p3
   //check_address(fault_addr, f->esp);
   check_address(fault_addr, f->esp);
-	if(not_present==false)
-		sys_exit(-1);
+	if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
+        sys_exit(-1);
 bool load = false;
   	struct pte *page = pte_find(fault_addr);
   	if(page != NULL)

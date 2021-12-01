@@ -44,7 +44,6 @@ syscall_handler (struct intr_frame *f)
 {
   //is_valid_address(f->esp, 0, 3);
   check_address(f->esp,f->esp);
-  check_address(f->esp+3,f->esp);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
       shutdown_power_off();
@@ -56,27 +55,21 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_EXEC:{
-      //is_valid_address(f->esp, 4, 7);
-      check_address(f->esp,f->esp);
-      check_address(f->esp+7,f->esp);
+      is_valid_address(f->esp, 4, 7);
       //p3
       check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_WAIT:{
-      //is_valid_address(f->esp, 4, 7);
-      check_address(f->esp,f->esp);
-      check_address(f->esp+7,f->esp);
+      is_valid_address(f->esp, 4, 7);
       f->eax = sys_wait((pid_t)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_CREATE:{
-      //is_valid_address(f->esp, 4, 11);
-      check_address(f->esp,f->esp);
-      check_address(f->esp+11,f->esp);
+      is_valid_address(f->esp, 4, 11);
       //p3
-      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
+      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
       break;
     }
@@ -87,11 +80,9 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_OPEN:{
-      //is_valid_address(f->esp, 4, 7);
-      check_address(f->esp,f->esp);
-      check_address(f->esp+7,f->esp);
+      is_valid_address(f->esp, 4, 7);
       //p3
-      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
+      check_valid_string((const char *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -101,18 +92,14 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_READ:{
-      //is_valid_address(f->esp, 4, 15);
-      check_address(f->esp,f->esp);
-      check_address(f->esp+15,f->esp);
+      is_valid_address(f->esp, 4, 15);
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
-      //is_valid_address(f->esp, 4, 15);
-      check_address(f->esp,f->esp);
-      check_address(f->esp+15,f->esp);
+      is_valid_address(f->esp, 4, 15);
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
