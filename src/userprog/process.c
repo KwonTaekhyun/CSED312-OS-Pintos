@@ -127,6 +127,8 @@ start_process (void *file_name_)
   sema_up(&thread_current()->parent->sema_load);
 
   if (!success){
+    //p3
+    printf("exit in start process\n");
     sys_exit(-1);
   }
 
