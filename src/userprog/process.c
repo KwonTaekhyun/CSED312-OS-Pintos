@@ -184,9 +184,9 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   //p3
-  prinf("i'm in exit\n");
+  printf("i'm in exit\n");
   pt_destroy(&cur->page_table);
-  prinf("pt_destroy complete\n");
+  printf("pt_destroy complete\n");
  /* Destroy the current process's page directory and switch back
     to the kernel-only page directory. */
   pd = cur->pagedir;
