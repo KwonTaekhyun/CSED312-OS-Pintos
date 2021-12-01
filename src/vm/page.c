@@ -8,7 +8,6 @@
 #include "userprog/pagedir.h"
 bool pt_init(struct hash *pt)
 {
-    if(pt == NULL) return NULL;
     return hash_init(pt, pt_hash_func, pt_less_func, NULL);
 }
 static unsigned pt_hash_func(const struct hash_elem *e, void *aux)
@@ -66,7 +65,7 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 } 
 bool load_file(void *addr, struct pte *p)
 {
-    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=p->read_bytes)
+    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=(p->read_bytes))
         return false;
     memset(addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
