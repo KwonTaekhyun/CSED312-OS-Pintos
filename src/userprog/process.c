@@ -107,15 +107,17 @@ start_process (void *file_name_)
   //printf("pt_init\n");
   struct thread *t = thread_current();
   pt_init(&t->page_table);
-  printf("pt_init\n");
+  //printf("pt_init\n");
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-
+//p3
+  printf("start process: arv[0] : %s before load\n",argv[0]);
   success = load (argv[0], &if_.eip, &if_.esp);
-
+  //p3
+  printf("start process: arv[0] : %s load complete\n",argv[0]);
   if(success)
   {
     argu_stack(argv, argc, &if_.esp);
@@ -509,9 +511,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
           return false; 
         } */
       //p3
-      printf("load_seg\n");
+      //printf("load_seg\n");
       struct pte *page = malloc(sizeof(struct pte));
-      printf("load_seg done\n");
+      //printf("load_seg done\n");
       if(page != NULL)
       {
         page->type = VM_BIN;
@@ -523,9 +525,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->read_bytes = read_bytes;
         page->zero_bytes = zero_bytes;
         page->pinned = false;
-        printf("pte insert\n");
+        //printf("pte insert\n");
         pte_insert(&thread_current()->page_table, page);
-        printf("pte insert done\n");
+        //printf("pte insert done\n");
       }
 
       /* Advance. */
@@ -555,7 +557,6 @@ setup_stack (void **esp)
         palloc_free_page (kpage);
     }
     //p3
-    printf("setup_stack\n");
       struct pte *page = malloc(sizeof(struct pte));
       printf("setup_stack\n");
       if(page != NULL)
@@ -570,6 +571,7 @@ setup_stack (void **esp)
         page->zero_bytes = 0;
         page->pinned = true;
         success = pte_insert(&thread_current()->page_table, page);
+        printf("setup_stack done\n");
       }
 
   return success;
