@@ -114,10 +114,10 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
 //p3
-  printf("start process: arv[0] : %s before load\n",argv[0]);
+  //printf("start process: arv[0] : %s before load\n",argv[0]);
   success = load (argv[0], &if_.eip, &if_.esp);
   //p3
-  printf("start process: arv[0] : %s load complete\n",argv[0]);
+  //printf("start process: arv[0] : %s load complete\n",argv[0]);
   if(success)
   {
     argu_stack(argv, argc, &if_.esp);
@@ -127,7 +127,8 @@ start_process (void *file_name_)
   palloc_free_page (file_name);
 
   sema_up(&thread_current()->parent->sema_load);
-
+  //p3
+  printf("start_process done\n");
   if (!success){
     //p3
     //printf("exit in start process\n");
@@ -183,7 +184,9 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   //p3
+  prinf("i'm in exit\n");
   pt_destroy(&cur->page_table);
+  prinf("pt_destroy complete\n");
  /* Destroy the current process's page directory and switch back
     to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -558,7 +561,7 @@ setup_stack (void **esp)
     }
     //p3
       struct pte *page = malloc(sizeof(struct pte));
-      printf("setup_stack\n");
+      //printf("setup_stack\n");
       if(page != NULL)
       {
         page->vaddr = pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE); 
@@ -571,7 +574,7 @@ setup_stack (void **esp)
         page->zero_bytes = 0;
         page->pinned = true;
         success = pte_insert(&thread_current()->page_table, page);
-        printf("setup_stack done\n");
+        //printf("setup_stack done\n");
       }
 
   return success;
