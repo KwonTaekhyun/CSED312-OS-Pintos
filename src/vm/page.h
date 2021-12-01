@@ -20,6 +20,9 @@ struct pte
 	size_t zero_bytes; 
 
 	struct hash_elem elem;   
+
+	/* P3-5. File memory mapping */
+	struct frame* frame;
 };
 
 bool pt_init(struct hash *pt);
