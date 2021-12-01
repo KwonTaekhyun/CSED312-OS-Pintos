@@ -7,6 +7,8 @@
 /* P3-5. File memory mapping */
 #include "filesys/off_t.h"
 #include <list.h>
+#include "vm/page.h"
+#include "vm/frame.h"
 
 void syscall_init (void);
 
