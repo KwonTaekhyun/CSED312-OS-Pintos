@@ -343,7 +343,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
       read_bytes, PGSIZE - read_bytes, true, true);
 
     // P3-5-test
-    // printf("pte created success?: %d\n", pte_created);
+    printf("pte created success?: %d\n", pte_created);
 
     if(!pte_created){
       pt_destory_by_addr (addr);
@@ -361,7 +361,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
       read_bytes, PGSIZE - read_bytes, true, true);
 
     // P3-5-test
-    //printf("pte created success?: %d\n", pte_created);
+    printf("pte created success?: %d\n", pte_created);
 
     if(!pte_created){
         int j;
