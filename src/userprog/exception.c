@@ -170,6 +170,10 @@ bool load = false;
 			load = true;
 	  	}
 	}
+
+   // P3-5-test
+   printf("load is success?: %d\n", load);
+
    if(load == false) sys_exit(-1);
    /* if(load == false){
 	  printf ("Page fault at %p: %s error %s page in %s context.\n",
