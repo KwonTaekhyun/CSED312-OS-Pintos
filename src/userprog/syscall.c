@@ -342,6 +342,9 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
       read_bytes, PGSIZE - read_bytes, true, true);
 
+    // P3-5-test
+    printf("pte created success?: %d\n", pte_created);
+
     if(!pte_created){
         int j;
         for(j = i ; j > -1; j--){
