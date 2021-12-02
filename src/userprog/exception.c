@@ -163,7 +163,7 @@ bool load = false;
   	struct pte *page = pte_find(fault_addr);
      
    // P3-5-test
-   printf("There is no page?: %d\n", page == NULL);
+   //printf("There is no page?: %d\n", page == NULL);
 
   	if(page != NULL)
   	{
@@ -176,7 +176,7 @@ bool load = false;
 	}
 
    // P3-5-test
-   printf("load is success?: %d\n", load);
+   //printf("load is success?: %d\n", load);
 
    if(load == false) sys_exit(-1);
    /* if(load == false){
