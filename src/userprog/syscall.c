@@ -335,6 +335,24 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     return -1;
   }
   int file_page_num = file_bytes / PGSIZE;
+
+  if(file_page_num == 0){
+    size_t read_bytes = file_bytes;
+
+    bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
+      read_bytes, PGSIZE - read_bytes, true, true);
+
+    // P3-5-test
+    printf("pte created success?: %d\n", pte_created);
+
+    if(!pte_created){
+      pt_destory_by_addr (addr);
+      file_close(file_ptr);
+      lock_release (&filesys_lock);
+      return -1;
+    }
+  }
+  
   for(i = 0; i < file_page_num; i++){
     // ** 페이지 단위로 pte 생성 (pte_create_with_file) **
     size_t read_bytes = file_bytes - (i * PGSIZE) > PGSIZE ? PGSIZE : file_bytes - (i * PGSIZE);
