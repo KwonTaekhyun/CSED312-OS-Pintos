@@ -340,7 +340,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     size_t read_bytes = file_bytes - (i * PGSIZE) > PGSIZE ? PGSIZE : file_bytes - (i * PGSIZE);
 
     bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
-      read_bytes, PGSIZE - read_bytes, true);
+      read_bytes, PGSIZE - read_bytes, true, true);
 
     if(!pte_created){
         int j;
