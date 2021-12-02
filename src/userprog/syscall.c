@@ -336,6 +336,9 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   }
   int file_page_num = file_bytes / PGSIZE;
 
+    // P3-5-test
+    printf("file_bytes: %d, file_page_num: %d\n", file_bytes, file_page_num);
+
   if(file_page_num == 0){
     size_t read_bytes = file_bytes;
 
@@ -343,7 +346,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
       read_bytes, PGSIZE - read_bytes, true, true);
 
     // P3-5-test
-    printf("pte created success?: %d\n", pte_created);
+    // printf("pte created success?: %d\n", pte_created);
 
     if(!pte_created){
       pt_destory_by_addr (addr);
@@ -361,7 +364,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
       read_bytes, PGSIZE - read_bytes, true, true);
 
     // P3-5-test
-    printf("pte created success?: %d\n", pte_created);
+    // printf("pte created success?: %d\n", pte_created);
 
     if(!pte_created){
         int j;
