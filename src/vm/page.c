@@ -153,7 +153,7 @@ void pt_destory_by_addr (void* addr)
     free(page);
 }
 
-bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable)
+bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable, bool file_mapping)
 {
     if(pte_find(addr) != NULL){
         return false;
@@ -164,6 +164,8 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
     {
         page_entry->vaddr = addr;
         page_entry->file = file;
+
+        page_entry->type = file_mapping ? VM_FILE : VM_BIN;
 
         page_entry->offset = offset;
         page_entry->read_bytes = read_bytes;
