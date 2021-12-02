@@ -7,6 +7,9 @@
 #define VM_FILE 1
 #define VM_ANON 2
 
+/* P3-5. File memory mapping */
+#include "filesys/off_t.h"
+
 struct pte
 {
 	struct file* file;   
