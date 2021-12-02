@@ -361,7 +361,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   file_mapping_entry->addr = addr;
   file_mapping_entry->mapid = current_thread->file_mapping_num++;
   file_mapping_entry->file_page_num = file_page_num;
-  list_push_back(&(current_thread->file_mapping_table), file_mapping_entry);
+  list_push_back(&(current_thread->file_mapping_table), &(file_mapping_entry->file_mapping_elem));
 
   lock_release (&filesys_lock);
 

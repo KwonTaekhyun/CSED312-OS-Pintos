@@ -155,8 +155,9 @@ void pt_destory_by_addr (void* addr)
 
 bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable)
 {
-    if(pte_find(addr) != NULL)
+    if(pte_find(addr) != NULL){
         return false;
+    }
 
     struct pte* page_entry = malloc(sizeof(struct pte));
     if(page_entry != NULL)
