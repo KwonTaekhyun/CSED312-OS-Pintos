@@ -672,7 +672,7 @@ bool handle_mm_fault(struct pte *p)
         if(!load_file(addr, p))
         {
           //frame_deallocate(f->addr);
-          printf("load file error\n");
+          //printf("load file error\n");
           palloc_free_page(addr);
           return false;
         }
