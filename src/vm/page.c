@@ -165,6 +165,9 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
         return false;
     }
 
+    // P3-5. File memory mapping
+    printf("address: %p", addr);
+
     struct pte* page_entry = malloc(sizeof(struct pte));
     if(page_entry != NULL)
     {
