@@ -402,12 +402,6 @@ void sys_munmap(int mapid){
       break;
     }
   }
-  
-  munmapping(file_mapping_entry);
-}
-
-void munmapping(struct file_mapping *file_mapping_entry){
-  struct thread *current_thread = thread_current();
   if(!file_mapping_entry){
     return;
   }

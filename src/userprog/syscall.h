@@ -42,7 +42,6 @@ struct file_mapping{
 
 mapid_t sys_mmap(int fd_idx, void *addr);
 void sys_munmap(int mapid);
-void munmapping(struct file_mapping *file_mapping_entry);
 void mmap_file_write_at(struct file* file, void* addr, size_t read_bytes, off_t offset);
 
 void is_valid_address(void *esp, int start, int end);
