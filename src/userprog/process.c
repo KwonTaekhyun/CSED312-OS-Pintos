@@ -538,6 +538,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->read_bytes = read_bytes;
         page->zero_bytes = zero_bytes;
         page->pinned = false;
+        page->frame = NULL;
         //printf("pte insert\n");
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
