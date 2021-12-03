@@ -180,6 +180,8 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
         page_entry->read_bytes = read_bytes;
         page_entry->zero_bytes = zero_bytes;
 
+        page_entry->is_loaded = false;
+
         page_entry->writable = writable;
 
         page_entry->frame = NULL;
