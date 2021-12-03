@@ -43,6 +43,10 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   //is_valid_address(f->esp, 0, 3);
+
+  /* P3-5. File memory mapping */
+  debug_backtrace();
+
   check_address(f->esp,f->esp);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
@@ -313,7 +317,6 @@ void sys_close(int fd_idx){
 mapid_t sys_mmap(int fd_idx, void *addr){
 
   if(fd_idx < 2 || !addr || pg_ofs(addr) != 0 || !is_user_vaddr(addr)){
-    printf("Can't pass requirements\n");
     return -1;
   }
 
@@ -323,7 +326,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
 
   struct file* file_ptr = file_reopen(fd->file_ptr);
   if(!file_ptr){
-    printf("No file\n");
     lock_release (&filesys_lock);
     return -1;
   }
@@ -333,14 +335,13 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   off_t offset = 0;
   int file_bytes = file_length(file_ptr);
   if(!file_bytes){
-    printf("No file data\n");
     lock_release (&filesys_lock);
     return -1;
   }
   int file_page_num = file_bytes / PGSIZE;
 
     // P3-5-test
-    printf("file_bytes: %d, file_page_num: %d\n", file_bytes, file_page_num);
+    // printf("file_bytes: %d, file_page_num: %d\n", file_bytes, file_page_num);
 
   for(i = 0; i < file_page_num; i++){
     // ** 페이지 단위로 pte 생성 (pte_create_with_file) **
@@ -357,7 +358,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     }
 
     // P3-5-test
-    printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
+    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
 
     offset += read_bytes;
   }
@@ -378,7 +379,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     file_page_num++;
 
     // P3-5-test
-    printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
+    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
   }
 
   struct thread *current_thread = thread_current();
