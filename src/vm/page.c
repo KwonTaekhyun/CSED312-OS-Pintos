@@ -65,12 +65,6 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 } 
 bool load_file(struct frame *frame, struct pte *p)
 {
-    if(!p->file) printf("No file\n");
-    if(!frame->addr) printf("No frame addr\n");
-    if(!p->read_bytes) printf("No read bytes\n");
-
-    printf("file address: %p, frame address: %p", p->file, frame->addr);
-
     if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes)){
         // P3-5-test
         // printf("load file fail\n");

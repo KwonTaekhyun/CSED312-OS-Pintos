@@ -159,7 +159,7 @@ page_fault (struct intr_frame *f)
   // P3-6. Swapping
 //   printf("Page fault, address: %p\n", fault_addr);
 
-  debug_backtrace();
+//   debug_backtrace();
 
   //p3
   //check_address(fault_addr, f->esp);

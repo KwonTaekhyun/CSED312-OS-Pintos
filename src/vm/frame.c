@@ -59,6 +59,7 @@ void frame_deallocate(void *addr)
 }
 struct frame *frame_evict(enum palloc_flags flags)
 {
+    printf("frame eviction\n");
     // clock algorithm을 통해 evict할 frame을 선택
     struct frame *frame = clock_forwarding();
     while(pagedir_is_accessed (frame->thread->pagedir, frame->pte->vaddr)){
