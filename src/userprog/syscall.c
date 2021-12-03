@@ -349,6 +349,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     if(!pte_created)
     {
       file_close(file_ptr);
+      lock_release (&filesys_lock);
       return -1;
     }
 
@@ -367,6 +368,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     if(!pte_created)
     {
       file_close(file_ptr);
+      lock_release (&filesys_lock);
       return -1;
     }
 
