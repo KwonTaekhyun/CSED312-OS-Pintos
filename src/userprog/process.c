@@ -209,10 +209,16 @@ process_exit (void)
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
 
-    sys_munmap(fd->index);
-
     file_close(fd->file_ptr);
     palloc_free_page(fd);
+  }
+
+  struct list_elem *e;
+  for (e = list_begin (&thread_current()->file_mapping_table); e != list_end (&thread_current()->file_mapping_table);)
+  {
+      struct file_mapping *file_mapping = list_entry (e, struct file_mapping, file_mapping_elem);
+      e = list_next (e);
+      munmapping(file_mapping);
   }
   
   sema_up(&(cur->sema_wait));
