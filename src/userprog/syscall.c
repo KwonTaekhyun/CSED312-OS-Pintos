@@ -337,7 +337,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   int file_page_num = file_bytes / PGSIZE;
 
     // P3-5-test
-    printf("file_bytes: %d, file_page_num: %d\n", file_bytes, file_page_num);
+    // printf("file_bytes: %d, file_page_num: %d\n", file_bytes, file_page_num);
 
   for(i = 0; i < file_page_num; i++){
     // ** 페이지 단위로 pte 생성 (pte_create_with_file) **
@@ -346,8 +346,14 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
       read_bytes, PGSIZE - read_bytes, true, true);
 
+    if(!pte_created)
+    {
+      file_close(file_ptr);
+      return -1;
+    }
+
     // P3-5-test
-    printf("pte created success?: %d\n", pte_created);
+    // printf("pte created success?: %d\n", pte_created);
 
     offset += read_bytes;
   }
@@ -358,8 +364,14 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
       read_bytes, PGSIZE - read_bytes, true, true);
 
+    if(!pte_created)
+    {
+      file_close(file_ptr);
+      return -1;
+    }
+
     // P3-5-test
-    printf("pte created success?: %d\n", pte_created);
+    // printf("pte created success?: %d\n", pte_created);
   }
 
   struct thread *current_thread = thread_current();
