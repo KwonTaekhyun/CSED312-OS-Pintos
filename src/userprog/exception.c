@@ -157,8 +157,7 @@ page_fault (struct intr_frame *f)
   //p3
   //check_address(fault_addr, f->esp);
   check_address(fault_addr, f->esp);
-	if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
-        sys_exit(-1);
+  if(!not_present) sys_exit(-1);
 bool load = false;
   	struct pte *page = pte_find(fault_addr);
   	if(page != NULL)
@@ -171,13 +170,5 @@ bool load = false;
 	  	}
 	}
    if(load == false) sys_exit(-1);
-   /* if(load == false){
-	  printf ("Page fault at %p: %s error %s page in %s context.\n",
-      	    fault_addr,
-       	    not_present ? "not present" : "rights violation",
-            write ? "writing" : "reading",
-            user ? "user" : "kernel");
-	  kill (f);
-  }
-   */
+   
 }

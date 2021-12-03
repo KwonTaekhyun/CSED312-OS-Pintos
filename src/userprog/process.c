@@ -651,43 +651,34 @@ bool handle_mm_fault(struct pte *p)
     //frame_deallocate(f->addr);
     return false;
   }
-  if(addr==NULL) return false;
-  if(p!=NULL) 
+  if((addr==NULL)||(p==NULL)) return false;
+  bool load;
+  switch(p->type)
   {
-    switch(p->type)
+    case VM_BIN : 
     {
-      case VM_BIN : 
-      {
-        if(!load_file(addr, p))
-        {
-          //frame_deallocate(f->addr);
-          printf("load file error\n");
-          palloc_free_page(addr);
-          return false;
-        }
-        break;
-      }
-      case VM_FILE : 
-      {
-        if(!load_file(addr, p))
-        {
-          //frame_deallocate(f->addr);
-          printf("load file error\n");
-          palloc_free_page(addr);
-          return false;
-        }
-        break;
-      }
-      case VM_ANON : return false;
+      load = load_file(addr,p);
+      break;
     }
-    if(!install_page(p->vaddr, addr, p->writable))
+    case VM_FILE : 
     {
-      palloc_free_page(addr);
-      //frame_deallocate(f->addr);
-      return false;
+      load = load_file(addr,p);
+      break;
     }
-    p->is_loaded = true;
-    return true;
+    case VM_ANON : return false;
   }
-  else return false;
+  if(!load)
+  {
+    //frame_deallocate(f->addr);
+    palloc_free_page(addr);
+    return false;
+  }
+  if(!install_page(p->vaddr, addr, p->writable))
+  {
+    palloc_free_page(addr);
+    //frame_deallocate(f->addr);
+    return false;
+  }
+  p->is_loaded = true;
+  return true;
 }
