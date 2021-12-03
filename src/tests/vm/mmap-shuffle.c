@@ -27,7 +27,7 @@ test_main (void)
   /* Initialize. */
   for (i = 0; i < SIZE; i++){
     buf[i] = i * 257;
-    printf("%02hhx\n", buf[i]);
+    printf("%hhx\n", buf[i]);
   }
   msg ("init: cksum=%lu", cksum (buf, SIZE));
     
