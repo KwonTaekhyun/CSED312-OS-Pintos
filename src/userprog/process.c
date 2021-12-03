@@ -182,7 +182,26 @@ void
 process_exit (void)
 {
   struct thread *cur = thread_current ();
-  uint32_t *pd;
+
+  struct list *fd_list = &cur->file_descriptor_list;
+  while (!list_empty(fd_list)) {
+    struct list_elem *e = list_pop_front (fd_list);
+    struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
+
+    file_close(fd->file_ptr);
+    palloc_free_page(fd);
+  }
+
+  struct list *file_mapping_table = &cur->file_mapping_table;
+  struct list_elem *e;
+  while (!list_empty(file_mapping_table)) {
+    e = list_begin (file_mapping_table);
+    struct file_mapping *file_mapping = list_entry(e, struct file_mapping, file_mapping_elem);
+
+    sys_munmap(file_mapping->mapid);
+  }
+
+    uint32_t *pd;
   //p3
   //printf("i'm in exit\n");
   pt_destroy(&cur->page_table);
@@ -203,15 +222,6 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-
-  struct list *fd_list = &cur->file_descriptor_list;
-  while (!list_empty(fd_list)) {
-    struct list_elem *e = list_pop_front (fd_list);
-    struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-
-    file_close(fd->file_ptr);
-    palloc_free_page(fd);
-  }
   
   sema_up(&(cur->sema_wait));
   sema_down(&(cur->sema_exit));
@@ -591,6 +601,8 @@ setup_stack (void **esp)
 static bool
 install_page (void *upage, void *kpage, bool writable)
 {
+  // P3-5. File memory mapping
+  // printf("address V: %p, P: %p\n", upage, kpage);
   struct thread *t = thread_current ();
 
   /* Verify that there's not already a page at that virtual
@@ -643,15 +655,24 @@ void argu_stack(char **argv, int argc, void **esp)
 
 bool handle_mm_fault(struct pte *p)
 {
+  // P3-5. File memory mapping
+  // printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
   /* struct frame *f = frame_allocate(PAL_USER);
   f->pte = p; */
   uint8_t *addr = palloc_get_page(PAL_USER);
+  // P3-5. File memory mapping  
+  // printf("1\n");
   p->pinned = true;
   if(p->is_loaded) {
     //frame_deallocate(f->addr);
+    // printf("2\n");
     return false;
   }
-  if(addr==NULL) return false;
+  if(addr==NULL){
+    // P3-5. File memory mapping  
+    // printf("3\n");
+    return false;
+  }
   if(p!=NULL) 
   {
     switch(p->type)

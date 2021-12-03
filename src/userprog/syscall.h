@@ -4,6 +4,12 @@
 
 #include "lib/user/syscall.h"
 
+/* P3-5. File memory mapping */
+#include "filesys/off_t.h"
+#include <list.h>
+#include "vm/page.h"
+#include "vm/frame.h"
+
 void syscall_init (void);
 
 /* P2-3 */
@@ -23,6 +29,20 @@ int sys_write (int fd, const void *buffer, unsigned size);
 void sys_seek (int fd_idx, unsigned pos);
 unsigned sys_tell (int fd_idx);
 void sys_close(int fd_idx);
+
+/* P3-5. File memory mapping */
+struct file_mapping{
+    mapid_t mapid;
+    struct file *file_ptr;
+    void *addr;
+    struct list_elem file_mapping_elem;
+    struct list pte_list;
+    int file_page_num;
+};
+
+mapid_t sys_mmap(int fd_idx, void *addr);
+void sys_munmap(int mapid);
+void mmap_file_write_at(struct file* file, void* addr, size_t read_bytes, off_t offset);
 
 void is_valid_address(void *esp, int start, int end);
 struct file_descriptor* find_fd_by_idx(int fd_idx);

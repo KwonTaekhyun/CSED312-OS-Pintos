@@ -481,6 +481,9 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back(&(running_thread()->children), &(t->child));
   t->cur_file = NULL;
   #endif
+
+  /* P3-5. File memory mapping */
+  list_init(&(t->file_mapping_table));
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and

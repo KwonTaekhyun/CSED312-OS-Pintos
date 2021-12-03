@@ -129,6 +129,10 @@ struct thread
     //p3
     struct hash page_table;
 
+    /* P3-5. File memory mapping */
+   int file_mapping_num;
+   struct list file_mapping_table;
+
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };

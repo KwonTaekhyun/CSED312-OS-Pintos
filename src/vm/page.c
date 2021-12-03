@@ -65,8 +65,14 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 } 
 bool load_file(void *addr, struct pte *p)
 {
-    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=(p->read_bytes))
+    // P3-5-test
+    // printf("load file, address: %p\n", addr);
+
+    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=(p->read_bytes)){
+        // P3-5-test
+        // printf("load file fail\n");
         return false;
+    }
     memset(addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
 }
@@ -143,3 +149,48 @@ page_load(void *upage)
     }
     return true;
 } */
+
+/* P3-5. File memory mapping */
+void pt_destory_by_addr (void* addr)
+{
+    struct pte* page = pte_find(addr);
+    pte_delete(&(thread_current()->page_table), page);
+    if(page->frame!=NULL)  frame_deallocate(page->frame->addr);
+    free(page);
+}
+
+bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable, bool file_mapping)
+{
+    if(pte_find(addr) != NULL){
+        return false;
+    }
+
+    // P3-5. File memory mapping
+    // printf("address: %p, offset: %d\n", addr, offset / 4096);
+
+    struct pte* page_entry = malloc(sizeof(struct pte));
+    if(page_entry != NULL)
+    {
+        page_entry->vaddr = addr;
+        page_entry->file = file;
+
+        page_entry->type = file_mapping ? VM_FILE : VM_BIN;
+
+        page_entry->offset = offset;
+        page_entry->read_bytes = read_bytes;
+        page_entry->zero_bytes = zero_bytes;
+
+        page_entry->is_loaded = false;
+
+        page_entry->writable = writable;
+
+        page_entry->frame = NULL;
+
+        hash_insert(&(thread_current()->page_table), &page_entry->elem);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}

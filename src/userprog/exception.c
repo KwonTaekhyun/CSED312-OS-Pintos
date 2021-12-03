@@ -161,6 +161,10 @@ page_fault (struct intr_frame *f)
         sys_exit(-1);
 bool load = false;
   	struct pte *page = pte_find(fault_addr);
+     
+   // P3-5-test
+   //printf("There is no page?: %d\n", page == NULL);
+
   	if(page != NULL)
   	{
 	  	load = handle_mm_fault(page);
@@ -170,6 +174,10 @@ bool load = false;
 			load = true;
 	  	}
 	}
+
+   // P3-5-test
+   //printf("load is success?: %d\n", load);
+
    if(load == false) sys_exit(-1);
    /* if(load == false){
 	  printf ("Page fault at %p: %s error %s page in %s context.\n",
