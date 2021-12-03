@@ -204,6 +204,14 @@ process_exit (void)
       pagedir_destroy (pd);
     }
 
+  struct list_elem *e;
+  for (e = list_begin (&thread_current()->file_mapping_table); e != list_end (&thread_current()->file_mapping_table);)
+  {
+      struct file_mapping *file_mapping = list_entry (e, struct file_mapping, file_mapping_elem);
+      e = list_next (e);
+      munmapping(file_mapping);
+  }
+
   struct list *fd_list = &cur->file_descriptor_list;
   while (!list_empty(fd_list)) {
     struct list_elem *e = list_pop_front (fd_list);
@@ -211,14 +219,6 @@ process_exit (void)
 
     file_close(fd->file_ptr);
     palloc_free_page(fd);
-  }
-
-  struct list_elem *e;
-  for (e = list_begin (&thread_current()->file_mapping_table); e != list_end (&thread_current()->file_mapping_table);)
-  {
-      struct file_mapping *file_mapping = list_entry (e, struct file_mapping, file_mapping_elem);
-      e = list_next (e);
-      munmapping(file_mapping);
   }
   
   sema_up(&(cur->sema_wait));
