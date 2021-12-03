@@ -660,12 +660,18 @@ bool handle_mm_fault(struct pte *p)
   /* struct frame *f = frame_allocate(PAL_USER);
   f->pte = p; */
   uint8_t *addr = palloc_get_page(PAL_USER);
+  // P3-5. File memory mapping  
+  printf("1\n");
   p->pinned = true;
   if(p->is_loaded) {
     //frame_deallocate(f->addr);
     return false;
   }
-  if(addr==NULL) return false;
+  if(addr==NULL){
+    // P3-5. File memory mapping  
+    printf("2\n");
+    return false;
+  }
   if(p!=NULL) 
   {
     switch(p->type)
