@@ -414,8 +414,6 @@ void sys_munmap(int mapid){
   for(i = 0; i < file_page_num; i++){
     // ** 페이지 단위로 pte 할당해제 **
     // ** 만약 frame이 할당되어 있다면 frame 제거하고 dirty할 경우 disk에 작성한다. **
-    // P3-5. File memory mapping
-    printf("unmapping %d times in %s\n", i, current_thread->name);
     
     struct pte* page = pte_find(file_mapping_entry->addr + (i * PGSIZE));
     if(!page){
