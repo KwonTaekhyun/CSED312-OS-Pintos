@@ -172,7 +172,7 @@ bool sys_create(const char *file , unsigned initial_size)
     sys_exit(-1);
   }
   // P3-5. File memory mapping
-  printf("file size: %d", initial_size);
+  // printf("file size: %d", initial_size);
   return filesys_create (file, initial_size);
 }
 
