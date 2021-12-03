@@ -25,6 +25,7 @@
 //p3
 #include "vm/frame.h"
 #include "vm/page.h"
+#include "vm/swap.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -559,14 +560,14 @@ setup_stack (void **esp)
   uint8_t *kpage;
   bool success = false;
 
-  kpage = palloc_get_page(PAL_USER | PAL_ZERO);
+  kpage = frame_allocate(PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
       success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), kpage, true);
       if (success)
         *esp = PHYS_BASE;
       else
-        palloc_free_page(kpage);
+        frame_deallocate(kpage);
     }
     //p3
       struct pte *page = malloc(sizeof(struct pte));
@@ -659,7 +660,7 @@ bool handle_mm_fault(struct pte *p)
   // printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
   /* struct frame *f = frame_allocate(PAL_USER);
   f->pte = p; */
-  uint8_t *addr = palloc_get_page(PAL_USER);
+  uint8_t *addr = frame_allocate(PAL_USER);
   // P3-5. File memory mapping  
   // printf("1\n");
   p->pinned = true;
@@ -683,7 +684,7 @@ bool handle_mm_fault(struct pte *p)
         {
           //frame_deallocate(f->addr);
           printf("load file error\n");
-          palloc_free_page(addr);
+          frame_deallocate(addr);
           return false;
         }
         break;
@@ -694,16 +695,19 @@ bool handle_mm_fault(struct pte *p)
         {
           //frame_deallocate(f->addr);
           printf("load file error\n");
-          palloc_free_page(addr);
+          frame_deallocate(addr);
           return false;
         }
         break;
       }
-      case VM_ANON : return false;
+      case VM_ANON : {
+        swap_in(p->swap_index, addr);
+        break;
+      }
     }
     if(!install_page(p->vaddr, addr, p->writable))
     {
-      palloc_free_page(addr);
+      frame_deallocate(addr);
       //frame_deallocate(f->addr);
       return false;
     }
