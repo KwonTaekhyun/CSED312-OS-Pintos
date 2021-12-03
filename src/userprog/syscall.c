@@ -372,6 +372,8 @@ mapid_t sys_mmap(int fd_idx, void *addr){
       return -1;
     }
 
+    file_page_num++;
+
     // P3-5-test
     // printf("pte created success?: %d\n", pte_created);
   }
@@ -417,8 +419,11 @@ void sys_munmap(int mapid){
     }
     if(page->frame)
     {
-      if(pagedir_is_dirty (current_thread->pagedir, page->vaddr))
-          file_write_at(page->file, page->frame->addr, PGSIZE, i * PGSIZE);
+      if(pagedir_is_dirty (current_thread->pagedir, page->vaddr)){
+        // P3-5. File memory mapping
+        printf("There are something to write (dirty)\n");
+        file_write_at(page->file, page->frame->addr, PGSIZE, i * PGSIZE);
+      }
       frame_deallocate(page->frame->addr);
     }
     pagedir_clear_page (current_thread->pagedir, page->vaddr);
