@@ -576,7 +576,7 @@ setup_stack (void **esp)
       {
         page->vaddr = pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE); 
         page->writable = true; 
-        page->type = VM_BIN; 
+        page->type = VM_ANON; 
         page->is_loaded = true;
         page->file = NULL;
         page->offset = 0;
