@@ -417,11 +417,13 @@ void sys_munmap(int mapid){
     if(!page){
       continue;
     }
+    // P3-5. File memory mapping
+    printf("Is Dirty?: %s\n", pagedir_is_dirty (current_thread->pagedir, page->vaddr) ? "T" : "F");
     if(page->frame)
     {
       if(pagedir_is_dirty (current_thread->pagedir, page->vaddr)){
         // P3-5. File memory mapping
-        printf("There are something to write (dirty)\n");
+        // printf("There are something to write (dirty)\n");
         file_write_at(page->file, page->frame->addr, PGSIZE, i * PGSIZE);
       }
       frame_deallocate(page->frame->addr);
