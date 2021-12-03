@@ -322,6 +322,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
 
   struct file* file_ptr = file_reopen(fd->file_ptr);
   if(!file_ptr){
+    printf("No file\n");
     lock_release (&filesys_lock);
     return -1;
   }
@@ -331,6 +332,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   off_t offset = 0;
   int file_bytes = file_length(file_ptr);
   if(!file_bytes){
+    printf("No file data\n");
     lock_release (&filesys_lock);
     return -1;
   }
