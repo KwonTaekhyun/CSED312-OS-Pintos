@@ -313,6 +313,7 @@ void sys_close(int fd_idx){
 mapid_t sys_mmap(int fd_idx, void *addr){
 
   if(fd_idx < 2 || !addr || pg_ofs(addr) != 0 || !is_user_vaddr(addr)){
+    printf("Can't pass requirements\n");
     return -1;
   }
 
