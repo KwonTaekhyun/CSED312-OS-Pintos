@@ -58,7 +58,7 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
     if(page->is_loaded)
     {
         addr = pagedir_get_page(thread_current()->pagedir,page->vaddr);
-        frame_deallocate(addr);
+        // frame_deallocate(addr);
         pagedir_clear_page(thread_current()->pagedir, page->vaddr);
     }
     free(page);
