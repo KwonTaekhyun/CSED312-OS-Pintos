@@ -601,6 +601,8 @@ setup_stack (void **esp)
 static bool
 install_page (void *upage, void *kpage, bool writable)
 {
+  // P3-5. File memory mapping
+  printf("address V: %p, P: %p\n", upage, kpage);
   struct thread *t = thread_current ();
 
   /* Verify that there's not already a page at that virtual
