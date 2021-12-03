@@ -157,7 +157,7 @@ page_fault (struct intr_frame *f)
   user = (f->error_code & PF_U) != 0;
 
   // P3-6. Swapping
-  printf("Page fault, address: %p\n", fault_addr);
+//   printf("Page fault, address: %p\n", fault_addr);
 
   debug_backtrace();
 
@@ -166,13 +166,13 @@ page_fault (struct intr_frame *f)
   check_address(fault_addr, f->esp);
 
   // P3-6. Swapping
-  printf("Page fault2, address: %p\n", fault_addr);
+//   printf("Page fault2, address: %p\n", fault_addr);
 
    if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
         sys_exit(-1);
 
    // P3-6. Swapping
-   printf("Page fault3, address: %p\n", fault_addr);
+   // printf("Page fault3, address: %p\n", fault_addr);
 
    bool load = false;
   	struct pte *page = pte_find(fault_addr);
