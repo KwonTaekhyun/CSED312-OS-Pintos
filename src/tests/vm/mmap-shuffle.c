@@ -25,8 +25,10 @@ test_main (void)
   CHECK (mmap (handle, buf) != MAP_FAILED, "mmap \"buffer\"");
 
   /* Initialize. */
-  for (i = 0; i < SIZE; i++)
+  for (i = 0; i < SIZE; i++){
     buf[i] = i * 257;
+    printf("%d\n", i);
+  }
   msg ("init: cksum=%lu", cksum (buf, SIZE));
     
   /* Shuffle repeatedly. */
