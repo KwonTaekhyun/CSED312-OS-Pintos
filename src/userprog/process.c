@@ -209,6 +209,8 @@ process_exit (void)
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
 
+    sys_munmap(fd->index);
+
     file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
