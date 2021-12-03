@@ -382,9 +382,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
   }
 
-  // P3-5-test
-  printf("file_mapping_table 추가 시작\n");
-
   struct thread *current_thread = thread_current();
   struct file_mapping* file_mapping_entry = malloc(sizeof(struct file_mapping));
   file_mapping_entry->file_ptr = file_ptr;
@@ -392,9 +389,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   file_mapping_entry->mapid = current_thread->file_mapping_num++;
   file_mapping_entry->file_page_num = file_page_num;
   list_push_back(&(current_thread->file_mapping_table), &(file_mapping_entry->file_mapping_elem));
-
-  // P3-5-test
-  printf("file_mapping_table 추가 완료\n");
 
   lock_release (&filesys_lock);
 
