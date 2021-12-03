@@ -11,6 +11,8 @@
 #include "vm/frame.h"
 #include "userprog/process.h"
 
+#include "lib/debug.h"
+
 /* Number of page faults processed. */
 static long long page_fault_cnt;
 
@@ -156,6 +158,8 @@ page_fault (struct intr_frame *f)
 
   // P3-6. Swapping
   printf("Page fault, address: %p\n", fault_addr);
+
+  debug_backtrace();
 
   //p3
   //check_address(fault_addr, f->esp);
