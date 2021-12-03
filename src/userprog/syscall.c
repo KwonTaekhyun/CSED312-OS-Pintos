@@ -418,7 +418,7 @@ void sys_munmap(int mapid){
       continue;
     }
     // P3-5. File memory mapping
-    printf("Is Dirty?: %s\n", pagedir_is_dirty (current_thread->pagedir, page->vaddr) ? "T" : "F");
+    // printf("Is Dirty?: %s\n", pagedir_is_dirty (current_thread->pagedir, page->vaddr) ? "T" : "F");
     if(pagedir_is_dirty (current_thread->pagedir, page->vaddr)){
         // P3-5. File memory mapping
         // printf("There are something to write (dirty)\n");
