@@ -317,8 +317,6 @@ void sys_close(int fd_idx){
 mapid_t sys_mmap(int fd_idx, void *addr){
 
   if(fd_idx < 2 || !addr || pg_ofs(addr) != 0 || !is_user_vaddr(addr)){
-    // P3-5-test
-    printf("first req fail\n");
     return -1;
   }
 
@@ -328,8 +326,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
 
   struct file* file_ptr = file_reopen(fd->file_ptr);
   if(!file_ptr){
-    // P3-5-test
-    printf("second req fail\n");
     lock_release (&filesys_lock);
     return -1;
   }
@@ -339,8 +335,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   off_t offset = 0;
   int file_bytes = file_length(file_ptr);
   if(!file_bytes){
-    // P3-5-test
-    printf("third req fail\n");
     lock_release (&filesys_lock);
     return -1;
   }
@@ -364,7 +358,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     }
 
     // P3-5-test
-    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
+    printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
 
     offset += read_bytes;
   }
@@ -385,7 +379,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     file_page_num++;
 
     // P3-5-test
-    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
+    printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
   }
 
   struct thread *current_thread = thread_current();
