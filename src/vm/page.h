@@ -10,6 +10,9 @@
 /* P3-5. File memory mapping */
 #include "filesys/off_t.h"
 
+/* P3-6. Swapping */
+#include "vm/frame.h"
+
 struct pte
 {
 	struct file* file;   
@@ -39,7 +42,7 @@ bool pte_delete(struct hash *pt, struct pte *pte);
 struct pte *pte_find(void *vaddr);
 void pt_destroy(struct hash *pt);
 void pt_destroy_func(struct hash_elem *e, void *aux);
-bool load_file(void *addr, struct pte *p);
+bool load_file(struct frame *frame, struct pte *p);
 
 /* P3-5. File memory mapping */
 void pt_destory_by_addr (void* addr);

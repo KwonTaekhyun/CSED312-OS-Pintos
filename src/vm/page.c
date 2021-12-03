@@ -63,17 +63,17 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
     }
     free(page);
 } 
-bool load_file(void *addr, struct pte *p)
+bool load_file(struct frame *frame, struct pte *p)
 {
     // P3-5-test
     // printf("load file, address: %p\n", addr);
 
-    if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=(p->read_bytes)){
+    if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes)){
         // P3-5-test
         // printf("load file fail\n");
         return false;
     }
-    memset(addr+(p->read_bytes), 0, p->zero_bytes);
+    memset(frame->addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
 }
 /* bool pte_create_file(void* upage, struct file* file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable, bool is_mmap)

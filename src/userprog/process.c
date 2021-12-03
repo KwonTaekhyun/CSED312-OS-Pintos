@@ -557,17 +557,17 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 static bool
 setup_stack (void **esp) 
 {
-  uint8_t *kpage;
+  struct frame *frame;
   bool success = false;
 
-  kpage = frame_allocate(PAL_USER | PAL_ZERO);
-  if (kpage != NULL) 
+  frame = frame_allocate(PAL_USER | PAL_ZERO);
+  if (frame != NULL) 
     {
-      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), kpage, true);
+      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
       if (success)
         *esp = PHYS_BASE;
       else
-        frame_deallocate(kpage);
+        frame_deallocate(frame->addr);
     }
     //p3
       struct pte *page = malloc(sizeof(struct pte));
@@ -583,9 +583,12 @@ setup_stack (void **esp)
         page->read_bytes = 0;
         page->zero_bytes = 0;
         page->pinned = true;
+        page->frame = frame;
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
+
+
 
   return success;
 }
@@ -660,7 +663,7 @@ bool handle_mm_fault(struct pte *p)
   // printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
   /* struct frame *f = frame_allocate(PAL_USER);
   f->pte = p; */
-  uint8_t *addr = frame_allocate(PAL_USER);
+  struct frame *frame = frame_allocate(PAL_USER);
   // P3-5. File memory mapping  
   // printf("1\n");
   p->pinned = true;
@@ -669,7 +672,7 @@ bool handle_mm_fault(struct pte *p)
     // printf("2\n");
     return false;
   }
-  if(addr==NULL){
+  if(frame==NULL){
     // P3-5. File memory mapping  
     // printf("3\n");
     return false;
@@ -680,34 +683,34 @@ bool handle_mm_fault(struct pte *p)
     {
       case VM_BIN : 
       {
-        if(!load_file(addr, p))
+        if(!load_file(frame, p))
         {
           //frame_deallocate(f->addr);
           printf("load file error\n");
-          frame_deallocate(addr);
+          frame_deallocate(frame->addr);
           return false;
         }
         break;
       }
       case VM_FILE : 
       {
-        if(!load_file(addr, p))
+        if(!load_file(frame, p))
         {
           //frame_deallocate(f->addr);
           printf("load file error\n");
-          frame_deallocate(addr);
+          frame_deallocate(frame->addr);
           return false;
         }
         break;
       }
       case VM_ANON : {
-        swap_in(p->swap_index, addr);
+        swap_in(p->swap_index, frame->addr);
         break;
       }
     }
-    if(!install_page(p->vaddr, addr, p->writable))
+    if(!install_page(p->vaddr, frame->addr, p->writable))
     {
-      frame_deallocate(addr);
+      frame_deallocate(frame->addr);
       //frame_deallocate(f->addr);
       return false;
     }
