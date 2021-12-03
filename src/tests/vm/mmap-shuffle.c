@@ -25,12 +25,12 @@ test_main (void)
   CHECK (mmap (handle, buf) != MAP_FAILED, "mmap \"buffer\"");
 
   for (i = 0; i < SIZE; i++){
-    printf("%hhx\n", buf[i]);
+    printf("index[%d]: %hhx\n", i, buf[i]);
   }
   /* Initialize. */
   for (i = 0; i < SIZE; i++){
     buf[i] = i * 257;
-    printf("%hhx\n", buf[i]);
+    // printf("%hhx\n", buf[i]);
   }
   msg ("init: cksum=%lu", cksum (buf, SIZE));
     
