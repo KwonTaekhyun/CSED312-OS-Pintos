@@ -20,7 +20,7 @@ void swap_in(size_t swap_index, void* addr){
         block_read (swap_block_table, start_sector + i, addr + (i * BLOCK_SECTOR_SIZE));
     }
 
-    bitmap_flip(swap_table, swap_index);
+    bitmap_set(swap_block_table, swap_index, true);
     lock_release(&swap_lock);
 }
 size_t swap_out(void* addr){
@@ -35,7 +35,7 @@ size_t swap_out(void* addr){
         block_write(swap_table, start_sector + i, addr + (i * BLOCK_SECTOR_SIZE));
     }
 
-    bitmap_flip(swap_table, swap_index);
+    bitmap_set(swap_table, swap_index, false);
     lock_release(&swap_lock);
     return swap_index;
 }
