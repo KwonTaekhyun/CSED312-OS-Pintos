@@ -665,11 +665,12 @@ bool handle_mm_fault(struct pte *p)
   p->pinned = true;
   if(p->is_loaded) {
     //frame_deallocate(f->addr);
+    printf("2\n");
     return false;
   }
   if(addr==NULL){
     // P3-5. File memory mapping  
-    printf("2\n");
+    printf("3\n");
     return false;
   }
   if(p!=NULL) 
