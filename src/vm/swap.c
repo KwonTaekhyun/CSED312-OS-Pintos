@@ -3,9 +3,7 @@
 void swap_init(){
     // swap 영역 초기화
     swap_block_table = block_get_role(BLOCK_SWAP);
-    if(!swap_block_table){
-        PANIC ("Fail: initializing swap block");
-    }
+    ASSERT(swap_block_table != NULL);
 
     swap_table = bitmap_create(block_size(swap_block_table) / NUM_SECTOR_PER_PAGE);
     bitmap_set_all(swap_table, true);
