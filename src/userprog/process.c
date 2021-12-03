@@ -656,21 +656,21 @@ void argu_stack(char **argv, int argc, void **esp)
 bool handle_mm_fault(struct pte *p)
 {
   // P3-5. File memory mapping
-  printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
+  // printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
   /* struct frame *f = frame_allocate(PAL_USER);
   f->pte = p; */
   uint8_t *addr = palloc_get_page(PAL_USER);
   // P3-5. File memory mapping  
-  printf("1\n");
+  // printf("1\n");
   p->pinned = true;
   if(p->is_loaded) {
     //frame_deallocate(f->addr);
-    printf("2\n");
+    // printf("2\n");
     return false;
   }
   if(addr==NULL){
     // P3-5. File memory mapping  
-    printf("3\n");
+    // printf("3\n");
     return false;
   }
   if(p!=NULL) 
