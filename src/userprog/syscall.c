@@ -387,7 +387,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   // P3-5-test
   char *buf = (char *)addr;
   for(i = 0; i < file_bytes; i++){
-    printf("address %p :  %hhx\n", buf + i, buf[i]); 
+    printf("i: %d, address %p :  %hhx\n", i, buf + i, buf[i]); 
   }
 
   struct thread *current_thread = thread_current();
