@@ -26,6 +26,9 @@ struct pte
 
 	/* P3-5. File memory mapping */
 	struct frame* frame;
+
+	/* P3-6. Swapping */
+	size_t swap_index;
 };
 
 bool pt_init(struct hash *pt);

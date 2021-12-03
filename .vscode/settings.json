@@ -10,6 +10,7 @@
     "version": "cpp",
     "__hash_table": "c",
     "*.inc": "c",
-    "__mutex_base": "c"
+    "__mutex_base": "c",
+    "vaddr.h": "c"
   }
 }
