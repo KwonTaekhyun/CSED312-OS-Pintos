@@ -653,6 +653,8 @@ void argu_stack(char **argv, int argc, void **esp)
 
 bool handle_mm_fault(struct pte *p)
 {
+  // P3-5. File memory mapping
+  printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
   /* struct frame *f = frame_allocate(PAL_USER);
   f->pte = p; */
   uint8_t *addr = palloc_get_page(PAL_USER);
