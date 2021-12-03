@@ -7,7 +7,6 @@
 
 static struct bitmap *swap_table;
 static struct block *swap_block_table;
-static struct lock swap_lock;
 
 static const size_t NUM_SECTOR_PER_PAGE = PGSIZE / BLOCK_SECTOR_SIZE;
 
