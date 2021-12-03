@@ -394,11 +394,12 @@ mapid_t sys_mmap(int fd_idx, void *addr){
 void sys_munmap(int mapid){
   struct thread *current_thread = thread_current();
   struct list_elem *e;
-  struct file_mapping *file_mapping_entry;
+  struct file_mapping *file_mapping_entry = NULL;
   for (e = list_begin (&current_thread->file_mapping_table); 
         e != list_end (&current_thread->file_mapping_table); e = list_next (e)){
-    file_mapping_entry = list_entry (e, struct file_mapping, file_mapping_elem);
-    if (file_mapping_entry->mapid == mapid){
+    struct file_mapping * file_mapping = list_entry (e, struct file_mapping, file_mapping_elem);
+    if (file_mapping->mapid == mapid){
+      file_mapping_entry = file_mapping;
       break;
     }
   }
