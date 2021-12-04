@@ -167,10 +167,8 @@ process_wait (tid_t child_tid)
     struct thread *thr = list_entry(child_elem, struct thread, child);
     if(thr->tid == child_tid){
       sema_down(&(thr->sema_wait));
-
       list_remove(child_elem);
       exit_status = thr->exit_status;
-
       sema_up(&(thr->sema_exit));
       break;
     }
