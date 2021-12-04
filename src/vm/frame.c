@@ -9,11 +9,13 @@ void frame_init()
 {
     list_init(&frame_table);
     clock_hand = NULL;
+    lock_init (&frame_lock);
 }
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {   
     if(pte == NULL) return NULL;
 
+    lock_acquire (&frame_lock);
     struct frame *frame;
 
     // palloc_get_page()를 통해 페이지 할당
@@ -28,6 +30,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
         frame = malloc(sizeof(struct frame));
         if(!frame) {
             palloc_free_page(page);
+            lock_release (&frame_lock);
             return NULL;
         }
         else{
@@ -40,12 +43,13 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 
     // frame_table에 frame 추가
     list_push_back(&(frame_table), &(frame->elem));
-
+    lock_release (&frame_lock);
     // frame 주소 반환
     return frame;
 }
 void frame_deallocate(void *addr)
 {
+    lock_acquire (&frame_lock);
 	// 물리 주소 addr에 해당하는 frame 구조체를 frame_table에서 검색
     struct thread *current_thread = thread_current();
     struct list_elem *e;
@@ -59,6 +63,7 @@ void frame_deallocate(void *addr)
     }
     if(!frame_entry){
         // deallocate할 frame이 존재하지 않음
+        lock_release (&frame_lock);
         return;
     }
 
@@ -68,6 +73,8 @@ void frame_deallocate(void *addr)
 	palloc_free_page(frame_entry->addr);
 
     free(frame_entry);
+
+    lock_release (&frame_lock);
 }
 struct frame *frame_evict(enum palloc_flags flags)
 {

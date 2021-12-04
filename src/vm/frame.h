@@ -4,6 +4,7 @@
 #include "threads/palloc.h"
 //p3
 #include "vm/page.h"
+#include "threads/synch.h"
 
 struct frame
 {
@@ -14,6 +15,8 @@ struct frame
 
 struct list frame_table;
 struct list_elem *clock_hand;
+
+static struct lock frame_lock;
 
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte);
 void frame_deallocate(void *addr);
