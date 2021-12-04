@@ -124,6 +124,9 @@ struct frame *frame_evict(enum palloc_flags flags)
 
     // page 새로 할당 후 frame 초기화
     void *page = palloc_get_page(flags);
+    if(page == NULL){
+        printf("evict fail!!!\n");
+    }
     frame->addr = page;
     frame->pte = NULL;
 
