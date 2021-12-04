@@ -11,6 +11,8 @@ void frame_init()
 }
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {   
+    if(pte == NULL) return NULL;
+    
     struct frame *frame;
 
     // palloc_get_page()를 통해 페이지 할당
