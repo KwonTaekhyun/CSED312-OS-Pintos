@@ -118,6 +118,7 @@ start_process (void *file_name_)
 //p3
   //printf("start process: arv[0] : %s before load\n",argv[0]);
   success = load (argv[0], &if_.eip, &if_.esp);
+  sema_up(&thread_current()->sema_load);
   //p3
   //printf("start process: arv[0] : %s load complete\n",argv[0]);
   if(success)
@@ -127,8 +128,7 @@ start_process (void *file_name_)
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
-
-  sema_up(&thread_current()->parent->sema_load);
+  //sema_up(&thread_current()->parent->sema_load);
   //p3
   //printf("start_process done\n");
   if (!success){
@@ -167,7 +167,7 @@ process_wait (tid_t child_tid)
     struct thread *thr = list_entry(child_elem, struct thread, child);
     if(thr->tid == child_tid){
       if(thr == NULL) return -1;
-      sema_down(&(thr->sema_wait));
+      sema_down(&thr->sema_wait);
       exit_status = thr->exit_status;
       list_remove(child_elem);
       //sema_up(&(thr->sema_exit));
@@ -201,7 +201,7 @@ process_exit (void)
 
     sys_munmap(file_mapping->mapid);
   }
-
+sema_up(&(cur->sema_wait));
     uint32_t *pd;
   //p3
   //printf("i'm in exit\n");
@@ -224,7 +224,7 @@ process_exit (void)
       pagedir_destroy (pd);
     }
   
-  sema_up(&(cur->sema_wait));
+  
   //sema_down(&(cur->sema_exit));
 }
 
