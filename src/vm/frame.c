@@ -15,6 +15,8 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     void *page = palloc_get_page(flags);
     if(!page)
     {
+        // P3-6-test
+        printf("eviction 수행\n");
         frame = frame_evict(flags);
     }
     else{
