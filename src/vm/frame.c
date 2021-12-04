@@ -38,6 +38,8 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 
     frame->pte = pte;
 
+    if(!pte) printf("null pte!!!\n");
+
     // frame_table에 frame 추가
     list_push_back(&(frame_table), &(frame->elem));
 
