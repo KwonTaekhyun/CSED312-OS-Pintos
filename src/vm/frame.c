@@ -2,6 +2,7 @@
 #include "threads/thread.h"
 #include "lib/debug.h"
 #include "userprog/pagedir.h"
+#include "vm/swap.h"
 
 
 void frame_init()
@@ -102,8 +103,8 @@ struct frame *frame_evict(enum palloc_flags flags)
     // printf("find evict frame!\n");
 
     // eviction
-    bool is_dirty = pagedir_is_dirty(frame->pte->thread->pagedir, frame->pte->vaddr)
-      || pagedir_is_dirty(frame->pte->thread->pagedir, frame->addr);
+    bool is_dirty = pagedir_is_dirty(thread_current()->pagedir, frame->pte->vaddr)
+      || pagedir_is_dirty(thread_current()->pagedir, frame->addr);
 
 	if(frame->pte->type == VM_FILE){
 		mmap_file_write_at(frame->pte->file, frame->addr, frame->pte->read_bytes, frame->pte->offset);
@@ -115,7 +116,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     // frame 정보 및 데이터 제거 후 frame_table에서 제거
 	frame->pte->is_loaded = false;
     frame->pte->frame = NULL;
-    pagedir_clear_page(frame->pte->thread->pagedir, frame->pte->vaddr);
+    pagedir_clear_page(thread_current()->pagedir, frame->pte->vaddr);
     list_remove(&(frame->elem));
 
     // page 새로 할당 후 frame 초기화
