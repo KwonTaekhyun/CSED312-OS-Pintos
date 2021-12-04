@@ -72,14 +72,20 @@ struct frame *frame_evict(enum palloc_flags flags)
 
     while(n-- > 0){
         if(frame->pte->pinned){
+            // P3-6-test
+            printf("pinned!\n");
             frame = clock_forwarding();
             continue;
         }
         else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
+            // P3-6-test
+            printf("accessed!\n");
             pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
             frame = clock_forwarding();
             continue;
         }
+        // P3-6-test
+        printf("find evict frame!\n");
         break;
     }
 
