@@ -501,7 +501,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
   uint8_t *addr = upage;
 
-  // int i = 1;
+  int i = 1;
 
   while (read_bytes > 0 || zero_bytes > 0) 
     {
