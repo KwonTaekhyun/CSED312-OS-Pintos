@@ -225,7 +225,7 @@ process_exit (void)
     }
   
   sema_up(&(cur->sema_wait));
-  sema_down(&(cur->sema_exit));
+  //sema_down(&(cur->sema_exit));
 }
 
 /* Sets up the CPU for running user code in the current
