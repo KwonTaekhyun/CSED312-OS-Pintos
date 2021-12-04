@@ -501,8 +501,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
   uint8_t *addr = upage;
 
-  int i = 1;
-
   while (read_bytes > 0 || zero_bytes > 0) 
     {
       /* Calculate how to fill this page.
@@ -532,11 +530,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
       }
-      else{
-        // P3-6-test
-        printf("pte 생성 실패 %dtimes, virtual address: %p\n", i, upage);
-      }
-      i++;
 
       /* Advance. */
       read_bytes -= page_read_bytes;

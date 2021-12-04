@@ -1,5 +1,6 @@
 #include "frame.h"
 #include "threads/thread.h"
+#include "lib/debug.h"
 
 
 void frame_init()
@@ -17,6 +18,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     {
         // P3-6-test
         printf("eviction 수행\n");
+        debug_backtrace();
         frame = frame_evict(flags);
     }
     else{
