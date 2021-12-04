@@ -7,7 +7,7 @@ void frame_init()
     list_init(&frame_table);
     clock_hand = NULL;
 }
-struct frame *frame_allocate(enum palloc_flags flags)
+struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {
     struct frame *frame;
 
@@ -26,6 +26,8 @@ struct frame *frame_allocate(enum palloc_flags flags)
         frame->addr = page;
         frame->thread = thread_current ();
     }
+
+    frame->pte = pte;
 
     // frame_table에 frame 추가
     list_push_back(&(frame_table), &(frame->elem));

@@ -561,7 +561,7 @@ setup_stack (void **esp)
   struct frame *frame;
   bool success = false;
 
-  frame = frame_allocate(PAL_USER | PAL_ZERO);
+  frame = frame_allocate(PAL_USER | PAL_ZERO, NULL);
   if (frame != NULL) 
     {
       success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
@@ -589,7 +589,9 @@ setup_stack (void **esp)
         //printf("setup_stack done\n");
       }
 
-
+  if(!frame->pte){
+    frame->pte = page;
+  }
 
   return success;
 }
@@ -664,7 +666,7 @@ bool handle_mm_fault(struct pte *p)
   // printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
   /* struct frame *f = frame_allocate(PAL_USER);
   f->pte = p; */
-  struct frame *frame = frame_allocate(PAL_USER);
+  struct frame *frame = frame_allocate(PAL_USER, p);
   // P3-5. File memory mapping  
   // printf("1\n");
   p->pinned = true;

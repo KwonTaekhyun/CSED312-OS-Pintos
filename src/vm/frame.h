@@ -16,7 +16,7 @@ struct frame
 struct list frame_table;
 struct list_elem *clock_hand;
 
-struct frame *frame_allocate(enum palloc_flags flags);
+struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte);
 void frame_deallocate(void *addr);
 struct frame *frame_evict(enum palloc_flags flags);
 struct frame *clock_forwarding();
