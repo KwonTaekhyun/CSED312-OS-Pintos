@@ -122,12 +122,6 @@ struct frame *frame_evict(enum palloc_flags flags)
     pagedir_clear_page(thread_current()->pagedir, frame->pte->vaddr);
     list_remove(&(frame->elem));
 
-    // page 새로 할당 후 frame 초기화
-    void *page = palloc_get_page(flags);
-    if(page == NULL){
-        printf("evict fail!!!\n");
-    }
-    frame->addr = page;
     frame->pte = NULL;
 
     return frame;
