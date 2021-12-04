@@ -17,8 +17,8 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     if(!page)
     {
         // P3-6-test
-        printf("eviction 수행\n");
-        debug_backtrace();
+        // printf("eviction 수행\n");
+        // debug_backtrace();
         frame = frame_evict(flags);
     }
     else{
@@ -76,6 +76,9 @@ struct frame *frame_evict(enum palloc_flags flags)
         pagedir_set_accessed (frame->thread->pagedir, frame->pte->vaddr, false);
         frame = clock_forwarding();
     }
+
+    // P3-6-test
+    printf("evict frame address: %p\n", frame->addr);
 
     // eviction
     bool is_dirty = pagedir_is_dirty(frame->thread->pagedir, frame->pte->vaddr)
