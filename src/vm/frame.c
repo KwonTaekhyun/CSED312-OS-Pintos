@@ -76,6 +76,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     while(pagedir_is_accessed (frame->pte->thread->pagedir, frame->pte->vaddr)){
         pagedir_set_accessed (frame->pte->thread->pagedir, frame->pte->vaddr, false);
         frame = clock_forwarding();
+        printf("vaddr: %p", frame->pte->vaddr);
         printf("after clocking\n");
     }
 
