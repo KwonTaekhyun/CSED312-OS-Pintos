@@ -499,7 +499,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
   ASSERT (ofs % PGSIZE == 0);
   file_seek (file, ofs);
 
-  int i = 1;
+  uint8_t *addr = upage;
+
+  // int i = 1;
 
   while (read_bytes > 0 || zero_bytes > 0) 
     {
@@ -537,8 +539,12 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       upage += PGSIZE;
       ofs+=page_read_bytes;
 
-      printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
+      // printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
+printf("MEMSET test\n");
+memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
+printf("MEMSET test\n");
+
   return true;
 }
 
