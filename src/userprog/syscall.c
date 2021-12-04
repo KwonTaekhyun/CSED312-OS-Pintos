@@ -75,12 +75,14 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
+      unpin_string((const void *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_REMOVE:{
       is_valid_address(f->esp, 4, 7);
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_remove((const char *)*(uint32_t *)(f->esp + 4));
+      unpin_string((const void *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_OPEN:{
@@ -88,6 +90,7 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
+      unpin_string((const void *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_FILESIZE:{
