@@ -12,7 +12,7 @@ void frame_init()
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {   
     if(pte == NULL) return NULL;
-    
+
     struct frame *frame;
 
     // palloc_get_page()를 통해 페이지 할당
@@ -75,6 +75,8 @@ struct frame *frame_evict(enum palloc_flags flags)
     while(n-- > 0){
         // P3-6-test
         printf("finding!\n");
+        if(!frame) printf("null frame\n");
+        else printf("frame address: %p\n", frame->addr);
         if(!frame->pte) printf("null pte\n");
         if(!thread_current()) printf("no thread\n");
         if(frame->pte->pinned){
