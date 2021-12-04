@@ -3,7 +3,7 @@
 #include "lib/debug.h"
 #include "userprog/pagedir.h"
 #include "vm/swap.h"
-
+#include "userprog/syscall.h"
 
 void frame_init()
 {
