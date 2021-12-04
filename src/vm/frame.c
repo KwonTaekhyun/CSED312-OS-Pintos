@@ -37,6 +37,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     }
 
     frame->pte = pte;
+    pte->frame = frame;
 
     if(!pte) printf("null pte!!!\n");
 

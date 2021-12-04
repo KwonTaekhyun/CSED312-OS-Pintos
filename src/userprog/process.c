@@ -555,16 +555,6 @@ setup_stack (void **esp)
 {
   struct frame *frame;
   bool success = false;
-
-  frame = frame_allocate(PAL_USER | PAL_ZERO, NULL);
-  if (frame != NULL) 
-    {
-      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
-      if (success)
-        *esp = PHYS_BASE;
-      else
-        frame_deallocate(frame->addr);
-    }
     //p3
       struct pte *page = malloc(sizeof(struct pte));
       //printf("setup_stack\n");
@@ -579,15 +569,21 @@ setup_stack (void **esp)
         page->read_bytes = 0;
         page->zero_bytes = 0;
         page->pinned = true;
-        page->frame = frame;
+        page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
 
-  if(!frame->pte){
-    frame->pte = page;
-  }
+    frame = frame_allocate(PAL_USER | PAL_ZERO, page);
+  if (frame != NULL) 
+    {
+      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
+      if (success)
+        *esp = PHYS_BASE;
+      else
+        frame_deallocate(frame->addr);
+    }
 
   return success;
 }
