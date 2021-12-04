@@ -25,6 +25,8 @@
 //p3
 #include "vm/frame.h"
 #include "vm/page.h"
+#include "vm/swap.h"
+#include "lib/kernel/bitmap.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -496,6 +498,11 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
   ASSERT (pg_ofs (upage) == 0);
   ASSERT (ofs % PGSIZE == 0);
   file_seek (file, ofs);
+
+  uint8_t *addr = upage;
+
+  // int i = 1;
+
   while (read_bytes > 0 || zero_bytes > 0) 
     {
       /* Calculate how to fill this page.
@@ -504,24 +511,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
       
-     /*  uint8_t *kpage = palloc_get_page (PAL_USER);
-      if (kpage == NULL)
-        return false;
-
-      
-      if (file_read (file, kpage, page_read_bytes) != (int) page_read_bytes)
-        {
-          palloc_free_page (kpage);
-          return false; 
-        }
-      memset (kpage + page_read_bytes, 0, page_zero_bytes);
-
-      
-      if (!install_page (upage, kpage, writable)) 
-        {
-          palloc_free_page (kpage);
-          return false; 
-        } */
       //p3
       //printf("load_seg\n");
       struct pte *page = malloc(sizeof(struct pte));
@@ -534,9 +523,12 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->vaddr = upage;
         page->is_loaded = false;
         page->offset = ofs;
-        page->read_bytes = read_bytes;
-        page->zero_bytes = zero_bytes;
+        page->read_bytes = page_read_bytes;
+        page->zero_bytes = page_zero_bytes;
         page->pinned = false;
+        page->frame = NULL;
+        page->swap_index = BITMAP_ERROR;
+        page->thread = thread_current();
         //printf("pte insert\n");
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
@@ -547,7 +539,13 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
       ofs+=page_read_bytes;
+
+      // printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
+// printf("MEMSET test\n");
+// memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
+// printf("MEMSET test\n");
+
   return true;
 }
 
@@ -556,18 +554,8 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 static bool
 setup_stack (void **esp) 
 {
-  uint8_t *kpage;
+  struct frame *frame;
   bool success = false;
-
-  kpage = palloc_get_page(PAL_USER | PAL_ZERO);
-  if (kpage != NULL) 
-    {
-      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), kpage, true);
-      if (success)
-        *esp = PHYS_BASE;
-      else
-        palloc_free_page(kpage);
-    }
     //p3
       struct pte *page = malloc(sizeof(struct pte));
       //printf("setup_stack\n");
@@ -582,9 +570,22 @@ setup_stack (void **esp)
         page->read_bytes = 0;
         page->zero_bytes = 0;
         page->pinned = true;
+        page->frame = NULL;
+        page->swap_index = BITMAP_ERROR;
+        page->thread = thread_current();
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
+
+    frame = frame_allocate(PAL_USER | PAL_ZERO, page);
+  if (frame != NULL) 
+    {
+      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
+      if (success)
+        *esp = PHYS_BASE;
+      else
+        frame_deallocate(frame->addr);
+    }
 
   return success;
 }
@@ -655,20 +656,20 @@ void argu_stack(char **argv, int argc, void **esp)
 
 bool handle_mm_fault(struct pte *p)
 {
-  // P3-5. File memory mapping
-  // printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
-  /* struct frame *f = frame_allocate(PAL_USER);
-  f->pte = p; */
-  uint8_t *addr = palloc_get_page(PAL_USER);
+  // P3-6-test
+  // printf("PF address: %p, type: %d\n", p->vaddr, p->type);
+
+  struct frame *frame = frame_allocate(PAL_USER, p);
   // P3-5. File memory mapping  
   // printf("1\n");
+  p->frame = frame;
   p->pinned = true;
   if(p->is_loaded) {
     //frame_deallocate(f->addr);
     // printf("2\n");
     return false;
   }
-  if(addr==NULL){
+  if(frame==NULL){
     // P3-5. File memory mapping  
     // printf("3\n");
     return false;
@@ -679,31 +680,40 @@ bool handle_mm_fault(struct pte *p)
     {
       case VM_BIN : 
       {
-        if(!load_file(addr, p))
+        // printf("load_file_BIN\n");
+        if(!load_file(frame, p))
         {
           //frame_deallocate(f->addr);
           printf("load file error\n");
-          palloc_free_page(addr);
+          frame_deallocate(frame->addr);
           return false;
         }
         break;
       }
       case VM_FILE : 
       {
-        if(!load_file(addr, p))
+        if(!load_file(frame, p))
         {
           //frame_deallocate(f->addr);
           printf("load file error\n");
-          palloc_free_page(addr);
+          frame_deallocate(frame->addr);
           return false;
         }
         break;
       }
-      case VM_ANON : return false;
+      case VM_ANON : {
+        if(p->swap_index != BITMAP_ERROR){
+          swap_in(p->swap_index, frame->addr);
+        }
+        else{
+          memset(frame->addr, 0, PGSIZE);
+        }
+        break;
+      }
     }
-    if(!install_page(p->vaddr, addr, p->writable))
+    if(!install_page(p->vaddr, frame->addr, p->writable))
     {
-      palloc_free_page(addr);
+      frame_deallocate(frame->addr);
       //frame_deallocate(f->addr);
       return false;
     }
