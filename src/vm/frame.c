@@ -70,7 +70,7 @@ struct frame *frame_evict(enum palloc_flags flags)
 
     int n = list_size(&frame_table) * 2;
 
-    while(n > 0){
+    while(n-- > 0){
         if(frame->pte->pinned){
             frame = clock_forwarding();
             continue;
