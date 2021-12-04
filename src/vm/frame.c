@@ -12,6 +12,7 @@ void frame_init()
 }
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {   
+    printf("1frame table size: %d", list_size(&frame_table));
     if(pte == NULL) return NULL;
 
     struct frame *frame;
@@ -20,6 +21,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     void *page = palloc_get_page(flags);
     if(!page){
         frame = frame_evict(flags);
+        printf("2frame table size: %d", list_size(&frame_table));
     }
     else{
         frame = malloc(sizeof(struct frame));
@@ -37,6 +39,8 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 
     // frame_table에 frame 추가
     list_push_back(&(frame_table), &(frame->elem));
+
+    printf("3frame table size: %d", list_size(&frame_table));
 
     // frame 주소 반환
     return frame;
@@ -139,4 +143,6 @@ void frame_swap_out(struct frame *frame){
 
     frame->pte->swap_index = swap_index;
     frame->pte->type = VM_ANON;
+
+    printf("swap-out end\n");
 }
