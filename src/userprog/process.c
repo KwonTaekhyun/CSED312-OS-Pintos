@@ -118,7 +118,7 @@ start_process (void *file_name_)
 //p3
   //printf("start process: arv[0] : %s before load\n",argv[0]);
   success = load (argv[0], &if_.eip, &if_.esp);
-  sema_up(&thread_current()->sema_load);
+  sema_up(&thread_current()->parent->sema_load);
   //p3
   //printf("start process: arv[0] : %s load complete\n",argv[0]);
   if(success)
