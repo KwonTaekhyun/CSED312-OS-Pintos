@@ -284,7 +284,7 @@ memset (void *dst_, int value, size_t size)
   
   while (size-- > 0){
     *dst++ = value;
-    printf("address: %p", dst);
+    printf("address: %p\n", dst);
   }
 
   return dst_;
