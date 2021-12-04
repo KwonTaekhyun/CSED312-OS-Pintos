@@ -71,6 +71,8 @@ struct frame *frame_evict(enum palloc_flags flags)
     int n = list_size(&frame_table) * 2;
 
     while(n-- > 0){
+        // P3-6-test
+        printf("finding!\n");
         if(frame->pte->pinned){
             // P3-6-test
             printf("pinned!\n");
