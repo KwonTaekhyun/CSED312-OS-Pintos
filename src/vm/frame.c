@@ -10,17 +10,12 @@ void frame_init()
     clock_hand = NULL;
 }
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
-{
-    // P3-6-test
-    printf("frame allocation, vaddress: %p\n", pte->vaddr);
-    
+{   
     struct frame *frame;
 
     // palloc_get_page()를 통해 페이지 할당
     void *page = palloc_get_page(flags);
     if(!page){
-        // P3-6-test
-        printf("frame eviction\n"); 
         frame = frame_evict(flags);
     }
     else{
@@ -72,10 +67,24 @@ struct frame *frame_evict(enum palloc_flags flags)
 {
     // clock algorithm을 통해 evict할 frame을 선택
     struct frame *frame = clock_forwarding();
-    while(pagedir_is_accessed (frame->pte->thread->pagedir, frame->pte->vaddr)){
-        pagedir_set_accessed (frame->pte->thread->pagedir, frame->pte->vaddr, false);
-        frame = clock_forwarding();
+
+    int n = list_size(&frame_table) * 2;
+
+    while(n > 0){
+        if(frame->pte->pinned){
+            frame = clock_forwarding();
+            continue;
+        }
+        else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
+            pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
+            frame = clock_forwarding();
+            continue;
+        }
+        break;
     }
+
+    // P3-6-test
+    printf("find evict frame!\n");
 
     // eviction
     bool is_dirty = pagedir_is_dirty(frame->pte->thread->pagedir, frame->pte->vaddr)
