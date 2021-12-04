@@ -498,6 +498,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
   ASSERT (pg_ofs (upage) == 0);
   ASSERT (ofs % PGSIZE == 0);
   file_seek (file, ofs);
+
+  int i = 1;
+
   while (read_bytes > 0 || zero_bytes > 0) 
     {
       /* Calculate how to fill this page.
@@ -534,7 +537,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       upage += PGSIZE;
       ofs+=page_read_bytes;
 
-      printf("load_segment!\n");
+      printf("load_segment! %dtimes\n", i++);
     }
   return true;
 }
