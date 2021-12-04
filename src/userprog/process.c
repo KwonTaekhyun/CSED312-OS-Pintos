@@ -659,7 +659,7 @@ void argu_stack(char **argv, int argc, void **esp)
 bool handle_mm_fault(struct pte *p)
 {
   // P3-6-test
-  printf("PF address: %p, type: %d\n", p->vaddr, p->type);
+  // printf("PF address: %p, type: %d\n", p->vaddr, p->type);
 
   struct frame *frame = frame_allocate(PAL_USER, p);
   // P3-5. File memory mapping  
