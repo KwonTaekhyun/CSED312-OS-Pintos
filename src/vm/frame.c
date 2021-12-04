@@ -39,8 +39,6 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     frame->pte = pte;
     pte->frame = frame;
 
-    if(!pte) printf("null pte!!!\n");
-
     // frame_table에 frame 추가
     list_push_back(&(frame_table), &(frame->elem));
 
@@ -81,7 +79,7 @@ struct frame *frame_evict(enum palloc_flags flags)
         frame = clock_forwarding();
         printf("after clocking\n");
         printf("thread name: %s\n", frame->thread->name);
-        printf("vaddress: %s\n", !(frame->pte) ? "none" : "exist");
+        if(!frame->pte) printf("null pte\n");
     }
 
     // P3-6-test
