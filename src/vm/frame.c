@@ -74,11 +74,12 @@ struct frame *frame_evict(enum palloc_flags flags)
 
     while(n-- > 0){
         // P3-6-test
-        printf("finding!\n");
-        if(!frame) printf("null frame\n");
-        else printf("frame address: %p\n", frame->addr);
-        if(!frame->pte) printf("null pte\n");
-        if(!thread_current()) printf("no thread\n");
+        if(frame->addr == 0){
+            // P3-6-test
+            printf("0 addr!\n");
+            frame = clock_forwarding();
+            continue;
+        }
         if(frame->pte->pinned){
             // P3-6-test
             printf("pinned!\n");
