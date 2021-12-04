@@ -22,7 +22,7 @@ void swap_in(size_t swap_index, void* addr){
     bitmap_set(swap_table, swap_index, true);
 }
 size_t swap_out(void* addr){
-    printf("swap-out!!\n");
+    // printf("swap-out!!\n");
     // addr 주소가 가리키는 페이지를 스왑 파티션에 기록, 페이지를 기록한 swap slot 번호를 리턴
     // Find an available block region to use
     size_t swap_index = bitmap_scan (swap_table, 0, 1, true);

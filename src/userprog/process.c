@@ -680,6 +680,7 @@ bool handle_mm_fault(struct pte *p)
     {
       case VM_BIN : 
       {
+        printf("load_file_BIN\n");
         if(!load_file(frame, p))
         {
           //frame_deallocate(f->addr);
