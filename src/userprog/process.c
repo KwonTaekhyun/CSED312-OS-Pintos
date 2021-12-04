@@ -523,8 +523,8 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->vaddr = upage;
         page->is_loaded = false;
         page->offset = ofs;
-        page->read_bytes = read_bytes;
-        page->zero_bytes = zero_bytes;
+        page->read_bytes = page_read_bytes;
+        page->zero_bytes = page_zero_bytes;
         page->pinned = false;
         page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
@@ -541,9 +541,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
       printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
-printf("MEMSET test\n");
-memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
-printf("MEMSET test\n");
+// printf("MEMSET test\n");
+// memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
+// printf("MEMSET test\n");
 
   return true;
 }
