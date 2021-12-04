@@ -11,6 +11,7 @@
     "__hash_table": "c",
     "*.inc": "c",
     "__mutex_base": "c",
-    "vaddr.h": "c"
+    "vaddr.h": "c",
+    "frame.h": "c"
   }
 }

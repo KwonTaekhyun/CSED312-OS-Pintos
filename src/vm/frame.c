@@ -1,6 +1,7 @@
 #include "frame.h"
 #include "threads/thread.h"
 #include "lib/debug.h"
+#include "userprog/pagedir.h"
 
 
 void frame_init()
