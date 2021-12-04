@@ -9,7 +9,6 @@ struct frame
 {
 	void *addr;
 	struct pte *pte;
-	struct thread *thread;
 	struct list_elem elem;
 };
 

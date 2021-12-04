@@ -32,6 +32,7 @@ struct pte
 
 	/* P3-6. Swapping */
 	size_t swap_index;
+	struct thread* thread;
 };
 
 bool pt_init(struct hash *pt);

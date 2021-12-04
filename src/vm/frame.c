@@ -33,7 +33,6 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
         }
 
         frame->addr = page;
-        frame->thread = thread_current();
     }
 
     frame->pte = pte;
@@ -74,11 +73,11 @@ struct frame *frame_evict(enum palloc_flags flags)
 {
     // clock algorithm을 통해 evict할 frame을 선택
     struct frame *frame = clock_forwarding();
-    while(pagedir_is_accessed (frame->thread->pagedir, frame->pte->vaddr)){
-        pagedir_set_accessed (frame->thread->pagedir, frame->pte->vaddr, false);
+    while(pagedir_is_accessed (frame->pte->thread->pagedir, frame->pte->vaddr)){
+        pagedir_set_accessed (frame->pte->thread->pagedir, frame->pte->vaddr, false);
         frame = clock_forwarding();
         printf("after clocking\n");
-        printf("thread name: %s\n", frame->thread->name);
+        printf("thread name: %s\n", frame->pte->thread->name);
         printf("clocking finish\n");
     }
 
@@ -86,8 +85,8 @@ struct frame *frame_evict(enum palloc_flags flags)
     printf("evict frame address: %p\n", frame->addr);
 
     // eviction
-    bool is_dirty = pagedir_is_dirty(frame->thread->pagedir, frame->pte->vaddr)
-      || pagedir_is_dirty(frame->thread->pagedir, frame->addr);
+    bool is_dirty = pagedir_is_dirty(frame->pte->thread->pagedir, frame->pte->vaddr)
+      || pagedir_is_dirty(frame->pte->thread->pagedir, frame->addr);
 
 	if(frame->pte->type == VM_FILE){
 		mmap_file_write_at(frame->pte->file, frame->addr, frame->pte->read_bytes, frame->pte->offset);
@@ -99,14 +98,13 @@ struct frame *frame_evict(enum palloc_flags flags)
     // frame 정보 및 데이터 제거 후 frame_table에서 제거
 	frame->pte->is_loaded = false;
     frame->pte->frame = NULL;
-    pagedir_clear_page(frame->thread->pagedir, frame->pte->vaddr);
+    pagedir_clear_page(frame->pte->thread->pagedir, frame->pte->vaddr);
     list_remove(&(frame->elem));
 
     // page 새로 할당 후 frame 초기화
     void *page = palloc_get_page(flags);
     frame->addr = page;
     frame->pte = NULL;
-    frame->thread = thread_current ();
 
     return frame;
 }

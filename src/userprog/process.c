@@ -528,6 +528,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->pinned = false;
         page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
+        page->thread = thread_current();
         //printf("pte insert\n");
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
@@ -571,6 +572,7 @@ setup_stack (void **esp)
         page->pinned = true;
         page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
+        page->thread = thread_current();
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
