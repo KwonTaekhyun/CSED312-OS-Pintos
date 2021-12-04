@@ -73,6 +73,8 @@ struct frame *frame_evict(enum palloc_flags flags)
     while(n-- > 0){
         // P3-6-test
         printf("finding!\n");
+        if(!frame->pte) printf("null pte\n");
+        if(!thread_current()) printf("no thread\n");
         if(frame->pte->pinned){
             // P3-6-test
             printf("pinned!\n");
