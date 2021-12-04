@@ -20,6 +20,9 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
         frame = frame_evict(flags);
     }
     else{
+        // P3-6-test
+        printf("physical page address: %p\n", page);
+
         frame = malloc(sizeof(struct frame));
         if(!frame) {
             return NULL;
