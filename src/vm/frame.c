@@ -22,7 +22,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
         // printf("before) frame table size: %d\n", list_size(&frame_table));
         frame = frame_evict(flags);
         // printf("after) frame table size: %d\n", list_size(&frame_table));
-        printf("frame address: %p\n", frame->addr);
+        // printf("frame address: %p\n", frame->addr);
     }
     else{
         frame = malloc(sizeof(struct frame));
