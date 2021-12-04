@@ -532,6 +532,11 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
       }
+      else{
+        // P3-6-test
+        printf("pte 생성 실패 %dtimes, virtual address: %p\n", i, upage);
+      }
+      i++;
 
       /* Advance. */
       read_bytes -= page_read_bytes;
@@ -539,7 +544,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       upage += PGSIZE;
       ofs+=page_read_bytes;
 
-      printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
+      // printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
 // printf("MEMSET test\n");
 // memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
