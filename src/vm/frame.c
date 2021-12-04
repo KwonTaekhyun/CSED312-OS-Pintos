@@ -78,7 +78,7 @@ struct frame *frame_evict(enum palloc_flags flags)
         frame = clock_forwarding();
         printf("after clocking\n");
         printf("thread name: %s\n", frame->thread->name);
-        printf("vaddress: %p\n", frame->pte->vaddr);
+        printf("vaddress: %s\n", !(frame->pte) ? "none" : "exist");
     }
 
     // P3-6-test
