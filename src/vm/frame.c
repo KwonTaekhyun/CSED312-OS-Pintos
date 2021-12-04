@@ -17,6 +17,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     void *page = palloc_get_page(flags);
     if(!page)
     {
+        printf("frame table: %d", list_size(&frame_table));
         // P3-6-test
         printf("eviction 수행\n");
         // debug_backtrace();
