@@ -11,32 +11,28 @@ void frame_init()
 }
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {
+    // P3-6-test
+    printf("frame allocation, vaddress: %p", pte->vaddr);
+    
     struct frame *frame;
 
     // palloc_get_page()를 통해 페이지 할당
     void *page = palloc_get_page(flags);
-    if(!page)
-    {
-        printf("frame table: %d", list_size(&frame_table));
-        // P3-6-test
-        printf("eviction 수행\n");
-        // debug_backtrace();
+    if(!page){
         frame = frame_evict(flags);
     }
     else{
-        // P3-6-test
-        // printf("physical page address: %p\n", page);
-
         frame = malloc(sizeof(struct frame));
         if(!frame) {
             palloc_free_page(page);
             return NULL;
         }
-
-        frame->addr = page;
+        else{
+            frame->addr = page;
+            frame->pte = pte;
+        }
     }
 
-    frame->pte = pte;
     pte->frame = frame;
 
     // frame_table에 frame 추가
@@ -77,15 +73,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     while(pagedir_is_accessed (frame->pte->thread->pagedir, frame->pte->vaddr)){
         pagedir_set_accessed (frame->pte->thread->pagedir, frame->pte->vaddr, false);
         frame = clock_forwarding();
-        if(!frame || !frame->pte){
-            printf("pass\n");
-            continue;
-        }
-        printf("after clocking\n");
     }
-
-    // P3-6-test
-    printf("evict frame address: %p\n", frame->addr);
 
     // eviction
     bool is_dirty = pagedir_is_dirty(frame->pte->thread->pagedir, frame->pte->vaddr)
@@ -115,9 +103,6 @@ struct frame *frame_evict(enum palloc_flags flags)
 struct frame *clock_forwarding(){
     clock_hand = (clock_hand == NULL || clock_hand == list_end(&frame_table)) ? 
         list_begin(&frame_table) : list_next(&clock_hand);
-
-    // P3-6-test
-    printf("clocking\n");
 
     return list_entry(clock_hand, struct frame, elem);
 }
