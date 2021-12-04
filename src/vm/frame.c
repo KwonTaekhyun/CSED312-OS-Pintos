@@ -78,7 +78,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     }
 
     // P3-6-test
-    printf("evict frame address: %p\n", frame->addr);
+    // printf("evict frame address: %p\n", frame->addr);
 
     // eviction
     bool is_dirty = pagedir_is_dirty(frame->thread->pagedir, frame->pte->vaddr)

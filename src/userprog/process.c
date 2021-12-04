@@ -501,7 +501,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
   uint8_t *addr = upage;
 
-  int i = 1;
+  // int i = 1;
 
   while (read_bytes > 0 || zero_bytes > 0) 
     {
@@ -539,7 +539,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       upage += PGSIZE;
       ofs+=page_read_bytes;
 
-      printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
+      // printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
 // printf("MEMSET test\n");
 // memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
@@ -658,10 +658,9 @@ void argu_stack(char **argv, int argc, void **esp)
 
 bool handle_mm_fault(struct pte *p)
 {
-  // P3-5. File memory mapping
-  // printf("loading address: %p, offset: %d\n", p->vaddr, p->offset);
-  /* struct frame *f = frame_allocate(PAL_USER);
-  f->pte = p; */
+  // P3-6-test
+  printf("PF address: %p, type: %d\n", p->vaddr, p->type);
+
   struct frame *frame = frame_allocate(PAL_USER, p);
   // P3-5. File memory mapping  
   // printf("1\n");
