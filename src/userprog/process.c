@@ -26,6 +26,7 @@
 #include "vm/frame.h"
 #include "vm/page.h"
 #include "vm/swap.h"
+#include "lib/kernel/bitmap.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -539,6 +540,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->zero_bytes = zero_bytes;
         page->pinned = false;
         page->frame = NULL;
+        page->swap_index = BITMAP_ERROR;
         //printf("pte insert\n");
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
@@ -585,6 +587,7 @@ setup_stack (void **esp)
         page->zero_bytes = 0;
         page->pinned = true;
         page->frame = frame;
+        page->swap_index = BITMAP_ERROR;
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
@@ -707,7 +710,12 @@ bool handle_mm_fault(struct pte *p)
         break;
       }
       case VM_ANON : {
-        swap_in(p->swap_index, frame->addr);
+        if(p->swap_index != BITMAP_ERROR){
+          swap_in(p->swap_index, frame->addr);
+        }
+        else{
+          memset(frame->addr, 0, PGSIZE);
+        }
         break;
       }
     }

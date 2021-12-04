@@ -6,6 +6,9 @@
 #include "lib/string.h"
 #include "threads/malloc.h"
 #include "userprog/pagedir.h"
+
+#include "lib/kernel/bitmap.h"
+
 bool pt_init(struct hash *pt)
 {
     return hash_init(pt, pt_hash_func, pt_less_func, NULL);
@@ -73,79 +76,6 @@ bool load_file(struct frame *frame, struct pte *p)
     memset(frame->addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
 }
-/* bool pte_create_file(void* upage, struct file* file, off_t ofs, uint32_t read_bytes, uint32_t zero_bytes, bool writable, bool is_mmap)
-{
-    if(pte_find(upage) != NULL) return false;
-    struct pte* page = malloc(sizeof(struct pte));
-    if(page != NULL)
-    {
-        page->type = VM_BIN;
-        page->file = file;
-        page->writable = writable;
-        page->vaddr = upage;
-        page->is_loaded = false;
-        page->offset = ofs;
-        page->read_bytes = read_bytes;
-        page->zero_bytes = zero_bytes;
-        //page->frame = NULL;
-        pte_insert(thread_current()->page_table, &page->elem);
-        return true;
-    }
-    else return false;
-}
-
-bool pte_create_zero(void *upage)
-{
-    if(pte_find(upage) != NULL) return false;
-    struct pte* page = malloc(sizeof(struct pte));    
-    if(page != NULL)
-    {
-        page->type = VM_ANON;
-        page->file = NULL;
-        page->writable = true;
-        page->vaddr = upage;
-        page->is_loaded = false;
-        page->offset = 0;
-        page->read_bytes = 0;
-        page->zero_bytes = 0;
-        //page->frame = NULL;
-        pte_insert(thread_current()->page_table, &page->elem);
-        return true;
-    }
-    else return false;
-}
-bool
-page_load(void *upage)
-{
-    struct pte* page = pte_find(upage);
-    if (page == NULL) return false;
-    struct frame* f = frame_allocate(page);
-    if(f == NULL) return false;
-    bool success;
-    switch (page->type)
-    {
-    case VM_BIN:
-        success = load_file(f, page);
-        break;
-    case VM_FILE:
-        break;
-    
-    case VM_ANON:
-        success = memset(f->addr, 0, PGSIZE) != NULL;
-        break;
-
-    default:
-        NOT_REACHED();
-        break;
-    }
-    
-    if(!success || !pagedir_set_page(thread_current ()->pagedir, upage, f->addr, page->writable))
-    {
-        frame_deallocate(f, true);
-        return false;
-    }
-    return true;
-} */
 
 /* P3-5. File memory mapping */
 void pt_destory_by_addr (void* addr)
@@ -182,6 +112,7 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
         page_entry->writable = writable;
 
         page_entry->frame = NULL;
+        page_entry->swap_index = BITMAP_ERROR;
 
         hash_insert(&(thread_current()->page_table), &page_entry->elem);
         return true;

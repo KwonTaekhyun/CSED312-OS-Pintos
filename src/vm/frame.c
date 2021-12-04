@@ -21,10 +21,11 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     }
     else{
         // P3-6-test
-        printf("physical page address: %p\n", page);
+        // printf("physical page address: %p\n", page);
 
         frame = malloc(sizeof(struct frame));
         if(!frame) {
+            palloc_free_page(page);
             return NULL;
         }
 
@@ -45,10 +46,11 @@ void frame_deallocate(void *addr)
 	// 물리 주소 addr에 해당하는 frame 구조체를 frame_table에서 검색
     struct thread *current_thread = thread_current();
     struct list_elem *e;
-    struct frame *frame_entry;
+    struct frame *frame_entry = NULL;
     for (e = list_begin (&frame_table); e != list_end (&frame_table); e = list_next (e)){
-        frame_entry = list_entry (e, struct frame, elem);
-        if (frame_entry->addr == addr){
+        struct frame *frame = list_entry (e, struct frame, elem);
+        if (frame->addr == addr){
+            frame_entry = frame;
             break;
         }
     }
@@ -60,7 +62,7 @@ void frame_deallocate(void *addr)
     // frame을 frame_table에서 제거
     list_remove(&(frame_entry->elem));
 
-	palloc_free_page(addr);
+	palloc_free_page(frame_entry->addr);
 
     free(frame_entry);
 }
