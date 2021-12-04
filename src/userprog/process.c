@@ -62,11 +62,13 @@ process_execute (const char *file_name)
 
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
 
-  sema_down(&thread_current()->sema_load);
+  //sema_down(&thread_current()->sema_load);
 
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
-
+  
+  struct thread *thr = list_entry(&thread_current()->child, struct thread, child);
+  sema_down(&thr->sema_load);
   struct list_elem* e;
   struct thread* t;
   for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
@@ -118,9 +120,9 @@ start_process (void *file_name_)
 //p3
   //printf("start process: arv[0] : %s before load\n",argv[0]);
   success = load (argv[0], &if_.eip, &if_.esp);
-  sema_up(&thread_current()->parent->sema_load);
   //p3
   //printf("start process: arv[0] : %s load complete\n",argv[0]);
+  sema_up(&thread_current()->sema_load);
   if(success)
   {
     argu_stack(argv, argc, &if_.esp);
@@ -167,9 +169,9 @@ process_wait (tid_t child_tid)
     struct thread *thr = list_entry(child_elem, struct thread, child);
     if(thr->tid == child_tid){
       if(thr == NULL) return -1;
-      sema_down(&thr->sema_wait);
-      exit_status = thr->exit_status;
+      sema_down(&(thr->sema_wait));
       list_remove(child_elem);
+      exit_status = thr->exit_status;
       //sema_up(&(thr->sema_exit));
       break;
     }
@@ -201,7 +203,7 @@ process_exit (void)
 
     sys_munmap(file_mapping->mapid);
   }
-sema_up(&(cur->sema_wait));
+
     uint32_t *pd;
   //p3
   //printf("i'm in exit\n");
@@ -224,8 +226,8 @@ sema_up(&(cur->sema_wait));
       pagedir_destroy (pd);
     }
   
-  
-  //sema_down(&(cur->sema_exit));
+  sema_up(&(cur->sema_wait));
+  sema_down(&(cur->sema_exit));
 }
 
 /* Sets up the CPU for running user code in the current

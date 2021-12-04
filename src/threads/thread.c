@@ -295,6 +295,10 @@ thread_exit (void)
   intr_disable ();
   list_remove (&thread_current()->allelem);
   thread_current ()->status = THREAD_DYING;
+  //p3
+  if(thread_current() != initial_thread){
+	  sema_up(&(thread_current()->sema_exit));
+  }
   schedule ();
   NOT_REACHED ();
 }
