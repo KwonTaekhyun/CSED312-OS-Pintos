@@ -29,10 +29,10 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
         }
         else{
             frame->addr = page;
-            frame->pte = pte;
         }
     }
 
+    frame->pte = pte;
     pte->frame = frame;
 
     // frame_table에 frame 추가

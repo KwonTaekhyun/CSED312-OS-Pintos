@@ -1,4 +1,5 @@
 #include "swap.h"
+#include "lib/kernel/bitmap.h"
 
 void swap_init(){
     // swap 영역 초기화
