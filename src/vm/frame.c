@@ -74,32 +74,32 @@ struct frame *frame_evict(enum palloc_flags flags)
 
     while(n-- > 0){
         // P3-6-test
-        if(frame->addr == 0){
-            // P3-6-test
-            printf("0 addr!\n");
-            frame = clock_forwarding();
-            continue;
-        }
+        // if(frame->addr == 0){
+        //     // P3-6-test
+        //     printf("0 addr!\n");
+        //     frame = clock_forwarding();
+        //     continue;
+        // }
         if(frame->pte->pinned){
             // P3-6-test
-            printf("pinned!\n");
+            // printf("pinned!\n");
             frame = clock_forwarding();
             continue;
         }
         else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
             // P3-6-test
-            printf("accessed!\n");
+            // printf("accessed!\n");
             pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
             frame = clock_forwarding();
             continue;
         }
         // P3-6-test
-        printf("find evict frame!\n");
+        // printf("find evict frame!\n");
         break;
     }
 
     // P3-6-test
-    printf("find evict frame!\n");
+    // printf("find evict frame!\n");
 
     // eviction
     bool is_dirty = pagedir_is_dirty(frame->pte->thread->pagedir, frame->pte->vaddr)
