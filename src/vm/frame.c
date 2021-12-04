@@ -33,7 +33,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
         }
 
         frame->addr = page;
-        frame->thread = thread_current ();
+        frame->thread = thread_current();
     }
 
     frame->pte = pte;
@@ -77,6 +77,8 @@ struct frame *frame_evict(enum palloc_flags flags)
         pagedir_set_accessed (frame->thread->pagedir, frame->pte->vaddr, false);
         frame = clock_forwarding();
         printf("after clocking\n");
+        printf("thread name: %s\n", frame->thread->name);
+        printf("vaddress: %p\n", frame->pte->vaddr);
     }
 
     // P3-6-test
