@@ -78,7 +78,7 @@ struct frame *frame_evict(enum palloc_flags flags)
         frame = clock_forwarding();
         if(!frame || !frame->pte){
             printf("pass\n");
-            break;
+            continue;
         }
         printf("after clocking\n");
     }
