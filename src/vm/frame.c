@@ -12,13 +12,15 @@ void frame_init()
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {
     // P3-6-test
-    printf("frame allocation, vaddress: %p", pte->vaddr);
+    printf("frame allocation, vaddress: %p\n", pte->vaddr);
     
     struct frame *frame;
 
     // palloc_get_page()를 통해 페이지 할당
     void *page = palloc_get_page(flags);
     if(!page){
+        // P3-6-test
+        printf("frame eviction\n"); 
         frame = frame_evict(flags);
     }
     else{
