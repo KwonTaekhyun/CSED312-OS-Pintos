@@ -662,6 +662,7 @@ bool handle_mm_fault(struct pte *p)
   struct frame *frame = frame_allocate(PAL_USER, p);
   // P3-5. File memory mapping  
   // printf("1\n");
+  p->frame = frame;
   p->pinned = true;
   if(p->is_loaded) {
     //frame_deallocate(f->addr);

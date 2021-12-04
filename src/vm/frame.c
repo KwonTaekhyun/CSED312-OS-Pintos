@@ -128,7 +128,7 @@ struct frame *frame_evict(enum palloc_flags flags)
 
 struct frame *clock_forwarding(){
     clock_hand = (clock_hand == NULL || clock_hand == list_end(&frame_table)) ? 
-        list_begin(&frame_table) : list_next(&clock_hand);
+        list_begin(&frame_table) : list_next(clock_hand);
 
     return list_entry(clock_hand, struct frame, elem);
 }
