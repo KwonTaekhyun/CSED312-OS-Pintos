@@ -537,7 +537,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       upage += PGSIZE;
       ofs+=page_read_bytes;
 
-      printf("load_segment! %dtimes\n", i++);
+      printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
   return true;
 }
