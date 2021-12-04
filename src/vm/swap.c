@@ -19,7 +19,7 @@ void swap_in(size_t swap_index, void* addr){
         block_read (swap_block_table, start_sector + i, addr + (i * BLOCK_SECTOR_SIZE));
     }
 
-    bitmap_set(swap_block_table, swap_index, true);
+    bitmap_set(swap_table, swap_index, true);
 }
 size_t swap_out(void* addr){
     printf("swap-out!!\n");
@@ -30,7 +30,7 @@ size_t swap_out(void* addr){
     size_t i;
     size_t start_sector = swap_index * NUM_SECTOR_PER_PAGE;
     for (i = 0; i < NUM_SECTOR_PER_PAGE; i++) {
-        block_write(swap_table, start_sector + i, addr + (i * BLOCK_SECTOR_SIZE));
+        block_write(swap_block_table, start_sector + i, addr + (i * BLOCK_SECTOR_SIZE));
     }
 
     bitmap_set(swap_table, swap_index, false);
