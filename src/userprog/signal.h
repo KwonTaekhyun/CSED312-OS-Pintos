@@ -4,7 +4,7 @@
 #include "threads/synch.h"
 #include <list.h>
 
-typedef int pid_t;
+#include "lib/user/syscall.h"
 
 enum signal_type {
   SIG_WAIT,

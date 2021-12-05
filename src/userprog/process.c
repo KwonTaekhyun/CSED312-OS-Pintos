@@ -189,7 +189,7 @@ process_exit (void)
   }
 
   struct list *file_mapping_table = &cur->file_mapping_table;
-  struct list_elem *e;
+  // struct list_elem *e;
   while (!list_empty(file_mapping_table)) {
     e = list_begin (file_mapping_table);
     struct file_mapping *file_mapping = list_entry(e, struct file_mapping, file_mapping_elem);
