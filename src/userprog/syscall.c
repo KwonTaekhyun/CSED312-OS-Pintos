@@ -182,16 +182,16 @@ bool sys_remove (const char *file)
 }
 
 int sys_open(char *file_name){
-  // lock_acquire (&filesys_lock);
+  lock_acquire (&filesys_lock);
   if(!file_name){
-    // lock_release (&filesys_lock);
+    lock_release (&filesys_lock);
     return -1;
   }
 
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
-    // lock_release (&filesys_lock);
+    lock_release (&filesys_lock);
     return -1;
   }
 
@@ -199,7 +199,7 @@ int sys_open(char *file_name){
 
   if (!fd) {
     palloc_free_page (fd);
-    // lock_release (&filesys_lock);
+    lock_release (&filesys_lock);
     return -1;
   }
 
@@ -214,7 +214,7 @@ int sys_open(char *file_name){
   }
 
   list_push_back(fd_list_ptr, &fd->elem);
-  // lock_release (&filesys_lock);
+  lock_release (&filesys_lock);
   return fd->index;
 }
 
@@ -301,6 +301,8 @@ void sys_close(int fd_idx){
     return;
   }
 
+  lock_acquire (&filesys_lock);
+
   struct file_descriptor *fd = find_fd_by_idx(fd_idx);
 
   list_remove(&(fd->elem));
@@ -313,6 +315,8 @@ void sys_close(int fd_idx){
     file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
+
+  lock_release (&filesys_lock);
 }
 
 /* P3-5. File memory mapping */
