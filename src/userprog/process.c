@@ -656,8 +656,7 @@ bool handle_mm_fault(struct pte *p)
   p->frame = frame;
   p->pinned = true;
   if(p->is_loaded) {
-    //frame_deallocate(f->addr);
-    // printf("2\n");
+    frame_deallocate(frame->addr);
     return false;
   }
   if(frame==NULL){
