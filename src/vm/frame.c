@@ -8,6 +8,7 @@
 void frame_init()
 {
     list_init(&frame_table);
+    lock_init(&frame_lock);
     clock_hand = NULL;
 }
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
@@ -15,7 +16,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     if(pte == NULL) return NULL;
 
     struct frame *frame;
-
+    lock_acquire(&frame_lock);
     // palloc_get_page()를 통해 페이지 할당
     void *page = palloc_get_page(flags);
     if(page == NULL){
@@ -28,6 +29,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
         frame = malloc(sizeof(struct frame));
         if(!frame) {
             palloc_free_page(page);
+            lock_release(&frame_lock);
             return NULL;
         }
         else{
@@ -40,7 +42,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 
     // frame_table에 frame 추가
     list_push_back(&(frame_table), &(frame->elem));
-
+    lock_release(&frame_lock);
     // frame 주소 반환
     return frame;
 }
@@ -50,6 +52,7 @@ void frame_deallocate(void *addr)
     struct thread *current_thread = thread_current();
     struct list_elem *e;
     struct frame *frame_entry = NULL;
+    lock_acquire(&frame_lock);
     for (e = list_begin (&frame_table); e != list_end (&frame_table); e = list_next (e)){
         struct frame *frame = list_entry (e, struct frame, elem);
         if (frame->addr == addr){
@@ -59,6 +62,7 @@ void frame_deallocate(void *addr)
     }
     if(!frame_entry){
         // deallocate할 frame이 존재하지 않음
+        lock_release(&frame_lock);
         return;
     }
 
@@ -68,10 +72,12 @@ void frame_deallocate(void *addr)
 	palloc_free_page(frame_entry->addr);
 
     free(frame_entry);
+    lock_release(&frame_lock);
 }
 struct frame *frame_evict(enum palloc_flags flags)
 {
     // clock algorithm을 통해 evict할 frame을 선택
+    lock_acquire(&frame_lock);
     struct frame *frame = clock_forwarding();
 
     int n = list_size(&frame_table) * 2;
@@ -123,7 +129,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     list_remove(&(frame->elem));
 
     frame->pte = NULL;
-
+    lock_release(&frame_lock);
     return frame;
 }
 

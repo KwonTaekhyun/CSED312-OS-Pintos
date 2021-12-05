@@ -19,5 +19,5 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte);
 void frame_deallocate(void *addr);
 struct frame *frame_evict(enum palloc_flags flags);
 struct frame *clock_forwarding();
-
+struct lock frame_lock;
 #endif
