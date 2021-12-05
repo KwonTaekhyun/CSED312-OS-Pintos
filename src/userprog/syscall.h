@@ -3,7 +3,7 @@
 
 
 #include "lib/user/syscall.h"
-
+#define STACK_HEURISTIC 32
 /* P3-5. File memory mapping */
 #include "filesys/off_t.h"
 #include <list.h>

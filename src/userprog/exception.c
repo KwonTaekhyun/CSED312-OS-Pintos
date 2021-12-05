@@ -155,30 +155,13 @@ page_fault (struct intr_frame *f)
   not_present = (f->error_code & PF_P) == 0;
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
-
-  // P3-6. Swapping
-//   printf("Page fault, address: %p\n", fault_addr);
-
-//   debug_backtrace();
-
-  //p3
-  //check_address(fault_addr, f->esp);
   check_address(fault_addr, f->esp);
-
-  // P3-6. Swapping
-//   printf("Page fault2, address: %p\n", fault_addr);
 
    if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
         sys_exit(-1);
 
-   // P3-6. Swapping
-   // printf("Page fault3, address: %p\n", fault_addr);
-
    bool load = false;
   	struct pte *page = pte_find(fault_addr);
-     
-   // P3-5-test
-   //printf("There is no page?: %d\n", page == NULL);
 
   	if(page != NULL)
   	{
@@ -189,18 +172,6 @@ page_fault (struct intr_frame *f)
 			load = true;
 	  	}
 	}
-
-   // P3-5-test
-   //printf("load is success?: %d\n", load);
-
    if(load == false) sys_exit(-1);
-   /* if(load == false){
-	  printf ("Page fault at %p: %s error %s page in %s context.\n",
-      	    fault_addr,
-       	    not_present ? "not present" : "rights violation",
-            write ? "writing" : "reading",
-            user ? "user" : "kernel");
-	  kill (f);
-  }
-   */
+   
 }
