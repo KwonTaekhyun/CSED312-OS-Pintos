@@ -518,10 +518,8 @@ void check_valid_string(const void *str, void *esp)
 void check_address(void *addr, void *esp)
 {
 	struct pte *page;
-	uint32_t address=(unsigned int)addr;
-	uint32_t lowest_address=0x8048000;
-	uint32_t highest_address=0xc0000000;
-	if(address >= lowest_address && address < highest_address)
+  if(!is_user_vaddr(addr)) sys_exit(-1);
+	if(addr >= (void *)0x08048000 || addr < (void *)0xc0000000)
 	{
 		page = pte_find(addr);
 		if(page == NULL)
@@ -534,9 +532,6 @@ void check_address(void *addr, void *esp)
 				sys_exit(-1);
 		}
 	}
-	else
-	{
-    //p3
-		sys_exit(-1);
-	}
+	else sys_exit(-1);
+
 }
