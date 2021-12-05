@@ -86,7 +86,7 @@ syscall_handler (struct intr_frame *f)
     case SYS_OPEN:{
       is_valid_address(f->esp, 4, 7);
       //p3
-      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
+      //check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -172,7 +172,7 @@ bool sys_create(const char *file , unsigned initial_size)
     sys_exit(-1);
   }
   // P3-5. File memory mapping
-  // printf("file size: %d", initial_size);
+  // printf("file size: %d", initial_size);g
   return filesys_create (file, initial_size);
 }
 
