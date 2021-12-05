@@ -8,6 +8,7 @@
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
+#include "userprog/signal.h"
 #include "filesys/directory.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
@@ -17,17 +18,15 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
-//p2-4
+#include "threads/malloc.h"
 #include "userprog/syscall.h"
-/*-------------P2-----------------*/
-#include "threads/synch.h"
-#include <list.h>
-//p3
+
 #include "vm/frame.h"
 #include "vm/page.h"
 #include "vm/swap.h"
 #include "lib/kernel/bitmap.h"
 #define MAX_STACK_SIZE (1 << 23)
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
@@ -39,45 +38,22 @@ tid_t
 process_execute (const char *file_name) 
 {
   char *fn_copy;
-  char *arg_copy;
+  char *save_ptr;
   tid_t tid;
-
+  
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
-  arg_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
-  if (arg_copy == NULL)
-    return TID_ERROR;
+  memset(fn_copy, 0, PGSIZE);
   strlcpy (fn_copy, file_name, PGSIZE);
-  strlcpy (arg_copy, fn_copy, PGSIZE);
-
-  char *argv;
-  arg_copy = strtok_r(arg_copy," ",&argv);
-
-  if (filesys_open(arg_copy) == NULL) {
-    return -1;
-  }
-
-  tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
-
-  sema_down(&thread_current()->sema_load);
-
+  
+  /* Create a new thread to execute FILE_NAME. */
+  tid = thread_create (strtok_r(fn_copy, " ", &save_ptr), PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
-
-  struct list_elem* e;
-  struct thread* t;
-  for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
-    t = list_entry(e, struct thread, child);
-    if (t->exit_status == -1) {
-      return process_wait(tid);
-    }
-  }
-
-  palloc_free_page (arg_copy); 
-
+    palloc_free_page (fn_copy);
+  
   return tid;
 }
 
@@ -86,57 +62,73 @@ process_execute (const char *file_name)
 static void
 start_process (void *file_name_)
 {
-  char *file_name = file_name_;
-  struct intr_frame if_;
-  bool success;
-
-  char *argv[64];
-  int argc;
+  int file_name_len;
   char *token;
   char *save_ptr;
+  int argc = 0;
+  int i = 0;
+  
+  char *file_name = strtok_r(file_name_, " ", &save_ptr);
+  struct intr_frame if_;
+  bool success;
+  
+  void **esp = &if_.esp;
 
-  token = strtok_r(file_name, " ", &save_ptr);
-  argv[0] = token;
-  argc = 1;
-  while(token!=NULL)
-  {
-    token = strtok_r(NULL, " ", &save_ptr);
-    if(token == NULL) break;
-    argv[argc] = token;
-    argc++;
-  }
-  //p3
-  //printf("pt_init\n");
   struct thread *t = thread_current();
   pt_init(&t->page_table);
-  //printf("pt_init\n");
+  
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-//p3
-  //printf("start process: arv[0] : %s before load\n",argv[0]);
-  success = load (argv[0], &if_.eip, &if_.esp);
-  //p3
-  //printf("start process: arv[0] : %s load complete\n",argv[0]);
-  if(success)
-  {
-    argu_stack(argv, argc, &if_.esp);
-  }
-
+  success = load (file_name_, &if_.eip, &if_.esp);
+  
   /* If load failed, quit. */
-  palloc_free_page (file_name);
-
-  sema_up(&thread_current()->parent->sema_load);
-  //p3
-  //printf("start_process done\n");
-  if (!success){
-    //p3
-    //printf("exit in start process\n");
-    sys_exit(-1);
+  if (!success) {
+    send_signal(-1, SIG_EXEC);
+    palloc_free_page (file_name);
+    thread_exit ();
   }
-
+  
+  /* Copy command to stack */
+  *(file_name + strlen(file_name)) = ' ';
+  if(save_ptr == file_name + strlen(file_name) - 1) *(save_ptr) = '\0';
+  else *(save_ptr) = ' ';
+  file_name_len = strlen(file_name) + 1;
+  *esp -= file_name_len;
+  *esp -= (unsigned)(*esp) % 4; // align memory
+  strlcpy (*esp, file_name, file_name_len);
+  
+  palloc_free_page (file_name);
+  file_name = (char*)(*esp);
+  save_ptr = file_name;
+   
+  /* Argument Passing */
+  for (token = strtok_r (NULL, " ", &save_ptr); token != NULL;
+       token = strtok_r (NULL, " ", &save_ptr)) {
+    while(*save_ptr == ' ') save_ptr++;
+    argc++; // swap delimiter to null terminations
+  }
+  
+  *esp -= sizeof(char*);
+  *(void**)(*esp) = NULL; // argv[argc]
+  *esp -= sizeof(char*) * argc;
+  save_ptr = file_name;
+  for (i = 0; i < argc; i++) {
+    *(char**)((*esp) + sizeof(void*) * i) = save_ptr;
+    save_ptr = save_ptr + strlen(save_ptr) + 1;
+    while(*save_ptr == ' ') save_ptr++;
+  }
+  *esp -= sizeof(void*);
+  *(void**)(*esp) = *esp + sizeof(void*);
+  *esp -= sizeof(int);
+  *(int*)(*esp) = argc;
+  *esp -= sizeof(void*);
+  *(void**)(*esp) = NULL; // fake ret
+  
+  send_signal(thread_current()->tid, SIG_EXEC);
+  
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -159,24 +151,9 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid) 
 {
-  struct list_elem *child_elem;
-  struct thread *current_thread = thread_current();
-  int exit_status = -1;
-
-  for(child_elem = list_begin(&(current_thread->children)); child_elem != list_end(&(current_thread->children)); child_elem = list_next(child_elem)){
-    struct thread *thr = list_entry(child_elem, struct thread, child);
-    if(thr->tid == child_tid){
-      sema_down(&(thr->sema_wait));
-
-      list_remove(child_elem);
-      exit_status = thr->exit_status;
-
-      sema_up(&(thr->sema_exit));
-      break;
-    }
-  }
-
-  return exit_status;
+  //struct thread *cur = thread_current();
+  int result = get_signal(child_tid, SIG_WAIT);
+  return result;
 }
 
 /* Free the current process's resources. */
@@ -184,14 +161,31 @@ void
 process_exit (void)
 {
   struct thread *cur = thread_current ();
-
-  struct list *fd_list = &cur->file_descriptor_list;
-  while (!list_empty(fd_list)) {
-    struct list_elem *e = list_pop_front (fd_list);
-    struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-
-    file_close(fd->file_ptr);
-    palloc_free_page(fd);
+  uint32_t *pd;
+  struct signal *sig;
+  struct fd_elem *f_e;
+  struct list_elem *e;
+  
+  if(cur->parent) list_remove(&cur->p_elem);
+  
+  for (e = list_begin (&cur->signal_list); e != list_end (&cur->signal_list); )
+  {
+    sig = list_entry (e, struct signal, elem);
+    e = list_remove(e);
+    free(sig);
+  }
+  
+  if (cur->current_file != NULL) {
+    file_allow_write(cur->current_file);
+    file_close(cur->current_file);
+  }
+  
+  for (e = list_begin (&cur->fd_table); e != list_end (&cur->fd_table); )
+  {
+    f_e = list_entry (e, struct fd_elem, elem);
+    e = list_remove(e);
+    file_close(f_e->file_ptr);
+    free(f_e);
   }
 
   struct list *file_mapping_table = &cur->file_mapping_table;
@@ -203,13 +197,10 @@ process_exit (void)
     sys_munmap(file_mapping->mapid);
   }
 
-    uint32_t *pd;
-  //p3
-  //printf("i'm in exit\n");
   pt_destroy(&cur->page_table);
-  //printf("pt_destroy complete\n");
- /* Destroy the current process's page directory and switch back
-    to the kernel-only page directory. */
+  
+  /* Destroy the current process's page directory and switch back
+     to the kernel-only page directory. */
   pd = cur->pagedir;
   if (pd != NULL) 
     {
@@ -224,9 +215,6 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-  
-  sema_up(&(cur->sema_wait));
-  sema_down(&(cur->sema_exit));
 }
 
 /* Sets up the CPU for running user code in the current
@@ -244,6 +232,7 @@ process_activate (void)
      interrupts. */
   tss_update ();
 }
+
 /* We load ELF binaries.  The following definitions are taken
    from the ELF specification, [ELF1], more-or-less verbatim.  */
 
@@ -326,12 +315,13 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
-
+  
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
+  
   /* Open executable file. */
   file = filesys_open (file_name);
   if (file == NULL) 
@@ -339,7 +329,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
-    t->cur_file = file;
+  else {
+    file_deny_write(file);
+  }
+
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
       || memcmp (ehdr.e_ident, "\177ELF\1\1\1", 7)
@@ -352,7 +345,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
-
+  
   /* Read program headers. */
   file_ofs = ehdr.e_phoff;
   for (i = 0; i < ehdr.e_phnum; i++) 
@@ -419,14 +412,14 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
-  file_deny_write(file);
-
   success = true;
 
  done:
   /* We arrive here whether the load is successful or not. */
+  t->current_file = file;
   return success;
 }
+
 /* load() helpers. */
 
 static bool install_page (void *upage, void *kpage, bool writable);
@@ -497,12 +490,8 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
   ASSERT ((read_bytes + zero_bytes) % PGSIZE == 0);
   ASSERT (pg_ofs (upage) == 0);
   ASSERT (ofs % PGSIZE == 0);
+
   file_seek (file, ofs);
-
-  uint8_t *addr = upage;
-
-  // int i = 1;
-
   while (read_bytes > 0 || zero_bytes > 0) 
     {
       /* Calculate how to fill this page.
@@ -510,11 +499,8 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
          and zero the final PAGE_ZERO_BYTES bytes. */
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
-      
-      //p3
-      //printf("load_seg\n");
+
       struct pte *page = malloc(sizeof(struct pte));
-      //printf("load_seg done\n");
       if(page != NULL)
       {
         page->type = VM_BIN;
@@ -539,13 +525,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
       ofs+=page_read_bytes;
-
-      // printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
-// printf("MEMSET test\n");
-// memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
-// printf("MEMSET test\n");
-
   return true;
 }
 
@@ -556,28 +536,28 @@ setup_stack (void **esp)
 {
   struct frame *frame;
   bool success = false;
-    //p3
-      struct pte *page = malloc(sizeof(struct pte));
-      //printf("setup_stack\n");
-      if(page != NULL)
-      {
-        page->vaddr = pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE); 
-        page->writable = true; 
-        page->type = VM_ANON; 
-        page->is_loaded = true;
-        page->file = NULL;
-        page->offset = 0;
-        page->read_bytes = 0;
-        page->zero_bytes = 0;
-        page->pinned = true;
-        page->frame = NULL;
-        page->swap_index = BITMAP_ERROR;
-        page->thread = thread_current();
-        success = pte_insert(&thread_current()->page_table, page);
-        //printf("setup_stack done\n");
-      }
 
-    frame = frame_allocate(PAL_USER | PAL_ZERO, page);
+  struct pte *page = malloc(sizeof(struct pte));
+      //printf("setup_stack\n");
+  if(page != NULL)
+  {
+    page->vaddr = pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE); 
+    page->writable = true; 
+    page->type = VM_ANON; 
+    page->is_loaded = true;
+    page->file = NULL;
+    page->offset = 0;
+    page->read_bytes = 0;
+    page->zero_bytes = 0;
+    page->pinned = true;
+    page->frame = NULL;
+    page->swap_index = BITMAP_ERROR;
+    page->thread = thread_current();
+    success = pte_insert(&thread_current()->page_table, page);
+    //printf("setup_stack done\n");
+  }
+
+  frame = frame_allocate(PAL_USER | PAL_ZERO, page);
   if (frame != NULL) 
     {
       success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
@@ -602,56 +582,12 @@ setup_stack (void **esp)
 static bool
 install_page (void *upage, void *kpage, bool writable)
 {
-  // P3-5. File memory mapping
-  // printf("address V: %p, P: %p\n", upage, kpage);
   struct thread *t = thread_current ();
 
   /* Verify that there's not already a page at that virtual
      address, then map our page there. */
   return (pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
-}
-
-/* P2 */
-void argu_stack(char **argv, int argc, void **esp)
-{
-  int i,j;
-  char **argv_addr;
-  argv_addr = (char**)malloc(sizeof(char*)*argc);
-
-  for(i = argc - 1 ; i >= 0 ; i -- )
-  {
-    for(j = strlen(argv[i]); j >= 0; j--)
-    {
-      *esp -= 1;
-      **(char**)esp = argv[i][j];
-    }
-    argv_addr[i] = (char*) *esp;
-  }
-
-  while((int)*esp % 4 != 0)
-  {
-    *esp -= sizeof(char);
-    char temp = 0;
-    memcpy(*esp, &temp, sizeof(char));
-  }
-
-  char* argv_null = 0;
-  *esp -= sizeof(char*);
-  memcpy(*esp, &argv_null, sizeof(char*));
-  for (i = argc - 1; i >= 0; i--)
-  {
-    *esp -= sizeof(char**);
-    memcpy(*esp, &argv_addr[i], sizeof(char**));
-  }
-  char **argv_pointer = *esp;
-  *esp -= sizeof(char**);
-  memcpy(*esp, &argv_pointer, sizeof(char**));
-  *esp -= sizeof(int);
-  memcpy(*esp, &argc, sizeof(int));
-  *esp -= sizeof(void*);
-  void *ret = 0;
-  memcpy(*esp, &ret, sizeof(void*));
 }
 
 bool handle_mm_fault(struct pte *p)
@@ -722,6 +658,7 @@ bool handle_mm_fault(struct pte *p)
   }
   else return false;
 }
+
 bool expand_stack(void *addr)
 {
 	struct frame *f;

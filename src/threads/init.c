@@ -38,7 +38,6 @@
 #include "filesys/fsutil.h"
 #endif
 
-/* P3-6 */
 #include "vm/frame.h"
 #include "vm/swap.h"
 
@@ -131,7 +130,6 @@ main (void)
   filesys_init (format_filesys);
 #endif
 
-  /* P3-6 */
   frame_init();
   swap_init();
 
@@ -144,6 +142,7 @@ main (void)
   shutdown ();
   thread_exit ();
 }
+
 /* Clear the "BSS", a segment that should be initialized to
    zeros.  It isn't actually stored on disk or zeroed by the
    kernel loader, so we have to zero it ourselves.
