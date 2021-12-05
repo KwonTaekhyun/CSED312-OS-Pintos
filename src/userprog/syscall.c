@@ -59,6 +59,7 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
+      unpin_string((void *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_WAIT:{
@@ -71,6 +72,7 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
+      unpin_string((void *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_REMOVE:{
@@ -84,6 +86,7 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
+      unpin_string((void *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_FILESIZE:{
@@ -96,6 +99,7 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
@@ -103,6 +107,7 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_SEEK:{
@@ -530,4 +535,34 @@ void check_address(void *addr, void *esp)
 	}
 	else sys_exit(-1);
 
+}
+
+void unpin_ptr(void *vaddr)
+{
+	struct vm_entry *vme  = find_vme(vaddr);
+	if(vme != NULL)
+	{
+		vme->pinned = false;
+	}
+}
+
+void unpin_string(void *str)
+{
+	unpin_ptr(str);
+	while(*(char *)str != 0)
+	{
+		str = (char *)str + 1;
+		unpin_ptr(str);
+	}
+}
+
+void unpin_buffer(void *buffer, unsigned size)
+{
+	int i;
+	char *local_buffer = (char *)buffer;
+	for(i=0; i<size; i++)
+	{
+		unpin_ptr(local_buffer);
+		local_buffer++;
+	}
 }
