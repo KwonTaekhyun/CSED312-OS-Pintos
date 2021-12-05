@@ -539,10 +539,10 @@ void check_address(void *addr, void *esp)
 
 void unpin_ptr(void *vaddr)
 {
-	struct vm_entry *vme  = find_vme(vaddr);
-	if(vme != NULL)
+	struct pte *page  = pte_find(vaddr);
+	if(page != NULL)
 	{
-		vme->pinned = false;
+		page->pinned = false;
 	}
 }
 
