@@ -724,7 +724,6 @@ bool handle_mm_fault(struct pte *p)
 }
 bool expand_stack(void *addr)
 {
-  struct pte *page;
 	struct frame *f;
   bool success = false;
 	struct pte *page = malloc(sizeof(struct pte));
