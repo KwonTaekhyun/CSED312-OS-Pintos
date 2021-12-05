@@ -68,22 +68,10 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 } 
 bool load_file(struct frame *frame, struct pte *p)
 {
-    if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes)){
-        // P3-5-test
-        // printf("load file fail\n");
+    if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes))
         return false;
-    }
     memset(frame->addr+(p->read_bytes), 0, p->zero_bytes);
     return true;
-}
-
-/* P3-5. File memory mapping */
-void pt_destory_by_addr (void* addr)
-{
-    struct pte* page = pte_find(addr);
-    pte_delete(&(thread_current()->page_table), page);
-    if(page->frame!=NULL)  frame_deallocate(page->frame->addr);
-    free(page);
 }
 
 bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable, bool file_mapping)
@@ -91,10 +79,6 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
     if(pte_find(addr) != NULL){
         return false;
     }
-
-    // P3-5. File memory mapping
-    // printf("address: %p, offset: %d\n", addr, offset / 4096);
-
     struct pte* page_entry = malloc(sizeof(struct pte));
     if(page_entry != NULL)
     {
