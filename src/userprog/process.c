@@ -105,30 +105,20 @@ start_process (void *file_name_)
     argv[argc] = token;
     argc++;
   }
-  //p3
-  //printf("pt_init\n");
   struct thread *t = thread_current();
   pt_init(&t->page_table);
-  //printf("pt_init\n");
-  /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-//p3
-  //printf("start process: arv[0] : %s before load\n",argv[0]);
   success = load (argv[0], &if_.eip, &if_.esp);
-  //p3
-  //printf("start process: arv[0] : %s load complete\n",argv[0]);
   if(success)
   {
     argu_stack(argv, argc, &if_.esp);
   }
-
+  sema_up(&thread_current()->parent->sema_load);
   /* If load failed, quit. */
   palloc_free_page (file_name);
-
-  sema_up(&thread_current()->parent->sema_load);
   //p3
   //printf("start_process done\n");
   if (!success){
@@ -186,14 +176,6 @@ process_exit (void)
   struct thread *cur = thread_current ();
 
   struct list *fd_list = &cur->file_descriptor_list;
-  while (!list_empty(fd_list)) {
-    struct list_elem *e = list_pop_front (fd_list);
-    struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-
-    file_close(fd->file_ptr);
-    palloc_free_page(fd);
-  }
-
   struct list *file_mapping_table = &cur->file_mapping_table;
   struct list_elem *e;
   while (!list_empty(file_mapping_table)) {
@@ -202,7 +184,15 @@ process_exit (void)
 
     sys_munmap(file_mapping->mapid);
   }
-
+  while (!list_empty(fd_list)) {
+    struct list_elem *e = list_pop_front (fd_list);
+    struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
+    lock_acquire(&filesys_lock);
+    sys_close(fd->file_ptr);
+    lock_release(&filesys_lock);
+    palloc_free_page(fd);
+  }
+  sema_up(&(cur->sema_wait));
     uint32_t *pd;
   //p3
   //printf("i'm in exit\n");
@@ -224,8 +214,7 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-  
-  sema_up(&(cur->sema_wait));
+
   sema_down(&(cur->sema_exit));
 }
 
