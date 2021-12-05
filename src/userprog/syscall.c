@@ -20,7 +20,7 @@
 //p3
 #include "vm/page.h"
 #include "vm/frame.h"
-#define STACK_HEURISTIC 32
+
 struct file 
 {
   struct inode *inode;        /* File's inode. */

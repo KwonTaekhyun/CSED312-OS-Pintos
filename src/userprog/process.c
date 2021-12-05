@@ -722,3 +722,44 @@ bool handle_mm_fault(struct pte *p)
   }
   else return false;
 }
+bool expand_stack(void *addr)
+{
+  struct pte *page;
+	struct frame *f;
+  bool success = false;
+	struct pte *page = malloc(sizeof(struct pte));
+      if(page != NULL)
+      {
+        page->vaddr = pg_round_down(addr); 
+        page->writable = true; 
+        page->type = VM_ANON; 
+        page->is_loaded = true;
+        page->file = NULL;
+        page->offset = 0;
+        page->read_bytes = 0;
+        page->zero_bytes = 0;
+        page->pinned = true;
+        page->frame = NULL;
+        page->swap_index = BITMAP_ERROR;
+        page->thread = thread_current();
+        success = pte_insert(&thread_current()->page_table, page);
+      }
+	/* allocate page and initialize the page's vm_entry */
+	f = frame_allocate(PAL_USER,page);
+	if(f == NULL)
+	{
+		free(page);
+		return false;
+	}
+  if(!success||!install_page(page->vaddr, f->addr, page->writable))
+    {
+      frame_deallocate(f->addr);
+      free(page);
+      return false;
+    }
+	if(intr_context())
+	{
+		page->pinned = false;
+	}
+	return true;
+}
