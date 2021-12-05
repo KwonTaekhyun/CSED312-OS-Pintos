@@ -42,11 +42,6 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
-  //is_valid_address(f->esp, 0, 3);
-
-  /* P3-5. File memory mapping */
-  // debug_backtrace();
-
   check_address(f->esp,f->esp);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
@@ -54,83 +49,83 @@ syscall_handler (struct intr_frame *f)
       break;
     }
     case SYS_EXIT:{
-      is_valid_address(f->esp, 4, 7);
+      //is_valid_address(f->esp, 4, 7);
       sys_exit(*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_EXEC:{
-      is_valid_address(f->esp, 4, 7);
+      //is_valid_address(f->esp, 4, 7);
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_WAIT:{
-      is_valid_address(f->esp, 4, 7);
+      //is_valid_address(f->esp, 4, 7);
       f->eax = sys_wait((pid_t)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_CREATE:{
-      is_valid_address(f->esp, 4, 11);
+      //is_valid_address(f->esp, 4, 11);
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
       break;
     }
     case SYS_REMOVE:{
-      is_valid_address(f->esp, 4, 7);
+      //is_valid_address(f->esp, 4, 7);
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_remove((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_OPEN:{
-      is_valid_address(f->esp, 4, 7);
+      //is_valid_address(f->esp, 4, 7);
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_FILESIZE:{
-      is_valid_address(f->esp, 4, 7); 
+      //is_valid_address(f->esp, 4, 7); 
       f->eax = sys_filesize((int)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_READ:{
-      is_valid_address(f->esp, 4, 15);
+      //is_valid_address(f->esp, 4, 15);
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
-      is_valid_address(f->esp, 4, 15);
+      //is_valid_address(f->esp, 4, 15);
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_SEEK:{
-      is_valid_address(f->esp, 4, 11);
+      //is_valid_address(f->esp, 4, 11);
       sys_seek((int)*(uint32_t *)(f->esp + 4), (unsigned)*(uint32_t *)(f->esp + 8));
       break;
     }
     case SYS_TELL:{
-      is_valid_address(f->esp, 4, 7);
+      //is_valid_address(f->esp, 4, 7);
       f->eax = sys_tell((int)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_CLOSE:{
-      is_valid_address(f->esp, 4, 7);
+      //is_valid_address(f->esp, 4, 7);
       sys_close((int)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_MMAP: {
-      is_valid_address(f->esp, 4, 11);
+      //is_valid_address(f->esp, 4, 11);
       f->eax = sys_mmap((mapid_t)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8));
       break;
     }
     case SYS_MUNMAP: {
-      is_valid_address(f->esp, 4, 7); 
+      //is_valid_address(f->esp, 4, 7); 
       sys_munmap((mapid_t)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -524,10 +519,8 @@ void check_address(void *addr, void *esp)
 	/* if address is user_address */
 	if(address >= lowest_address && address < highest_address)
 	{
-		/* find vm_entry if can't find vm_entry, exit the process */
 		page = pte_find(addr);
-		/* if can't find vm_entry */
-		/* if(page == NULL)
+		if(page == NULL)
 		{
 			if(addr >= esp-STACK_HEURISTIC){
 				if(expand_stack(addr) == false)
@@ -535,7 +528,7 @@ void check_address(void *addr, void *esp)
 			}
 			else
 				sys_exit(-1);
-		} */
+		}
 	}
 	else
 	{

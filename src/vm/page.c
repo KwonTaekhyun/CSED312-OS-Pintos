@@ -77,15 +77,6 @@ bool load_file(struct frame *frame, struct pte *p)
     return true;
 }
 
-/* P3-5. File memory mapping */
-void pt_destory_by_addr (void* addr)
-{
-    struct pte* page = pte_find(addr);
-    pte_delete(&(thread_current()->page_table), page);
-    if(page->frame!=NULL)  frame_deallocate(page->frame->addr);
-    free(page);
-}
-
 bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable, bool file_mapping)
 {
     if(pte_find(addr) != NULL){
