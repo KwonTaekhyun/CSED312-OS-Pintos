@@ -27,7 +27,7 @@
 #include "vm/page.h"
 #include "vm/swap.h"
 #include "lib/kernel/bitmap.h"
-
+#define MAX_STACK_SIZE (1 << 23)
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
@@ -726,6 +726,8 @@ bool expand_stack(void *addr)
 {
 	struct frame *f;
   bool success = false;
+  if((size_t)(PHYS_BASE - pg_round_down(addr)) > MAX_STACK_SIZE)
+		return false;
 	struct pte *page = malloc(sizeof(struct pte));
       if(page != NULL)
       {
