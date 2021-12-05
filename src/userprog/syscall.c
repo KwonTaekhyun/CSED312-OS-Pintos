@@ -173,10 +173,7 @@ bool sys_create(const char *file , unsigned initial_size)
   }
   // P3-5. File memory mapping
   // printf("file size: %d", initial_size);
-  lock_acquire(&filesys_lock);
-  bool ret = filesys_create (file, initial_size);
-  lock_release(&filesys_lock);
-  return ret;
+  return filesys_create (file, initial_size);
 }
 
 bool sys_remove (const char *file) 
@@ -189,12 +186,12 @@ int sys_open(char *file_name){
     return -1;
   }
 
-  //lock_acquire (&filesys_lock);
+  lock_acquire (&filesys_lock);
 
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
-    //lock_release (&filesys_lock);
+    lock_release (&filesys_lock);
     return -1;
   }
 
@@ -202,7 +199,7 @@ int sys_open(char *file_name){
 
   if (!fd) {
     palloc_free_page (fd);
-    //lock_release (&filesys_lock);
+    lock_release (&filesys_lock);
     return -1;
   }
 
@@ -217,7 +214,7 @@ int sys_open(char *file_name){
   }
 
   list_push_back(fd_list_ptr, &fd->elem);
-  //lock_release (&filesys_lock);
+  lock_release (&filesys_lock);
   return fd->index;
 }
 
@@ -236,7 +233,7 @@ int sys_filesize(int fd)
 }
 
 int sys_read (int fd, void* buffer, unsigned size) {
-  //lock_acquire (&filesys_lock);
+  lock_acquire (&filesys_lock);
 
   if (fd == 0){
     uint8_t *temp_buf = (uint8_t *) buffer;
@@ -244,18 +241,19 @@ int sys_read (int fd, void* buffer, unsigned size) {
     for(i = 0; i < size; i++){
       temp_buf[i] = input_getc();
     }
-    //lock_release (&filesys_lock);
+    lock_release (&filesys_lock);
     return size;
   }
   else if(fd > 2)
   {
     struct file *f = find_fd_by_idx(fd)->file_ptr;
     if(f == NULL || !is_user_vaddr(buffer)){
-      //lock_release (&filesys_lock);
+      lock_release (&filesys_lock);
       sys_exit(-1);
     }
-    lock_acquire (&filesys_lock);
+
     int read_bytes = (int) file_read(f, buffer, size);
+
     lock_release (&filesys_lock);
     return read_bytes;
   }
@@ -265,21 +263,21 @@ int sys_read (int fd, void* buffer, unsigned size) {
 }
 
 int sys_write (int fd, const void *buffer, unsigned size) {
-  //lock_acquire (&filesys_lock);
+  lock_acquire (&filesys_lock);
 
   if (fd == 1) {
     putbuf(buffer, size);
-    //lock_release (&filesys_lock);
+    lock_release (&filesys_lock);
     return size;
   }
   else if(fd > 2){
     struct file *f = find_fd_by_idx(fd)->file_ptr;
     if(f == NULL) 
     {
-      //lock_release (&filesys_lock);
+      lock_release (&filesys_lock);
       sys_exit(-1);
     }
-lock_acquire (&filesys_lock);
+
     int temp = (int) file_write(f, buffer, size);
 
     lock_release (&filesys_lock);
@@ -291,9 +289,7 @@ lock_acquire (&filesys_lock);
 }
 
 void sys_seek (int fd_idx, unsigned pos){
-  lock_acquire(&filesys_lock);
   file_seek(find_fd_by_idx(fd_idx)->file_ptr, pos);
-  lock_release(&filesys_lock);
 }
 
 unsigned sys_tell (int fd_idx){
@@ -314,9 +310,7 @@ void sys_close(int fd_idx){
   }
 
   if(fd->file_ptr) {
-    lock_acquire(&filesys_lock);
     file_close(fd->file_ptr);
-    lock_release(&filesys_lock);
     palloc_free_page(fd);
   }
 }
