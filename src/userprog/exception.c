@@ -172,10 +172,6 @@ page_fault (struct intr_frame *f)
 			load = true;
 	  	}
 	}
-   else if(fault_addr >= (f->esp - STACK_HEURISTIC))
-   {
-      load = expand_stack(fault_addr);
-   }
    if(load == false) sys_exit(-1);
    
 }

@@ -521,21 +521,18 @@ void check_address(void *addr, void *esp)
 	uint32_t address=(unsigned int)addr;
 	uint32_t lowest_address=0x8048000;
 	uint32_t highest_address=0xc0000000;
-	/* if address is user_address */
 	if(address >= lowest_address && address < highest_address)
 	{
-		/* find vm_entry if can't find vm_entry, exit the process */
 		page = pte_find(addr);
-		/* if can't find vm_entry */
-		/* if(page == NULL)
+		if(page == NULL)
 		{
 			if(addr >= esp-STACK_HEURISTIC){
-				if(expand_stack(addr) == false)
+				if(!expand_stack(addr))
 					sys_exit(-1);
 			}
 			else
 				sys_exit(-1);
-		} */
+		}
 	}
 	else
 	{
