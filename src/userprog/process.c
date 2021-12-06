@@ -26,6 +26,8 @@
 #include "vm/frame.h"
 #include "vm/page.h"
 
+#include "userprog/syscall.h"
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
@@ -211,7 +213,10 @@ process_exit (void)
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
 
+    lock_acquire(&filesys_lock);
     file_close(fd->file_ptr);
+    lock_release(&filesys_lock);
+
     palloc_free_page(fd);
   }
   
@@ -323,6 +328,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
   /* Open executable file. */
+  lock_acquire(&filesys_lock);
   file = filesys_open (file_name);
   if (file == NULL) 
     {
@@ -417,6 +423,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
+  lock_release(&filesys_lock);
   return success;
 }
 /* load() helpers. */
