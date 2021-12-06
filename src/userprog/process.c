@@ -569,7 +569,6 @@ setup_stack (void **esp)
       }
 
     frame = frame_allocate(PAL_USER | PAL_ZERO, page);
-    if(frame == NULL) printf("frame null!!!!!!!!!!!!!!!!!!!!!!!\n");
     if (frame != NULL) 
     {
       success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
