@@ -182,7 +182,7 @@ void
 process_exit (void)
 {
   printf("process exit?!\n");
-  
+
   struct thread *cur = thread_current ();
   uint32_t *pd;
   //p3
@@ -670,6 +670,7 @@ bool handle_mm_fault(struct pte *p)
     {
       case VM_BIN : 
       {
+        printf("load in handle_mm_fault\n");
         if(!load_file(addr, p))
         {
           //frame_deallocate(f->addr);

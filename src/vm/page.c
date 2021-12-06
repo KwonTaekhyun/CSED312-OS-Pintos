@@ -65,6 +65,7 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 } 
 bool load_file(void *addr, struct pte *p)
 {
+    printf("load file, address: %p, read_bytes: %d, offset:%d\n", p->file, p->read_bytes, p->offset);
     if(file_read_at(p->file, addr, p->read_bytes, p->offset)!=(p->read_bytes))
         return false;
     memset(addr+(p->read_bytes), 0, p->zero_bytes);
