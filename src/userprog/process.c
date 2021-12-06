@@ -170,7 +170,7 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-
+  pt_destroy(&cur->page_table);
  /* Destroy the current process's page directory and switch back
     to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -479,30 +479,30 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
-      /* Get a page of memory. */
-      uint8_t *kpage = palloc_get_page (PAL_USER);
-      if (kpage == NULL)
-        return false;
+      struct pte *page = malloc(sizeof(struct pte));
+      //printf("load_seg done\n");
+      if(page != NULL)
+      {
+        page->type = VM_BIN;
+        page->file = file;
+        page->writable = writable;
+        page->vaddr = upage;
+        page->is_loaded = false;
+        page->offset = ofs;
+        page->read_bytes = read_bytes;
+        page->zero_bytes = zero_bytes;
+        page->thread = thread_current();
+        //printf("pte insert\n");
+        pte_insert(&thread_current()->page_table, page);
+        //printf("pte insert done\n");
+      }
 
-      /* Load this page. */
-      if (file_read (file, kpage, page_read_bytes) != (int) page_read_bytes)
-        {
-          palloc_free_page (kpage);
-          return false; 
-        }
-      memset (kpage + page_read_bytes, 0, page_zero_bytes);
-
-      /* Add the page to the process's address space. */
-      if (!install_page (upage, kpage, writable)) 
-        {
-          palloc_free_page (kpage);
-          return false; 
-        }
 
       /* Advance. */
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
+      ofs+=page_read_bytes;
     }
   return true;
 }
@@ -524,6 +524,22 @@ setup_stack (void **esp)
       else
         palloc_free_page (kpage);
     }
+    struct pte *page = malloc(sizeof(struct pte));
+      //printf("setup_stack\n");
+      if(page != NULL)
+      {
+        page->vaddr = pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE); 
+        page->writable = true; 
+        page->type = VM_ANON; 
+        page->is_loaded = true;
+        page->file = NULL;
+        page->offset = 0;
+        page->read_bytes = 0;
+        page->zero_bytes = 0;
+        page->thread = thread_current();
+        success = pte_insert(&thread_current()->page_table, page);
+        //printf("setup_stack done\n");
+      }
   return success;
 }
 
