@@ -183,7 +183,7 @@ process_wait (tid_t child_tid)
 void
 process_exit (void)
 {
-  printf("process exit?!\n");
+  // printf("process exit?!\n");
 
   struct thread *cur = thread_current ();
   uint32_t *pd;
@@ -400,7 +400,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
                 }
               if (!load_segment (file, file_page, (void *) mem_page,
                                  read_bytes, zero_bytes, writable)){
-                                   printf("load 실패\n");
+                                  //  printf("load 실패\n");
                                    goto done;
                                  }
             }
@@ -526,7 +526,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       //p3
       //printf("load_seg\n");
       if(pte_find(upage) != NULL){
-        printf("Already exist?, address: %p\n", upage);
+        // printf("Already exist?, address: %p\n", upage);
         return false;
       }
 
@@ -555,7 +555,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 
       /* Advance. */
 
-      printf("pte 생성, address: %p\n", page->vaddr);
+      // printf("pte 생성, address: %p\n", page->vaddr);
     }
   return true;
 }
@@ -677,7 +677,7 @@ bool handle_mm_fault(struct pte *p)
     {
       case VM_BIN : 
       {
-        printf("load in handle_mm_fault\n");
+        // printf("load in handle_mm_fault\n");
         if(!load_file(addr, p))
         {
           //frame_deallocate(f->addr);

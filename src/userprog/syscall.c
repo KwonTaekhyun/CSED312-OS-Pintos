@@ -180,7 +180,7 @@ int sys_open(char *file_name){
   if(!file_name){
     return -1;
   }
-  if(lock_held_by_current_thread(&filesys_lock)) printf("lock held?!\n");
+  // if(lock_held_by_current_thread(&filesys_lock)) printf("lock held?!\n");
 
   lock_acquire (&filesys_lock);
 
