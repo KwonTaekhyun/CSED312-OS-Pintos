@@ -573,7 +573,11 @@ setup_stack (void **esp)
     {
       success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
       if (success)*esp = PHYS_BASE;
-      else frame_deallocate(frame->addr);
+      else 
+      {
+        frame_deallocate(frame->addr);
+        free(page);
+      }
     }
 
   return success;
