@@ -122,6 +122,7 @@ struct thread
     struct list file_descriptor_list;
     //p2-4
     struct file* cur_file;
+    struct hash page_table;
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
