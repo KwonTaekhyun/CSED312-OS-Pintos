@@ -17,6 +17,9 @@
 #include "lib/user/syscall.h"
 #include "threads/palloc.h"
 
+//p3
+#include "vm/page.h"
+
 struct file 
 {
   struct inode *inode;        /* File's inode. */
@@ -38,7 +41,8 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f) 
 {
-  is_valid_address(f->esp, 0, 3);
+  //is_valid_address(f->esp, 0, 3);
+  check_address(f->esp,f->esp);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
       shutdown_power_off();
@@ -51,6 +55,8 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_EXEC:{
       is_valid_address(f->esp, 4, 7);
+      //p3
+      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -61,16 +67,21 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_CREATE:{
       is_valid_address(f->esp, 4, 11);
+      //p3
+      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
       break;
     }
     case SYS_REMOVE:{
       is_valid_address(f->esp, 4, 7);
+      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_remove((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
     case SYS_OPEN:{
       is_valid_address(f->esp, 4, 7);
+      //p3
+      check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
       break;
     }
@@ -81,11 +92,15 @@ syscall_handler (struct intr_frame *f)
     }
     case SYS_READ:{
       is_valid_address(f->esp, 4, 15);
+      //p3
+      check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
     case SYS_WRITE:{
       is_valid_address(f->esp, 4, 15);
+      //p3
+      check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       break;
     }
@@ -305,4 +320,50 @@ struct file_descriptor* find_fd_by_idx(int fd_idx){
     }
   }
   return fd;
+}
+struct pte *check_addr(void *addr)
+{
+    return pte_find(addr);
+}
+void check_buffer(void *buf, unsigned size, void *esp, bool to_write)
+{
+  unsigned *i;
+  struct pte *page;
+  for(i = (void*)buf; i<(void*)buf+size; i++)
+  {
+    check_address((void*)i,esp);
+    page = pte_find((void*)i);
+    if((page!=NULL) && (!page->writable && to_write)) sys_exit(-1); 
+  }
+}
+void check_valid_string(const void *str, void *esp)
+{
+  uint8_t *i;
+  struct pte *page;
+  char *str_temp = (char*) str;
+  check_address((void*)str_temp, esp);
+  while(*str_temp != 0)
+	{
+		str_temp += 1;
+		check_address(str_temp, esp);
+	}
+}
+void check_address(void *addr, void *esp)
+{
+	struct pte *page;
+	uint32_t address=(unsigned int)addr;
+	uint32_t lowest_address=0x8048000;
+	uint32_t highest_address=0xc0000000;
+	/* if address is user_address */
+	if(address >= lowest_address && address < highest_address)
+	{
+		/* find vm_entry if can't find vm_entry, exit the process */
+		page = pte_find(addr);
+    if(page == NULL) sys_exit(-1);
+	}
+	else
+	{
+    //p3
+		sys_exit(-1);
+	}
 }

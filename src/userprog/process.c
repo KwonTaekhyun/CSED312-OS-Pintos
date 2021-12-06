@@ -54,7 +54,6 @@ process_execute (const char *file_name)
   if (filesys_open(arg_copy) == NULL) {
     return -1;
   }
-
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
 
   sema_down(&thread_current()->sema_load);
