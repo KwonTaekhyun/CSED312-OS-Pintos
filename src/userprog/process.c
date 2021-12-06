@@ -181,6 +181,8 @@ process_wait (tid_t child_tid)
 void
 process_exit (void)
 {
+  printf("process exit?!\n");
+  
   struct thread *cur = thread_current ();
   uint32_t *pd;
   //p3
