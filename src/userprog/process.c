@@ -522,7 +522,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       //p3
       //printf("load_seg\n");
       if(pte_find(upage) != NULL){
-        printf("Already exist?, address: %p\n", page->vaddr);
+        printf("Already exist?, address: %p\n", upage);
         continue;
       }
 
