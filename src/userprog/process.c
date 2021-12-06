@@ -391,8 +391,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
                   zero_bytes = ROUND_UP (page_offset + phdr.p_memsz, PGSIZE);
                 }
               if (!load_segment (file, file_page, (void *) mem_page,
-                                 read_bytes, zero_bytes, writable))
-                goto done;
+                                 read_bytes, zero_bytes, writable)){
+                                   printf("load 실패\n");
+                                   goto done;
+                                 }
             }
           else
             goto done;
@@ -519,7 +521,10 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         } */
       //p3
       //printf("load_seg\n");
-      if(pte_find(upage) != NULL) continue;
+      if(pte_find(upage) != NULL){
+        printf("Already exist?, address: %p\n", page->vaddr);
+        continue;
+      }
 
       struct pte *page = malloc(sizeof(struct pte));
       //printf("load_seg done\n");
