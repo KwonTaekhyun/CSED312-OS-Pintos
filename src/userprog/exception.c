@@ -154,7 +154,11 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
 
-  printf("page fault 발생\n");
+  	  printf ("Page fault at %p: %s error %s page in %s context.\n",
+      	    fault_addr,
+       	    not_present ? "not present" : "rights violation",
+            write ? "writing" : "reading",
+            user ? "user" : "kernel");
 
   //p3
   //check_address(fault_addr, f->esp);
