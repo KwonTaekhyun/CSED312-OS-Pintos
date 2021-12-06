@@ -7,7 +7,7 @@
 
 /*----------P2----------*/
 #include "threads/synch.h"
-
+#include "vm/page.h"
 /* States in a thread's life cycle. */
 enum thread_status
   {
