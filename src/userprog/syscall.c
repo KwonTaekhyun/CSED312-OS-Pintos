@@ -311,8 +311,10 @@ void sys_close(int fd_idx){
   }
 
   if(fd->file_ptr) {
+    lock_acquire(&filesys_lock);
     file_close(fd->file_ptr);
     palloc_free_page(fd);
+    lock_release(&filesys_lock);
   }
 }
 
