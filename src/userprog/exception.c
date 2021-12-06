@@ -154,6 +154,8 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
 
+  printf("page fault 발생\n");
+
   //p3
   //check_address(fault_addr, f->esp);
   check_address(fault_addr, f->esp);
