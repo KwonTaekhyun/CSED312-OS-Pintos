@@ -537,6 +537,8 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
       ofs+=page_read_bytes;
+
+      printf("pte 생성, address: %p\n", page->vaddr);
     }
   return true;
 }
