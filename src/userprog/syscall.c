@@ -141,6 +141,9 @@ void sys_exit(int exit_status){
   }
 
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
+
+  if(lock_held_by_current_thread(&filesys_lock)) lock_release(&filesys_lock);
+
   thread_exit();
 }
 
@@ -157,12 +160,20 @@ bool sys_create(const char *file , unsigned initial_size)
   if(file == NULL){
     sys_exit(-1);
   }
-  return filesys_create (file, initial_size);
+  lock_acquire(&filesys_lock);
+    bool success = filesys_create(file, initial_size);
+    lock_release(&filesys_lock);
+
+    return success;
 }
 
 bool sys_remove (const char *file) 
 {
-  return  filesys_remove(file);
+  lock_acquire(&filesys_lock);
+    bool success = filesys_remove(file);
+    lock_release(&filesys_lock);
+
+    return success;
 }
 
 int sys_open(char *file_name){
@@ -212,7 +223,11 @@ int sys_filesize(int fd)
   }
   else
   {
-    return (int) file_length(f);
+    lock_acquire(&filesys_lock);
+    int filesize = file_length(f);
+    lock_release(&filesys_lock);
+
+    return filesize;
   }
 }
 
@@ -273,11 +288,17 @@ int sys_write (int fd, const void *buffer, unsigned size) {
 }
 
 void sys_seek (int fd_idx, unsigned pos){
+  lock_acquire(&filesys_lock);
   file_seek(find_fd_by_idx(fd_idx)->file_ptr, pos);
+  lock_release(&filesys_lock);
 }
 
 unsigned sys_tell (int fd_idx){
-  return file_tell(find_fd_by_idx(fd_idx)->file_ptr);
+  lock_acquire(&filesys_lock);
+    unsigned pos = (unsigned)file_tell(fde->file);
+    lock_release(&filesys_lock);
+
+    return pos;
 }
 
 void sys_close(int fd_idx){
@@ -285,18 +306,22 @@ void sys_close(int fd_idx){
     return;
   }
 
+  lock_acquire(&filesys_lock);
+
   struct file_descriptor *fd = find_fd_by_idx(fd_idx);
 
   list_remove(&(fd->elem));
 
   if(thread_current()->cur_file == fd->file_ptr){
-    thread_current()->cur_file == NULL;
+    thread_current()->cur_file = NULL;
   }
 
   if(fd->file_ptr) {
     file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
+
+  lock_release(&filesys_lock);
 }
 
 // 유효한 주소를 가리키는지 확인하는 함수
