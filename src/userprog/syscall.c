@@ -295,7 +295,7 @@ void sys_seek (int fd_idx, unsigned pos){
 
 unsigned sys_tell (int fd_idx){
   lock_acquire(&filesys_lock);
-    unsigned pos = (unsigned)file_tell(fde->file);
+    unsigned pos = (unsigned)file_tell(find_fd_by_idx(fd_idx)->file_ptr);
     lock_release(&filesys_lock);
 
     return pos;
