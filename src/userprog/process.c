@@ -495,11 +495,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
          and zero the final PAGE_ZERO_BYTES bytes. */
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
-
-      read_bytes -= page_read_bytes;
-      zero_bytes -= page_zero_bytes;
-      upage += PGSIZE;
-      ofs+=page_read_bytes;
       
      /*  uint8_t *kpage = palloc_get_page (PAL_USER);
       if (kpage == NULL)
@@ -523,7 +518,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       //printf("load_seg\n");
       if(pte_find(upage) != NULL){
         printf("Already exist?, address: %p\n", upage);
-        continue;
+        return false;
       }
 
       struct pte *page = malloc(sizeof(struct pte));
@@ -543,6 +538,11 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
       }
+
+      read_bytes -= page_read_bytes;
+      zero_bytes -= page_zero_bytes;
+      upage += PGSIZE;
+      ofs+=page_read_bytes;
 
       /* Advance. */
 
