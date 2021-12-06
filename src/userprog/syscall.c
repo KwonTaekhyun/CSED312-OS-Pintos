@@ -491,10 +491,7 @@ struct file_descriptor* find_fd_by_idx(int fd_idx){
   }
   return fd;
 }
-struct pte *check_addr(void *addr)
-{
-    return pte_find(addr);
-}
+
 void check_buffer(void *buf, unsigned size, void *esp, bool to_write)
 {
   unsigned *i;

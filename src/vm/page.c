@@ -45,7 +45,7 @@ struct pte *pte_find(void *vaddr)
     struct pte page;
     struct hash_elem *e;
     page.vaddr = pg_round_down(vaddr);
-    e = hash_find(&thread_current()->page_table, &page.elem);
+    e = hash_find(thread_current()->page_table, &page.elem);
     if(e==NULL) return NULL;
     else return hash_entry(e,struct pte, elem);
 }
@@ -69,8 +69,11 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
 bool load_file(struct frame *frame, struct pte *p)
 {
     if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes))
+    {
+        frame_deallocate(frame->addr);
         return false;
-    memset(frame->addr+(p->read_bytes), 0, p->zero_bytes);
+    }
+    memset((frame->addr)+(p->read_bytes), 0, p->zero_bytes);
     return true;
 }
 

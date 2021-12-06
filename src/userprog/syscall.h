@@ -46,7 +46,6 @@ void mmap_file_write_at(struct file* file, void* addr, size_t read_bytes, off_t 
 
 void is_valid_address(void *esp, int start, int end);
 struct file_descriptor* find_fd_by_idx(int fd_idx);
-struct pte *check_addr(void *addr);
 void check_buffer(void *buf, unsigned size, void *esp, bool to_write);
 void check_valid_string(const void *str, void *esp);
 void check_address(void *addr, void *esp);
