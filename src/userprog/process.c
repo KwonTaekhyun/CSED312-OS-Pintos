@@ -177,20 +177,20 @@ process_exit (void)
   struct list *fd_list = &cur->file_descriptor_list;
   struct list *file_mapping_table = &cur->file_mapping_table;
   struct list_elem *e;
-  while (!list_empty(file_mapping_table)) {
-    e = list_begin (file_mapping_table);
-    struct file_mapping *file_mapping = list_entry(e, struct file_mapping, file_mapping_elem);
-
-    sys_munmap(file_mapping->mapid);
-  }
   while (!list_empty(fd_list)) {
     struct list_elem *e = list_pop_front (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-    lock_acquire(&filesys_lock);
+    //lock_acquire(&filesys_lock);
     sys_close(fd->file_ptr);
-    lock_release(&filesys_lock);
+    //lock_release(&filesys_lock);
     palloc_free_page(fd);
   }
+  while (!list_empty(file_mapping_table)) {
+    e = list_begin (file_mapping_table);
+    struct file_mapping *file_mapping = list_entry(e, struct file_mapping, file_mapping_elem);
+    sys_munmap(file_mapping->mapid);
+  }
+  
   sema_up(&(cur->sema_wait));
     uint32_t *pd;
   //p3
