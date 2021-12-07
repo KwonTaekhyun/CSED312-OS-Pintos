@@ -456,13 +456,6 @@ void sys_munmap(int mapid){
   lock_release (&filesys_lock);
 }
 
-void mmap_file_write_at(struct file* file, void* addr, size_t read_bytes, off_t offset)
-{
-  lock_acquire(&filesys_lock);
-  file_write_at(file, addr, read_bytes, offset);
-  lock_release(&filesys_lock);
-}
-
 // 유효한 주소를 가리키는지 확인하는 함수
 void is_valid_address(void *esp, int start, int end){
   if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
