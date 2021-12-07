@@ -50,6 +50,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 void frame_deallocate(void *addr)
 {
 	// 물리 주소 addr에 해당하는 frame 구조체를 frame_table에서 검색
+    lock_acquire(&frame_lock);
     struct thread *current_thread = thread_current();
     struct list_elem *e;
     struct frame *frame_entry = NULL;
@@ -65,7 +66,6 @@ void frame_deallocate(void *addr)
         return;
     }
     palloc_free_page(frame_entry->addr);
-    lock_acquire(&frame_lock);
     // frame을 frame_table에서 제거
     if(clock_hand==&frame_entry->elem) list_entry(list_remove(&frame_entry->elem),struct frame, elem);
     else list_remove(&(frame_entry->elem));
@@ -77,13 +77,12 @@ struct frame *frame_evict(enum palloc_flags flags)
 {
     // clock algorithm을 통해 evict할 frame을 선택
     struct frame *frame = clock_forwarding();
-    lock_acquire(&frame_lock);
+
     int n = list_size(&frame_table) * 2;
-    if (n==0) lock_release(&frame_lock);
+
     while(true){
         frame = clock_forwarding();
         if(frame==NULL) {
-            lock_release(&frame_lock);
             return;
         }
         if(frame->pte->pinned){
@@ -126,7 +125,6 @@ struct frame *frame_evict(enum palloc_flags flags)
     free(frame);
     break;
     }
-    lock_release(&frame_lock);
     // P3-6-test
     // printf("find evict frame!\n");
 
