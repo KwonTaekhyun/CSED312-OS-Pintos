@@ -145,7 +145,7 @@ void sys_exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
-  /* file_close(current_thread->cur_file);
+  file_close(current_thread->cur_file);
 
   struct list *fd_list = &current_thread->file_descriptor_list;
   while (!list_empty(fd_list)) {
@@ -155,9 +155,8 @@ void sys_exit(int exit_status){
     file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
-   */
+  
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
-  if(lock_held_by_current_thread(&filesys_lock)) lock_release(&filesys_lock);
   thread_exit();
 }
 
@@ -188,26 +187,21 @@ int sys_open(char *file_name){
   if(!file_name){
     return -1;
   }
-
+  struct file_descriptor *fd = palloc_get_page(0);
+  if (!fd) {
+    return -1;
+  }
   lock_acquire (&filesys_lock);
 
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
-    lock_release (&filesys_lock);
-    return -1;
-  }
-
-  struct file_descriptor *fd = palloc_get_page(0);
-
-  if (!fd) {
     palloc_free_page (fd);
     lock_release (&filesys_lock);
     return -1;
   }
 
   fd->file_ptr = file_ptr;
-
   struct list *fd_list_ptr = &(thread_current()->file_descriptor_list);
   if(list_empty(fd_list_ptr)){
     fd->index = 3;
