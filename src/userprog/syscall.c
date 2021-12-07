@@ -43,7 +43,8 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   is_valid_address(f->esp, 0, 3);
-  check_address(f->esp,f->esp);
+  void *esp = f->esp;
+  check_address(esp,f->esp);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
       shutdown_power_off();
