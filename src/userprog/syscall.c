@@ -187,21 +187,26 @@ int sys_open(char *file_name){
   if(!file_name){
     return -1;
   }
-  struct file_descriptor *fd = palloc_get_page(0);
-  if (!fd) {
-    return -1;
-  }
+
   lock_acquire (&filesys_lock);
 
   struct file *file_ptr = filesys_open(file_name);
 
   if(!file_ptr){
+    lock_release (&filesys_lock);
+    return -1;
+  }
+
+  struct file_descriptor *fd = palloc_get_page(0);
+
+  if (!fd) {
     palloc_free_page (fd);
     lock_release (&filesys_lock);
     return -1;
   }
 
   fd->file_ptr = file_ptr;
+
   struct list *fd_list_ptr = &(thread_current()->file_descriptor_list);
   if(list_empty(fd_list_ptr)){
     fd->index = 3;
