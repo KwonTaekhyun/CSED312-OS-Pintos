@@ -521,7 +521,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         pte_insert(&thread_current()->page_table, page);
         //printf("pte insert done\n");
       }
-
+      else return false;
       /* Advance. */
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
@@ -564,7 +564,7 @@ setup_stack (void **esp)
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
-
+      else return false;
     frame = frame_allocate(PAL_USER | PAL_ZERO, page);
     if (frame != NULL) 
     {
