@@ -66,7 +66,7 @@ void frame_deallocate(void *addr)
     palloc_free_page(frame_entry->addr);
     lock_acquire(&frame_lock);
     // frame을 frame_table에서 제거
-    if(clock_hand==frame_entry->elem) list_entry(list_remove(&frame_entry->elem),struct frame, elem);
+    if(clock_hand==&frame_entry->elem) list_entry(list_remove(&frame_entry->elem),struct frame, elem);
     else list_remove(&(frame_entry->elem));
     lock_release(&frame_lock);
 
@@ -120,7 +120,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     frame->pte->frame = NULL;
     pagedir_clear_page(frame->pte->thread->pagedir, frame->pte->vaddr);
     palloc_free_page(frame->addr);
-    if(clock_hand ==frame->elem) clock_hand = list_entry(list_remove(&frame->elem),struct frame, elem);
+    if(clock_hand ==&frame->elem) clock_hand = list_entry(list_remove(&frame->elem),struct frame, elem);
     else list_remove(&(frame->elem));
     free(frame);
     break;
