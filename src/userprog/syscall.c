@@ -145,7 +145,7 @@ void sys_exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
-  file_close(current_thread->cur_file);
+  /* file_close(current_thread->cur_file);
 
   struct list *fd_list = &current_thread->file_descriptor_list;
   while (!list_empty(fd_list)) {
@@ -155,8 +155,9 @@ void sys_exit(int exit_status){
     file_close(fd->file_ptr);
     palloc_free_page(fd);
   }
-
+   */
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
+  if(lock_held_by_current_thread(&filesys_lock)) lock_release(&filesys_lock);
   thread_exit();
 }
 
