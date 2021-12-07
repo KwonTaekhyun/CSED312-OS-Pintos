@@ -149,16 +149,6 @@ void sys_exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
-  // file_close(current_thread->cur_file);
-
-  // struct list *fd_list = &current_thread->file_descriptor_list;
-  // while (!list_empty(fd_list)) {
-  //   struct list_elem *e = list_pop_front (fd_list);
-  //   struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
-    
-  //   file_close(fd->file_ptr);
-  //   palloc_free_page(fd);
-  // }
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
 
   if(lock_held_by_current_thread(&filesys_lock)) lock_release(&filesys_lock);
@@ -251,7 +241,7 @@ int sys_read (int fd, void* buffer, unsigned size) {
     lock_release (&filesys_lock);
     return size;
   }
-  else if(fd > 2)
+  else if(fd > 1)
   {
     struct file *f = find_fd_by_idx(fd)->file_ptr;
     if(f == NULL || !is_user_vaddr(buffer)){
@@ -277,7 +267,7 @@ int sys_write (int fd, const void *buffer, unsigned size) {
     lock_release (&filesys_lock);
     return size;
   }
-  else if(fd > 2){
+  else if(fd > 1){
     struct file *f = find_fd_by_idx(fd)->file_ptr;
     if(f == NULL) 
     {
