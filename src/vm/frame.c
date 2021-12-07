@@ -8,14 +8,14 @@
 void frame_init()
 {
     list_init(&frame_table);
-    lock_init(&frame_lock);
+    // lock_init(&frame_lock);
     clock_hand = NULL;
 }
 struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {   
     if(pte == NULL) return NULL;
 
-    lock_acquire(&frame_lock);
+    // lock_acquire(&frame_lock);
 
     struct frame *frame;
 
@@ -43,14 +43,14 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 
     // frame_table에 frame 추가
     list_push_back(&(frame_table), &(frame->elem));
-    lock_release(&frame_lock);
+    // lock_release(&frame_lock);
     // frame 주소 반환
     return frame;
 }
 void frame_deallocate(void *addr)
 {
 	// 물리 주소 addr에 해당하는 frame 구조체를 frame_table에서 검색
-    lock_acquire(&frame_lock);
+    // lock_acquire(&frame_lock);
     struct thread *current_thread = thread_current();
     struct list_elem *e;
     struct frame *frame_entry = NULL;
@@ -69,7 +69,7 @@ void frame_deallocate(void *addr)
     // frame을 frame_table에서 제거
     if(clock_hand==&frame_entry->elem) list_entry(list_remove(&frame_entry->elem),struct frame, elem);
     else list_remove(&(frame_entry->elem));
-    lock_release(&frame_lock);
+    // lock_release(&frame_lock);
 
     free(frame_entry);
 }
