@@ -136,6 +136,7 @@ syscall_handler (struct intr_frame *f)
       break;
     }
   }
+  unpin_ptr(f->esp);
 }
 
 // system call 구현 함수들
@@ -470,11 +471,9 @@ void mmap_file_write_at(struct file* file, void* addr, size_t read_bytes, off_t 
 
 // 유효한 주소를 가리키는지 확인하는 함수
 void is_valid_address(void *esp, int start, int end){
-  check_address(esp+start,esp);
-  check_address(esp+end,esp);
-  /* if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
+  if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
     sys_exit(-1);
-  } */
+  }
 }
 struct file_descriptor* find_fd_by_idx(int fd_idx){
   struct file_descriptor *fd;
