@@ -13,8 +13,6 @@ struct frame
 	struct list_elem elem;
 };
 
-static struct lock frame_lock;
-
 struct list frame_table;
 struct list_elem *clock_hand;
 struct lock frame_lock;
