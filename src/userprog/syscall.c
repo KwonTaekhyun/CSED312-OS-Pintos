@@ -143,7 +143,7 @@ syscall_handler (struct intr_frame *f)
 
 void sys_exit(int exit_status){
   // final-test
-  debug_backtrace();
+  // debug_backtrace();
 
 
   struct thread *current_thread = thread_current();
