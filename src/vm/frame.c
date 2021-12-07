@@ -15,6 +15,8 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
 {   
     if(pte == NULL) return NULL;
 
+    lock_acquire(&frame_lock);
+
     struct frame *frame;
 
     // palloc_get_page()를 통해 페이지 할당
@@ -40,7 +42,6 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     pte->frame = frame;
 
     // frame_table에 frame 추가
-    lock_acquire(&frame_lock);
     list_push_back(&(frame_table), &(frame->elem));
     lock_release(&frame_lock);
     // frame 주소 반환
