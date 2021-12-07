@@ -142,6 +142,10 @@ syscall_handler (struct intr_frame *f)
 // system call 구현 함수들
 
 void sys_exit(int exit_status){
+  // final-test
+  debug_backtrace();
+
+
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
