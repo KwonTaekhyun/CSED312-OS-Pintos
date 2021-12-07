@@ -4,6 +4,7 @@
 #include "threads/palloc.h"
 //p3
 #include "vm/page.h"
+#include "threads/synch.h"
 
 struct frame
 {
@@ -11,6 +12,8 @@ struct frame
 	struct pte *pte;
 	struct list_elem elem;
 };
+
+static struct lock frame_lock;
 
 struct list frame_table;
 struct list_elem *clock_hand;
