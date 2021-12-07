@@ -501,9 +501,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       
       //p3
       //printf("load_seg\n");
-      if(pte_find(addr) != NULL){
-        return false;
-      }
       struct pte *page = malloc(sizeof(struct pte));
       //printf("load_seg done\n");
       if(page != NULL)
