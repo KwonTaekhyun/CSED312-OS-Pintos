@@ -94,7 +94,8 @@ start_process (void *file_name_)
   int argc;
   char *token;
   char *save_ptr;
-
+  struct thread *t = thread_current();
+  pt_init(&t->page_table);
   token = strtok_r(file_name, " ", &save_ptr);
   argv[0] = token;
   argc = 1;
@@ -105,8 +106,6 @@ start_process (void *file_name_)
     argv[argc] = token;
     argc++;
   }
-  struct thread *t = thread_current();
-  pt_init(&t->page_table);
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
@@ -504,6 +503,9 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       
       //p3
       //printf("load_seg\n");
+      if(pte_find(addr) != NULL){
+        return false;
+      }
       struct pte *page = malloc(sizeof(struct pte));
       //printf("load_seg done\n");
       if(page != NULL)
@@ -548,6 +550,9 @@ setup_stack (void **esp)
   struct frame *frame;
   bool success = false;
     //p3
+    if(pte_find( pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE)) != NULL){
+        return false;
+    }
       struct pte *page = malloc(sizeof(struct pte));
       //printf("setup_stack\n");
       if(page != NULL)
