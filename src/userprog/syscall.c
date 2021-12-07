@@ -470,8 +470,8 @@ void mmap_file_write_at(struct file* file, void* addr, size_t read_bytes, off_t 
 
 // 유효한 주소를 가리키는지 확인하는 함수
 void is_valid_address(void *esp, int start, int end){
-  check_address(esp+start);
-  check_address(esp+end);
+  check_address(esp+start,esp);
+  check_address(esp+end,esp);
   /* if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
     sys_exit(-1);
   } */
