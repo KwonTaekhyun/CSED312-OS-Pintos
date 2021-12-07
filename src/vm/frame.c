@@ -3,6 +3,7 @@
 #include "lib/debug.h"
 #include "userprog/pagedir.h"
 #include "vm/swap.h"
+#include "userprog/syscall.h"
 
 
 void frame_init()
@@ -122,9 +123,13 @@ struct frame *frame_evict(enum palloc_flags flags)
       || pagedir_is_dirty(thread_current()->pagedir, frame->addr);
 
 	if(frame->pte->type == VM_FILE){
-		mmap_file_write_at(frame->pte->file, frame->addr, frame->pte->read_bytes, frame->pte->offset);
+        if(is_dirty){
+            lock_acquire(&filesys_lock);
+            file_write_at(frame->pte->file, frame->addr, frame->pte->read_bytes, frame->pte->offset);
+            lock_release(&filesys_lock);
+        }
 	}
-	else{
+	else if(frame->pte->type == VM_BIN){
 		frame_swap_out(frame);
 	}
 

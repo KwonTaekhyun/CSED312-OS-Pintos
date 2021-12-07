@@ -12,6 +12,7 @@
     "*.inc": "c",
     "__mutex_base": "c",
     "vaddr.h": "c",
-    "frame.h": "c"
+    "frame.h": "c",
+    "syscall.h": "c"
   }
 }

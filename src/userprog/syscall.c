@@ -286,11 +286,17 @@ int sys_write (int fd, const void *buffer, unsigned size) {
 }
 
 void sys_seek (int fd_idx, unsigned pos){
+  lock_acquire(&filesys_lock);
   file_seek(find_fd_by_idx(fd_idx)->file_ptr, pos);
+  lock_release(&filesys_lock);
 }
 
 unsigned sys_tell (int fd_idx){
-  return file_tell(find_fd_by_idx(fd_idx)->file_ptr);
+  lock_acquire(&filesys_lock);
+  unsigned pos = (unsigned)file_tell(find_fd_by_idx(fd_idx)->file_ptr);
+  lock_release(&filesys_lock);
+
+  return pos;
 }
 
 void sys_close(int fd_idx){
@@ -430,12 +436,6 @@ void sys_munmap(int mapid){
       continue;
     }
     // P3-5. File memory mapping
-    // printf("Is Dirty?: %s\n", pagedir_is_dirty (current_thread->pagedir, page->vaddr) ? "T" : "F");
-    if(pagedir_is_dirty (current_thread->pagedir, page->vaddr)){
-        // P3-5. File memory mapping
-        // printf("There are something to write (dirty)\n");
-        file_write_at(page->file, page->vaddr, PGSIZE, i * PGSIZE);
-    }
     if(page->frame)
     {
       if(pagedir_is_dirty (current_thread->pagedir, page->vaddr)){
