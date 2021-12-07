@@ -151,16 +151,17 @@ void sys_exit(int exit_status){
 
   // file_close(current_thread->cur_file);
 
-  struct list *fd_list = &current_thread->file_descriptor_list;
-  while (!list_empty(fd_list)) {
-    struct list_elem *e = list_pop_front (fd_list);
-    struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
+  // struct list *fd_list = &current_thread->file_descriptor_list;
+  // while (!list_empty(fd_list)) {
+  //   struct list_elem *e = list_pop_front (fd_list);
+  //   struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
     
-    file_close(fd->file_ptr);
-    palloc_free_page(fd);
-  }
-  
+  //   file_close(fd->file_ptr);
+  //   palloc_free_page(fd);
+  // }
   printf("%s: exit(%d)\n", current_thread->name, exit_status);
+
+  if(lock_held_by_current_thread(&filesys_lock)) lock_release(&filesys_lock);
   thread_exit();
 }
 
