@@ -43,8 +43,7 @@ static void
 syscall_handler (struct intr_frame *f) 
 {
   is_valid_address(f->esp, 0, 3);
-  void *esp = f->esp;
-  check_address(esp,f->esp);
+  check_address(f->esp,f->esp);
   switch (*(uint32_t *)(f->esp)) {
     case SYS_HALT:{
       shutdown_power_off();
@@ -471,9 +470,11 @@ void mmap_file_write_at(struct file* file, void* addr, size_t read_bytes, off_t 
 
 // 유효한 주소를 가리키는지 확인하는 함수
 void is_valid_address(void *esp, int start, int end){
-  if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
+  check_address(esp+start);
+  check_address(esp+end);
+  /* if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
     sys_exit(-1);
-  }
+  } */
 }
 struct file_descriptor* find_fd_by_idx(int fd_idx){
   struct file_descriptor *fd;
