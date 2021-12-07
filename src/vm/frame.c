@@ -129,7 +129,7 @@ struct frame *frame_evict(enum palloc_flags flags)
             lock_release(&filesys_lock);
         }
 	}
-	else if(frame->pte->type == VM_BIN){
+	else {
 		frame_swap_out(frame);
 	}
 
