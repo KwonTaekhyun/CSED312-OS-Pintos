@@ -548,9 +548,6 @@ setup_stack (void **esp)
   struct frame *frame;
   bool success = false;
     //p3
-    if(pte_find(((uint8_t *)PHYS_BASE)-PGSIZE) != NULL){
-        return false;
-    }
       struct pte *page = malloc(sizeof(struct pte));
       //printf("setup_stack\n");
       if(page != NULL)
@@ -570,10 +567,8 @@ setup_stack (void **esp)
         success = pte_insert(&thread_current()->page_table, page);
         //printf("setup_stack done\n");
       }
-    if(!handle_mm_fault(page)) return false;
-    *esp = PHYS_BASE;
-    return true;
-    /* frame = frame_allocate(PAL_USER | PAL_ZERO, page);
+
+    frame = frame_allocate(PAL_USER | PAL_ZERO, page);
     if (frame != NULL) 
     {
       success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
@@ -583,7 +578,7 @@ setup_stack (void **esp)
         frame_deallocate(frame->addr);
         free(page);
       }
-    } */
+    }
 
   return success;
 }
