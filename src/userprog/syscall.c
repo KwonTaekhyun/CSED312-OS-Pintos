@@ -149,7 +149,7 @@ void sys_exit(int exit_status){
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
-  file_close(current_thread->cur_file);
+  // file_close(current_thread->cur_file);
 
   struct list *fd_list = &current_thread->file_descriptor_list;
   while (!list_empty(fd_list)) {
@@ -312,7 +312,7 @@ void sys_close(int fd_idx){
   list_remove(&(fd->elem));
 
   if(thread_current()->cur_file == fd->file_ptr){
-    thread_current()->cur_file == NULL;
+    thread_current()->cur_file = NULL;
   }
 
   if(fd->file_ptr) {
