@@ -314,7 +314,7 @@ void sys_close(int fd_idx){
   if(fd->file_ptr) {
     lock_acquire(&filesys_lock);
     file_close(fd->file_ptr);
-    //palloc_free_page(fd);
+    palloc_free_page(fd);
     lock_release(&filesys_lock);
   }
 }
@@ -365,7 +365,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
 
     // P3-5-test
     // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
-
     offset += read_bytes;
   }
 
