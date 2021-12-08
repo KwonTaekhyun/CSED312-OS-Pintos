@@ -8,8 +8,4 @@ int process_wait (tid_t);
 void process_exit (void);
 void process_activate (void);
 
-//2-2
-void argu_stack(char **argv, int argc, void **esp);
-
-
 #endif /* userprog/process.h */

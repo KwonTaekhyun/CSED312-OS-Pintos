@@ -5,9 +5,6 @@
 #include <list.h>
 #include <stdint.h>
 
-/*----------P2----------*/
-#include "threads/synch.h"
-
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -83,13 +80,6 @@ typedef int tid_t;
    only because they are mutually exclusive: only a thread in the
    ready state is on the run queue, whereas only a thread in the
    blocked state is on a semaphore wait list. */
-   //p2-3
-   struct file_descriptor
-   {
-      int index;
-      struct file *file_ptr;
-      struct list_elem elem;
-   };
 struct thread
   {
     /* Owned by thread.c. */
@@ -103,25 +93,20 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-// #ifdef USERPROG
+#ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
 
-    /*---------P2--------*/
-    struct list children;
-    struct list_elem child;
+    struct list_elem p_elem;            /* List element for process child-parent relationship */
     struct thread *parent;
-    int exit_status;
+    struct list child_list;
 
-    struct semaphore sema_wait;
-    struct semaphore sema_exit;
-    struct semaphore sema_load;
-// #endif
+    struct list signal_list;
+    struct list fd_table;
 
-    //p2-3 fd
-    struct list file_descriptor_list;
-    //p2-4
-    struct file* cur_file;
+    struct file *current_file;
+#endif
+
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
@@ -161,5 +146,7 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+struct thread* get_thread_from_tid(tid_t tid);
 
 #endif /* threads/thread.h */
