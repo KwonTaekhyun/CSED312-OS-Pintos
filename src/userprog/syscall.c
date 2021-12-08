@@ -446,7 +446,7 @@ void sys_munmap(int mapid){
       frame_deallocate(page->frame->addr);
     }
     pagedir_clear_page (current_thread->pagedir, page->vaddr);
-    hash_delete (&(current_thread->page_table), &(page->elem));
+    pte_delete (&(current_thread->page_table), page);
   }
   
   list_remove(&(file_mapping_entry->file_mapping_elem));
