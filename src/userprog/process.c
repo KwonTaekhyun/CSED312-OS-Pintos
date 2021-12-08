@@ -61,12 +61,12 @@ process_execute (const char *file_name)
   }
   struct process *pcb = palloc_get_page(0);
   if (!pcb) return TID_ERROR;
-  pcb->file_name = fn_copy1;
+  pcb->file_name = fn_copy;
   pcb->parent = thread_current();
   pcb->is_loaded = false;
-  sema_init(&pcb->load_sema, 0);
+  sema_init(&pcb->sema_load, 0);
   pcb->is_exited = false;
-  sema_init(&pcb->exit_sema, 0);
+  sema_init(&pcb->sema_exit, 0);
   pcb->exit_status = -1;
 
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, pcb);
@@ -178,7 +178,7 @@ process_wait (tid_t child_tid)
   exit_status = pcb->exit_status;
   list_remove(&pcb->childelem);
   pcb->parent = NULL;
-  if(child->is_exited) palloc_free_page(pcb);
+  if(pcb->is_exited) palloc_free_page(pcb);
   return exit_status;
 }
 
@@ -346,7 +346,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-  t->page_table = malloc(sizeof t->page_table);
+  t->page_table = malloc(sizeof *t->page_table);
   if(t->page_table == NULL) goto done;
   pt_init(&t->page_table);
   /* Open executable file. */
