@@ -483,8 +483,8 @@ init_thread (struct thread *t, const char *name, int priority)
 
   /* P3-5. File memory mapping */
   list_init(&(t->file_mapping_table));
-  t->page_table = NULL;
   
+
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
