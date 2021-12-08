@@ -84,9 +84,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     // clock algorithm을 통해 evict할 frame을 선택
     struct frame *frame = clock_forwarding();
 
-    int n = list_size(&frame_table) * 2;
-
-    while(n-- > 0){
+    while(true){
         if(frame->pte->pinned){
             frame = clock_forwarding();
             continue;
