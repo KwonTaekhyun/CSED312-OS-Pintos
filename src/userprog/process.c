@@ -600,15 +600,11 @@ setup_stack (void **esp)
       }
       else return false;
     frame = frame_allocate(PAL_USER | PAL_ZERO, page);
-    if (frame != NULL) 
+    if(frame == NULL) return false;
+    else
     {
-      success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
-      if (success)*esp = PHYS_BASE;
-      else 
-      {
-        frame_deallocate(frame->addr);
-        pte_delete(&thread_current()->page_table, page);
-      }
+      *esp = PHYS_BASE;
+      return handle_mm_fault(page);
     }
 
   return success;
