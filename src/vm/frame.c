@@ -84,25 +84,19 @@ struct frame *frame_evict(enum palloc_flags flags)
     // clock algorithm을 통해 evict할 frame을 선택
     struct frame *frame = clock_forwarding();
 
-    // int n = list_size(&frame_table) * 2;
+    int n = list_size(&frame_table) * 2;
 
-    // while(n-- > 0){
-    //     if(frame->pte->pinned){
-    //         frame = clock_forwarding();
-    //         continue;
-    //     }
-    //     else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
-    //         pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
-    //         frame = clock_forwarding();
-    //         continue;
-    //     }
-    //     break;
-    // }
-
-    while(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr))
-    {
-        pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
-        frame = clock_forwarding();
+    while(n-- > 0){
+        if(frame->pte->pinned){
+            frame = clock_forwarding();
+            continue;
+        }
+        else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
+            pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
+            frame = clock_forwarding();
+            continue;
+        }
+        break;
     }
 
     // eviction
@@ -121,12 +115,8 @@ struct frame *frame_evict(enum palloc_flags flags)
             frame_swap_out(frame);
         }
 	}
-    else if(frame->pte->type == VM_ANON){
+    else {
         frame_swap_out(frame);
-    }
-    else{
-        // final-test
-        printf("Type: %d, is pinned: %s\n", frame->pte->type, frame->pte->pinned ? "T": "F");
     }
 
     // frame 정보 및 데이터 제거 후 frame_table에서 제거
