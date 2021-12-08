@@ -60,19 +60,14 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
     void *addr;
     if(page->is_loaded)
     {
-        addr = pagedir_get_page(thread_current()->pagedir,page->vaddr);
-        frame_deallocate(addr);
+        frame_deallocate(page->frame->addr);
         pagedir_clear_page(thread_current()->pagedir, page->vaddr);
     }
     pte_delete(&thread_current()->page_table, page);
 } 
 bool load_file(struct frame *frame, struct pte *p)
 {
-    if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes))
-    {
-        //frame_deallocate(frame->addr);
-        return false;
-    }
+    if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes)) return false;
     memset((frame->addr)+(p->read_bytes), 0, p->zero_bytes);
     return true;
 }
