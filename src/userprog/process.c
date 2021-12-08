@@ -26,6 +26,7 @@
 #include "vm/swap.h"
 #include "lib/kernel/bitmap.h"
 #define MAX_STACK_SIZE (1 << 23)
+#include <hash.h>
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -316,6 +317,12 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
+
+  t->page_table = malloc(sizeof (struct hash));
+  if(t->page_table == NULL) goto done;
+  pt_init(&t->page_table);
+
+  lock_acquire(&file_lock);
   
   /* Open executable file. */
   file = filesys_open (file_name);
@@ -411,6 +418,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
+  lock_release(&file_lock);
   t->current_file = file;
   return success;
 }

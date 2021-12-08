@@ -160,6 +160,13 @@ page_fault (struct intr_frame *f)
   user = (f->error_code & PF_U) != 0;
   check_address(fault_addr, f->esp);
 
+   if(!user) {
+    f->error_code = 0;
+    f->eip = (void (*)(void)) f->eax;
+    f->eax = -1;
+    return;
+  }
+
    if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
         sys_exit(-1);
 
