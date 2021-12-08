@@ -346,7 +346,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-  t->page_table = malloc(sizeof *t->page_table);
+  t->page_table = malloc(sizeof (struct hash));
   if(t->page_table == NULL) goto done;
   pt_init(&t->page_table);
   /* Open executable file. */
