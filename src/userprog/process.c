@@ -318,8 +318,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
-  t->page_table = malloc(sizeof(struct hash));
-  if(t->page_table == NULL) goto done;
+  // t->page_table = malloc(sizeof(struct hash));
+  // if(t->page_table == NULL) goto done;
   pt_init(&t->page_table);
 
   lock_acquire(&file_lock);
