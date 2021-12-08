@@ -116,16 +116,16 @@ struct thread
     struct thread *parent;
     int exit_status;
 
-    struct semaphore sema_wait;
+    /* struct semaphore sema_wait;
     struct semaphore sema_exit;
-    struct semaphore sema_load;
+    struct semaphore sema_load; */
 // #endif
 
     //p2-3 fd
     struct list file_descriptor_list;
     //p2-4
     struct file* cur_file;
-
+    struct process *pcb;
     //p3
     struct hash page_table;
 

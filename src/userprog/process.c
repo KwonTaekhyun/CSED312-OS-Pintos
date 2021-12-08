@@ -59,15 +59,29 @@ process_execute (const char *file_name)
   if (filesys_open(arg_copy) == NULL) {
     return -1;
   }
+  ctruct process *pcb = palloc_get_page(0);
+  if (!pcb) return TID_ERROR;
+  pcb->file_name = fn_copy1;
+  pcb->parent = thread_current();
+  pcb->is_loaded = false;
+  sema_init(&pcb->load_sema, 0);
+  pcb->is_exited = false;
+  sema_init(&pcb->exit_sema, 0);
+  pcb->exit_status = -1;
 
   tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
 
   sema_down(&thread_current()->sema_load);
 
   if (tid == TID_ERROR)
+  {
     palloc_free_page (fn_copy); 
+    palloc_free_page(pcb);
+  }
 
-  struct list_elem* e;
+  sema_down(&pcb->sema_load);
+  if(pcb->pid != PID_ERROR) list_push_back(&thread_current()->children, &pcb->childelem);
+  /* struct list_elem* e;
   struct thread* t;
   for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
     t = list_entry(e, struct thread, child);
@@ -75,6 +89,7 @@ process_execute (const char *file_name)
       return process_wait(tid);
     }
   }
+ */
 
   palloc_free_page (arg_copy); 
 
@@ -89,13 +104,14 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
-
-  char *argv[64];
+  char *argv[127];
   int argc;
   char *token;
   char *save_ptr;
+  struct process *pcb = file_name_;
   struct thread *t = thread_current();
-  pt_init(&t->page_table);
+  &thread_current()->pcb = pcb;
+  //pt_init(&t->page_table);
   token = strtok_r(file_name, " ", &save_ptr);
   argv[0] = token;
   argc = 1;
@@ -110,12 +126,13 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (argv[0], &if_.eip, &if_.esp);
+  success = pcb->is_loaded = load (argv[0], &if_.eip, &if_.esp);
+  pcb->pid = success? thread_tid() : PID_ERROR;
+  sema_up(&pcb->sema_load);
   if(success)
   {
     argu_stack(argv, argc, &if_.esp);
   }
-  sema_up(&thread_current()->parent->sema_load);
   /* If load failed, quit. */
   palloc_free_page (file_name);
   //p3
@@ -151,19 +168,18 @@ process_wait (tid_t child_tid)
   struct list_elem *child_elem;
   struct thread *current_thread = thread_current();
   int exit_status = -1;
-
   for(child_elem = list_begin(&(current_thread->children)); child_elem != list_end(&(current_thread->children)); child_elem = list_next(child_elem)){
-    struct thread *thr = list_entry(child_elem, struct thread, child);
-    if(thr->tid == child_tid){
-      sema_down(&(thr->sema_wait));
-      exit_status = thr->exit_status;
-      list_remove(child_elem);
-      thr->parent = NULL;
-      sema_up(&(thr->sema_exit));
+    struct process *pcb = list_entry(child_elem, struct process, childelem);
+    if(pcb->tid == child_tid){
       break;
     }
   }
-
+  if(pcb==NULL) return -1;
+  sema_down(&pcb->sema_exit);
+  exit_status = pcb->exit_status;
+  list_remove(&pcb->childelem);
+  pcb->parent = NULL;
+  if(child->is_exited) palloc_free_page(pcb);
   return exit_status;
 }
 
@@ -172,7 +188,7 @@ void
 process_exit (void)
 {
   struct thread *cur = thread_current ();
-
+  struct process *pcb = &cur->pcb;
   struct list *fd_list = &cur->file_descriptor_list;
   struct list *file_mapping_table = &cur->file_mapping_table;
   struct list_elem *e;
@@ -182,23 +198,29 @@ process_exit (void)
     struct file_mapping *file_mapping = list_entry(e, struct file_mapping, file_mapping_elem);
     sys_munmap(file_mapping->mapid);
   }
-
-  while (!list_empty(fd_list)) {
-    struct list_elem *e = list_pop_front (fd_list);
+  pcb->is_exited = true;
+  for (e = list_begin(&cur->children); e != list_end(&cur->children); e = list_next(e))
+  {
+    struct process *child = list_entry(e, struct process, childelem);
+    list_remove(&child->childelem);
+    child->parent = NULL;
+    if(child->is_exited) palloc_free_page(child);
+  }
+  while (list_size(fd_list)>2) {
+    struct list_elem *e = list_pop_back (fd_list);
     struct file_descriptor *fd = list_entry(e, struct file_descriptor, elem);
     //lock_acquire(&filesys_lock);
-    sys_close(fd->file_ptr);
+    sys_close(fd->index);
     //lock_release(&filesys_lock);
-    palloc_free_page(fd);
   }
+  sema_up(&pcb->sema_exit);
+  if(pcb&&!pcb->parent) palloc_free_page(pcb);
 
   if(cur->cur_file != NULL){
     lock_acquire(&filesys_lock);
     file_close(cur->cur_file);
     lock_release(&filesys_lock);
   } 
-
-  sema_up(&(cur->sema_wait));
     uint32_t *pd;
   //p3
   //printf("i'm in exit\n");
@@ -220,8 +242,6 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
-
-  sema_down(&(cur->sema_exit));
 }
 
 /* Sets up the CPU for running user code in the current
