@@ -69,12 +69,12 @@ process_execute (const char *file_name)
 
   struct list_elem* e;
   struct thread* t;
-  for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
+  /* for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
     t = list_entry(e, struct thread, child);
     if (t->exit_status == -1) {
       return process_wait(tid);
     }
-  }
+  } */
 
   palloc_free_page (arg_copy); 
 
@@ -156,11 +156,10 @@ process_wait (tid_t child_tid)
     struct thread *thr = list_entry(child_elem, struct thread, child);
     if(thr->tid == child_tid){
       sema_down(&(thr->sema_wait));
-
-      list_remove(child_elem);
       exit_status = thr->exit_status;
-
-      sema_up(&(thr->sema_exit));
+      list_remove(child_elem);
+      thr->parent = NULL;
+      //sema_up(&(thr->sema_exit));
       break;
     }
   }
@@ -222,7 +221,7 @@ process_exit (void)
       pagedir_destroy (pd);
     }
 
-  sema_down(&(cur->sema_exit));
+  //sema_down(&(cur->sema_exit));
 }
 
 /* Sets up the CPU for running user code in the current
