@@ -123,7 +123,6 @@ struct frame *frame_evict(enum palloc_flags flags)
 	frame->pte->is_loaded = false;
     frame->pte->frame = NULL;
     pagedir_clear_page(thread_current()->pagedir, frame->pte->vaddr);
-    free(frame->pte);
     list_remove(&(frame->elem));
 
     frame->pte = NULL;
