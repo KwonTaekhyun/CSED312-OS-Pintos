@@ -77,7 +77,7 @@ bool load_file(struct frame *frame, struct pte *p)
     return true;
 }
 
-bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable, bool file_mapping)
+bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable)
 {
     if(pte_find(addr) != NULL){
         return false;
@@ -88,7 +88,7 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
         page_entry->vaddr = addr;
         page_entry->file = file;
 
-        page_entry->type = file_mapping ? VM_FILE : VM_BIN;
+        page_entry->type = VM_FILE;
 
         page_entry->offset = offset;
         page_entry->read_bytes = read_bytes;
@@ -101,6 +101,8 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
         page_entry->frame = NULL;
         page_entry->swap_index = BITMAP_ERROR;
         page_entry->thread = thread_current();
+
+        page_entry->pinned = false;
 
         hash_insert(&(thread_current()->page_table), &page_entry->elem);
         return true;

@@ -47,6 +47,6 @@ bool load_file(struct frame *frame, struct pte *p);
 
 /* P3-5. File memory mapping */
 void pt_destory_by_addr (void* addr);
-bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable, bool file_mapping);
+bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read_bytes, size_t zero_bytes, bool writable);
 
 #endif

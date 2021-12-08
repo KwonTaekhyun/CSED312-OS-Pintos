@@ -117,9 +117,15 @@ struct frame *frame_evict(enum palloc_flags flags)
         }
 	}
 	else if(frame->pte->type == VM_BIN){
-		frame_swap_out(frame);
+        if(is_dirty){
+            frame_swap_out(frame);
+        }
 	}
+    else if(frame->pte->type == VM_ANON){
+        frame_swap_out(frame);
+    }
     else{
+        // final-test
         printf("Type: %d, is pinned: %s\n", frame->pte->type, frame->pte->pinned ? "T": "F");
     }
 
