@@ -59,7 +59,7 @@ process_execute (const char *file_name)
   if (filesys_open(arg_copy) == NULL) {
     return -1;
   }
-  ctruct process *pcb = palloc_get_page(0);
+  struct process *pcb = palloc_get_page(0);
   if (!pcb) return TID_ERROR;
   pcb->file_name = fn_copy1;
   pcb->parent = thread_current();
@@ -69,9 +69,7 @@ process_execute (const char *file_name)
   sema_init(&pcb->exit_sema, 0);
   pcb->exit_status = -1;
 
-  tid = thread_create (arg_copy, PRI_DEFAULT, start_process, fn_copy);
-
-  sema_down(&thread_current()->sema_load);
+  tid = thread_create (arg_copy, PRI_DEFAULT, start_process, pcb);
 
   if (tid == TID_ERROR)
   {
@@ -110,7 +108,7 @@ start_process (void *file_name_)
   char *save_ptr;
   struct process *pcb = file_name_;
   struct thread *t = thread_current();
-  &thread_current()->pcb = pcb;
+  t->pcb = file_name;
   //pt_init(&t->page_table);
   token = strtok_r(file_name, " ", &save_ptr);
   argv[0] = token;
@@ -168,9 +166,10 @@ process_wait (tid_t child_tid)
   struct list_elem *child_elem;
   struct thread *current_thread = thread_current();
   int exit_status = -1;
+  struct process *pcb;
   for(child_elem = list_begin(&(current_thread->children)); child_elem != list_end(&(current_thread->children)); child_elem = list_next(child_elem)){
-    struct process *pcb = list_entry(child_elem, struct process, childelem);
-    if(pcb->tid == child_tid){
+    pcb = list_entry(child_elem, struct process, childelem);
+    if(pcb->pid == child_tid){
       break;
     }
   }
@@ -188,7 +187,7 @@ void
 process_exit (void)
 {
   struct thread *cur = thread_current ();
-  struct process *pcb = &cur->pcb;
+  struct process *pcb = cur->pcb;
   struct list *fd_list = &cur->file_descriptor_list;
   struct list *file_mapping_table = &cur->file_mapping_table;
   struct list_elem *e;
@@ -347,7 +346,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-  t->page_table = malloc(sizeof hash);
+  t->page_table = malloc(sizeof t->page_table);
   if(t->page_table == NULL) goto done;
   pt_init(&t->page_table);
   /* Open executable file. */
