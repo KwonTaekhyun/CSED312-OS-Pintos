@@ -70,6 +70,9 @@ void frame_deallocate(void *addr)
         clock_forwarding();
     }
 
+    frame_entry->pte->frame = NULL;
+    frame_entry->pte->is_loaded = false;
+
     // frame을 frame_table에서 제거
     list_remove(&(frame_entry->elem));
 
