@@ -64,7 +64,7 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
         frame_deallocate(addr);
         pagedir_clear_page(thread_current()->pagedir, page->vaddr);
     }
-    free(page);
+    pte_delete(&thread_current()->page_table, page);
 } 
 bool load_file(struct frame *frame, struct pte *p)
 {

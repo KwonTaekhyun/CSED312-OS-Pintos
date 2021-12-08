@@ -584,7 +584,7 @@ setup_stack (void **esp)
       else 
       {
         frame_deallocate(frame->addr);
-        free(page);
+        pte_delete(&thread_current()->page_table, page);
       }
     }
 
@@ -749,13 +749,13 @@ bool expand_stack(void *addr)
 	f = frame_allocate(PAL_USER,page);
 	if(f == NULL)
 	{
-		free(page);
+		pte_delete(&thread_current()->page_table, page);
 		return false;
 	}
   if(!success||!install_page(page->vaddr, f->addr, page->writable))
     {
       frame_deallocate(f->addr);
-      free(page);
+      pte_delete(&thread_current()->page_table, page);
       return false;
     }
 	if(intr_context())
