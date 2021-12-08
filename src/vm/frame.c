@@ -23,10 +23,7 @@ struct frame *frame_allocate(enum palloc_flags flags, struct pte *pte)
     // palloc_get_page()를 통해 페이지 할당
     void *page = palloc_get_page(flags);
     if(page == NULL){
-        // printf("before) frame table size: %d\n", list_size(&frame_table));
         frame = frame_evict(flags);
-        // printf("after) frame table size: %d\n", list_size(&frame_table));
-        // printf("frame address: %p\n", frame->addr);
     }
     else{
         frame = malloc(sizeof(struct frame));
@@ -87,36 +84,26 @@ struct frame *frame_evict(enum palloc_flags flags)
     // clock algorithm을 통해 evict할 frame을 선택
     struct frame *frame = clock_forwarding();
 
-    int n = list_size(&frame_table) * 2;
+    // int n = list_size(&frame_table) * 2;
 
-    while(n-- > 0){
-        // P3-6-test
-        // if(frame->addr == 0){
-        //     // P3-6-test
-        //     printf("0 addr!\n");
-        //     frame = clock_forwarding();
-        //     continue;
-        // }
-        if(frame->pte->pinned){
-            // P3-6-test
-            // printf("pinned!\n");
-            frame = clock_forwarding();
-            continue;
-        }
-        else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
-            // P3-6-test
-            // printf("accessed!\n");
-            pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
-            frame = clock_forwarding();
-            continue;
-        }
-        // P3-6-test
-        // printf("find evict frame!\n");
-        break;
+    // while(n-- > 0){
+    //     if(frame->pte->pinned){
+    //         frame = clock_forwarding();
+    //         continue;
+    //     }
+    //     else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
+    //         pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
+    //         frame = clock_forwarding();
+    //         continue;
+    //     }
+    //     break;
+    // }
+
+    while(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr))
+    {
+        pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
+        frame = clock_forwarding();
     }
-
-    // P3-6-test
-    // printf("find evict frame!\n");
 
     // eviction
     bool is_dirty = pagedir_is_dirty(thread_current()->pagedir, frame->pte->vaddr)
