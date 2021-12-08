@@ -91,7 +91,8 @@ struct frame *frame_evict(enum palloc_flags flags)
         //     frame = clock_forwarding();
         //     continue;
         // }
-        else if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
+        // else 
+        if(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr)){
             pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
             frame = clock_forwarding();
             continue;
