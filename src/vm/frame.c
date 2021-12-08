@@ -101,10 +101,6 @@ struct frame *frame_evict(enum palloc_flags flags)
 
     while(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr))
     {
-        if(frame->pte->pinned){
-            frame = clock_forwarding();
-            continue;
-        }
         pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
         frame = clock_forwarding();
     }
@@ -120,9 +116,12 @@ struct frame *frame_evict(enum palloc_flags flags)
             lock_release(&filesys_lock);
         }
 	}
-	else {
+	else if(frame->pte->type == VM_BIN){
 		frame_swap_out(frame);
 	}
+    else{
+        printf("Type: %d\n", frame->pte->type);
+    }
 
     // frame 정보 및 데이터 제거 후 frame_table에서 제거
 	frame->pte->is_loaded = false;
