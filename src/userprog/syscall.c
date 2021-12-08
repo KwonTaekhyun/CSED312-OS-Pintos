@@ -347,9 +347,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
   }
   int file_page_num = file_bytes / PGSIZE;
 
-    // P3-5-test
-    // printf("file_bytes: %d, file_page_num: %d\n", file_bytes, file_page_num);
-
   for(i = 0; i < file_page_num; i++){
     // ** 페이지 단위로 pte 생성 (pte_create_with_file) **
     size_t read_bytes = file_bytes - (i * PGSIZE) > PGSIZE ? PGSIZE : file_bytes - (i * PGSIZE);
@@ -364,8 +361,6 @@ mapid_t sys_mmap(int fd_idx, void *addr){
       return -1;
     }
 
-    // P3-5-test
-    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
     offset += read_bytes;
   }
 
@@ -383,16 +378,7 @@ mapid_t sys_mmap(int fd_idx, void *addr){
     }
 
     file_page_num++;
-
-    // P3-5-test
-    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
   }
-
-  // P3-5-test
-  // char *buf = (char *)addr;
-  // for(i = 0; i < file_bytes; i++){
-  //   printf("i: %d, address %p :  %hhx\n", i, buf + i, buf[i]); 
-  // }
 
   struct thread *current_thread = thread_current();
   struct file_mapping* file_mapping_entry = malloc(sizeof(struct file_mapping));
@@ -439,8 +425,6 @@ void sys_munmap(int mapid){
     if(page->frame)
     {
       if(pagedir_is_dirty (current_thread->pagedir, page->vaddr)){
-        // P3-5. File memory mapping
-        // printf("There are something to write (dirty)\n");
         file_write_at(page->file, page->frame->addr, PGSIZE, i * PGSIZE);
       }
       frame_deallocate(page->frame->addr);
