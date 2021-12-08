@@ -9,6 +9,10 @@
 #include "threads/malloc.h"
 #include "threads/vaddr.h"
 
+#include "vm/page.h"
+#include "vm/frame.h"
+
+
 static void syscall_handler (struct intr_frame *);
 
 static int get_user(const uint8_t *uaddr);
@@ -419,4 +423,237 @@ void sys_close (struct intr_frame * f) {
       return;
     }
   }
+}
+
+mapid_t sys_mmap(int fd_idx, void *addr){
+
+  if(fd_idx < 2 || !addr || pg_ofs(addr) != 0 || !is_user_vaddr(addr)){
+    return -1;
+  }
+
+  lock_acquire (&file_lock);
+
+  struct fd_elem* fd = find_fd_by_idx(fd_idx);
+
+  struct file* file_ptr = file_reopen(fd->file_ptr);
+  if(!file_ptr){
+    lock_release (&file_lock);
+    return -1;
+  }
+
+  /* file ptr를 addr에 lazy loading */
+  int i;
+  off_t offset = 0;
+  int file_bytes = file_length(file_ptr);
+  if(!file_bytes){
+    lock_release (&file_lock);
+    return -1;
+  }
+  int file_page_num = file_bytes / PGSIZE;
+
+    // P3-5-test
+    // printf("file_bytes: %d, file_page_num: %d\n", file_bytes, file_page_num);
+
+  for(i = 0; i < file_page_num; i++){
+    // ** 페이지 단위로 pte 생성 (pte_create_with_file) **
+    size_t read_bytes = file_bytes - (i * PGSIZE) > PGSIZE ? PGSIZE : file_bytes - (i * PGSIZE);
+
+    bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
+      read_bytes, PGSIZE - read_bytes, true);
+
+    if(!pte_created)
+    {
+      file_close(file_ptr);
+      lock_release (&file_lock);
+      return -1;
+    }
+
+    // P3-5-test
+    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
+    offset += read_bytes;
+  }
+
+  if(file_bytes - (file_page_num * PGSIZE) != 0){
+    size_t read_bytes = file_bytes - offset;
+
+    bool pte_created = pte_create_by_file(addr + offset, file_ptr, offset, 
+      read_bytes, PGSIZE - read_bytes, true);
+
+    if(!pte_created)
+    {
+      file_close(file_ptr);
+      lock_release (&file_lock);
+      return -1;
+    }
+
+    file_page_num++;
+
+    // P3-5-test
+    // printf("pte created success?: %d, %dbytes\n", pte_created, read_bytes);
+  }
+
+  // P3-5-test
+  // char *buf = (char *)addr;
+  // for(i = 0; i < file_bytes; i++){
+  //   printf("i: %d, address %p :  %hhx\n", i, buf + i, buf[i]); 
+  // }
+
+  struct thread *current_thread = thread_current();
+  struct file_mapping* file_mapping_entry = malloc(sizeof(struct file_mapping));
+  file_mapping_entry->file_ptr = file_ptr;
+  file_mapping_entry->addr = addr;
+  file_mapping_entry->mapid = current_thread->file_mapping_num++;
+  file_mapping_entry->file_page_num = file_page_num;
+  list_push_back(&(current_thread->file_mapping_table), &(file_mapping_entry->file_mapping_elem));
+
+  lock_release (&file_lock);
+
+  return file_mapping_entry->mapid;
+}
+
+void sys_munmap(int mapid){
+  struct thread *current_thread = thread_current();
+  struct list_elem *e;
+  struct file_mapping *file_mapping_entry = NULL;
+  for (e = list_begin (&current_thread->file_mapping_table); 
+        e != list_end (&current_thread->file_mapping_table); e = list_next (e)){
+    struct file_mapping * file_mapping = list_entry (e, struct file_mapping, file_mapping_elem);
+    if (file_mapping->mapid == mapid){
+      file_mapping_entry = file_mapping;
+      break;
+    }
+  }
+  if(!file_mapping_entry){
+    return;
+  }
+
+  lock_acquire (&file_lock);
+
+  int i;
+  int file_page_num = file_mapping_entry->file_page_num;
+  for(i = 0; i < file_page_num; i++){
+    // ** 페이지 단위로 pte 할당해제 **
+    // ** 만약 frame이 할당되어 있다면 frame 제거하고 dirty할 경우 disk에 작성한다. **
+    
+    struct pte* page = pte_find(file_mapping_entry->addr + (i * PGSIZE));
+    if(!page){
+      continue;
+    }
+    // P3-5. File memory mapping
+    if(page->frame)
+    {
+      if(pagedir_is_dirty (current_thread->pagedir, page->vaddr)){
+        // P3-5. File memory mapping
+        // printf("There are something to write (dirty)\n");
+        file_write_at(page->file, page->frame->addr, PGSIZE, i * PGSIZE);
+      }
+      frame_deallocate(page->frame->addr);
+    }
+    pagedir_clear_page (current_thread->pagedir, page->vaddr);
+    pte_delete (&(current_thread->page_table), page);
+  }
+  
+  list_remove(&(file_mapping_entry->file_mapping_elem));
+  file_close(file_mapping_entry->file_ptr);
+  free(file_mapping_entry);
+
+  lock_release (&file_lock);
+}
+
+// 유효한 주소를 가리키는지 확인하는 함수
+void is_valid_address(void *esp, int start, int end){
+  if(!is_user_vaddr(esp + start) || !is_user_vaddr(esp + end) ){
+    sys_exit(-1);
+  }
+}
+struct file_descriptor* find_fd_by_idx(int fd_idx){
+  struct fd_elem *fd;
+  struct list_elem *fd_elem = list_begin(&thread_current()->fd_table);
+
+  while(fd_elem != list_end(&thread_current()->fd_table)){
+    fd = list_entry(fd_elem, struct fd_elem, elem);
+    if(fd_idx == fd->fd){
+       break;
+    }
+
+    fd_elem = list_next(fd_elem);
+    if(fd_elem == list_end(&thread_current()->fd_table)){
+      sys_exit(-1);
+    }
+  }
+  return fd;
+}
+
+void check_buffer(void *buf, unsigned size, void *esp, bool to_write)
+{
+  unsigned *i;
+  struct pte *page;
+  for(i = (void*)buf; i<(void*)buf+size; i++)
+  {
+    check_address((void*)i,esp);
+    page = pte_find((void*)i);
+    if((page!=NULL) && (!page->writable && to_write)) sys_exit(-1); 
+  }
+}
+void check_valid_string(const void *str, void *esp)
+{
+  uint8_t *i;
+  struct pte *page;
+  char *str_temp = (char*) str;
+  check_address((void*)str_temp, esp);
+  while(*str_temp != 0)
+	{
+		str_temp += 1;
+		check_address(str_temp, esp);
+	}
+}
+void check_address(void *addr, void *esp)
+{
+	struct pte *page;
+  if(!is_user_vaddr(addr)) sys_exit(-1);
+	if(addr >= (void *)0x08048000 || addr < (void *)0xc0000000)
+	{
+		page = pte_find(addr);
+		if(page == NULL)
+		{
+			if(addr >= esp-STACK_HEURISTIC){
+				if(!expand_stack(addr))
+					sys_exit(-1);
+			}
+			else
+				sys_exit(-1);
+		}
+	}
+	else sys_exit(-1);
+
+}
+
+void unpin_ptr(void *vaddr)
+{
+	struct pte *page  = pte_find(vaddr);
+	if(page != NULL)
+	{
+		page->pinned = false;
+	}
+}
+
+void unpin_string(void *str)
+{
+	unpin_ptr(str);
+	while(*(char *)str != 0)
+	{
+		str = (char *)str + 1;
+		unpin_ptr(str);
+	}
+}
+
+void unpin_buffer(void *buffer, unsigned size)
+{
+	int i;
+	char *local_buffer = (char *)buffer;
+	for(i=0; i<size; i++)
+	{
+		unpin_ptr(local_buffer);
+		local_buffer++;
+	}
 }

@@ -21,6 +21,12 @@
 #include "threads/malloc.h"
 #include "userprog/syscall.h"
 
+#include "vm/frame.h"
+#include "vm/page.h"
+#include "vm/swap.h"
+#include "lib/kernel/bitmap.h"
+#define MAX_STACK_SIZE (1 << 23)
+
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
 
@@ -170,6 +176,14 @@ process_exit (void)
     file_allow_write(cur->current_file);
     file_close(cur->current_file);
   }
+
+  struct list *file_mapping_table = &cur->file_mapping_table;
+  struct list_elem *e;
+  while (!list_empty(file_mapping_table)) {
+    e = list_begin (file_mapping_table);
+    struct file_mapping *file_mapping = list_entry(e, struct file_mapping, file_mapping_elem);
+    sys_munmap(file_mapping->mapid);
+  }
   
   for (e = list_begin (&cur->fd_table); e != list_end (&cur->fd_table); )
   {
@@ -178,6 +192,8 @@ process_exit (void)
     file_close(f_e->file_ptr);
     free(f_e);
   }
+
+  pt_destroy(&cur->page_table);
   
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -479,31 +495,37 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
          and zero the final PAGE_ZERO_BYTES bytes. */
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
-
-      /* Get a page of memory. */
-      uint8_t *kpage = palloc_get_page (PAL_USER);
-      if (kpage == NULL)
-        return false;
-
-      /* Load this page. */
-      if (file_read (file, kpage, page_read_bytes) != (int) page_read_bytes)
-        {
-          palloc_free_page (kpage);
-          return false; 
-        }
-      memset (kpage + page_read_bytes, 0, page_zero_bytes);
-
-      /* Add the page to the process's address space. */
-      if (!install_page (upage, kpage, writable)) 
-        {
-          palloc_free_page (kpage);
-          return false; 
-        }
-
+      
+      //p3
+      //printf("load_seg\n");
+      struct pte *page = malloc(sizeof(struct pte));
+      //printf("load_seg done\n");
+      if(page != NULL)
+      {
+        page->type = VM_BIN;
+        page->file = file;
+        page->writable = writable;
+        page->vaddr = upage;
+        page->is_loaded = false;
+        page->offset = ofs;
+        page->read_bytes = page_read_bytes;
+        page->zero_bytes = page_zero_bytes;
+        page->pinned = false;
+        page->frame = NULL;
+        page->swap_index = BITMAP_ERROR;
+        page->thread = thread_current();
+        //printf("pte insert\n");
+        pte_insert(&thread_current()->page_table, page);
+        //printf("pte insert done\n");
+      }
+      else return false;
       /* Advance. */
       read_bytes -= page_read_bytes;
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
+      ofs+=page_read_bytes;
+
+      // printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
   return true;
 }
@@ -546,4 +568,114 @@ install_page (void *upage, void *kpage, bool writable)
      address, then map our page there. */
   return (pagedir_get_page (t->pagedir, upage) == NULL
           && pagedir_set_page (t->pagedir, upage, kpage, writable));
+}
+
+bool handle_mm_fault(struct pte *p)
+{
+  // P3-6-test
+  // printf("PF address: %p, type: %d\n", p->vaddr, p->type);
+
+  struct frame *frame = frame_allocate(PAL_USER, p);
+  // P3-5. File memory mapping  
+  // printf("1\n");
+  p->frame = frame;
+  p->pinned = true;
+  if(p->is_loaded) {
+    frame_deallocate(frame->addr);
+    return false;
+  }
+  if(frame==NULL){
+    // P3-5. File memory mapping  
+    // printf("3\n");
+    return false;
+  }
+  if(p!=NULL) 
+  {
+    switch(p->type)
+    {
+      case VM_BIN : 
+      {
+        // printf("load_file_BIN\n");
+        if(!load_file(frame, p))
+        {
+          //frame_deallocate(f->addr);
+          printf("load file error\n");
+          frame_deallocate(frame->addr);
+          return false;
+        }
+        break;
+      }
+      case VM_FILE : 
+      {
+        if(!load_file(frame, p))
+        {
+          //frame_deallocate(f->addr);
+          printf("load file error\n");
+          frame_deallocate(frame->addr);
+          return false;
+        }
+        break;
+      }
+      case VM_ANON : {
+        if(p->swap_index != BITMAP_ERROR){
+          swap_in(p->swap_index, frame->addr);
+        }
+        else{
+          memset(frame->addr, 0, PGSIZE);
+        }
+        break;
+      }
+    }
+    if(!install_page(p->vaddr, frame->addr, p->writable))
+    {
+      frame_deallocate(frame->addr);
+      //frame_deallocate(f->addr);
+      return false;
+    }
+    p->is_loaded = true;
+    return true;
+  }
+  else return false;
+}
+bool expand_stack(void *addr)
+{
+	struct frame *f;
+  bool success = false;
+  if((size_t)(PHYS_BASE - pg_round_down(addr)) > MAX_STACK_SIZE)
+		return false;
+	struct pte *page = malloc(sizeof(struct pte));
+      if(page != NULL)
+      {
+        page->vaddr = pg_round_down(addr); 
+        page->writable = true; 
+        page->type = VM_ANON; 
+        page->is_loaded = true;
+        page->file = NULL;
+        page->offset = 0;
+        page->read_bytes = 0;
+        page->zero_bytes = 0;
+        page->pinned = true;
+        page->frame = NULL;
+        page->swap_index = BITMAP_ERROR;
+        page->thread = thread_current();
+        success = pte_insert(&thread_current()->page_table, page);
+      }
+	/* allocate page and initialize the page's vm_entry */
+	f = frame_allocate(PAL_USER,page);
+	if(f == NULL)
+	{
+		pte_delete(&thread_current()->page_table, page);
+		return false;
+	}
+  if(!success||!install_page(page->vaddr, f->addr, page->writable))
+    {
+      frame_deallocate(f->addr);
+      pte_delete(&thread_current()->page_table, page);
+      return false;
+    }
+	if(intr_context())
+	{
+		page->pinned = false;
+	}
+	return true;
 }
