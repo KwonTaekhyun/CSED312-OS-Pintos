@@ -120,7 +120,7 @@ struct frame *frame_evict(enum palloc_flags flags)
 		frame_swap_out(frame);
 	}
     else{
-        printf("Type: %d\n", frame->pte->type);
+        printf("Type: %d, is pinned: %s\n", frame->pte->type, frame->pte->pinned ? "T": "F");
     }
 
     // frame 정보 및 데이터 제거 후 frame_table에서 제거
