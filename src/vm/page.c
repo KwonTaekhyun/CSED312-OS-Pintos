@@ -70,7 +70,7 @@ bool load_file(struct frame *frame, struct pte *p)
 {
     if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes))
     {
-        frame_deallocate(frame->addr);
+        //frame_deallocate(frame->addr);
         return false;
     }
     memset((frame->addr)+(p->read_bytes), 0, p->zero_bytes);
