@@ -69,12 +69,12 @@ process_execute (const char *file_name)
 
   struct list_elem* e;
   struct thread* t;
-  /* for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
+  for (e = list_begin(&thread_current()->children); e != list_end(&thread_current()->children); e = list_next(e)) {
     t = list_entry(e, struct thread, child);
     if (t->exit_status == -1) {
       return process_wait(tid);
     }
-  } */
+  }
 
   palloc_free_page (arg_copy); 
 
