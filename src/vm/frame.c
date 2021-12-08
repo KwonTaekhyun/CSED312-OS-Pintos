@@ -67,7 +67,7 @@ void frame_deallocate(void *addr)
     }
 
     if(clock_hand == &(frame_entry->elem)){
-        clock_hand = clock_forwarding();
+        clock_forwarding();
     }
 
     // frame을 frame_table에서 제거
