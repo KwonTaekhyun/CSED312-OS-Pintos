@@ -159,7 +159,7 @@ process_wait (tid_t child_tid)
       exit_status = thr->exit_status;
       list_remove(child_elem);
       thr->parent = NULL;
-      //sema_up(&(thr->sema_exit));
+      sema_up(&(thr->sema_exit));
       break;
     }
   }
@@ -221,7 +221,7 @@ process_exit (void)
       pagedir_destroy (pd);
     }
 
-  //sema_down(&(cur->sema_exit));
+  sema_down(&(cur->sema_exit));
 }
 
 /* Sets up the CPU for running user code in the current
