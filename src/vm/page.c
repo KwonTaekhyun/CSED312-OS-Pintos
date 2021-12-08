@@ -104,8 +104,7 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
 
         page_entry->pinned = false;
 
-        pte_insert(&(thread_current()->page_table), page_entry);
-        return true;
+        return pte_insert(&(thread_current()->page_table), page_entry);
     }
     else
     {
