@@ -475,15 +475,16 @@ init_thread (struct thread *t, const char *name, int priority)
   /*----------P2------------*/
   #ifdef USERPROG
   list_init(&(t->children));
-  sema_init(&(t->sema_wait), 0);
-  sema_init(&(t->sema_exit), 0);
-  sema_init(&(t->sema_load), 0);
+  t->pcb =NULL;
+
   list_push_back(&(running_thread()->children), &(t->child));
   t->cur_file = NULL;
   #endif
 
   /* P3-5. File memory mapping */
   list_init(&(t->file_mapping_table));
+  t->page_table = NULL;
+  
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
