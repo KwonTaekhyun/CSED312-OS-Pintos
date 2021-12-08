@@ -184,17 +184,17 @@ int sys_open(char *file_name){
   }
 
   lock_acquire (&filesys_lock);
-
-  struct file *file_ptr = filesys_open(file_name);
-
-  if(!file_ptr){
-    lock_release (&filesys_lock);
-    return -1;
-  }
-
   struct file_descriptor *fd = palloc_get_page(0);
 
   if (!fd) {
+    
+    lock_release (&filesys_lock);
+    return -1;
+  }
+  
+  struct file *file_ptr = filesys_open(file_name);
+
+  if(!file_ptr){
     palloc_free_page (fd);
     lock_release (&filesys_lock);
     return -1;

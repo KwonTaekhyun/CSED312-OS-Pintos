@@ -156,10 +156,9 @@ process_wait (tid_t child_tid)
     struct thread *thr = list_entry(child_elem, struct thread, child);
     if(thr->tid == child_tid){
       sema_down(&(thr->sema_wait));
-
-      list_remove(child_elem);
       exit_status = thr->exit_status;
-
+      list_remove(child_elem);
+      thr->parent = NULL;
       sema_up(&(thr->sema_exit));
       break;
     }
@@ -585,7 +584,7 @@ setup_stack (void **esp)
       else 
       {
         frame_deallocate(frame->addr);
-        free(page);
+        pte_delete(&thread_current()->page_table, page);
       }
     }
 
@@ -750,13 +749,13 @@ bool expand_stack(void *addr)
 	f = frame_allocate(PAL_USER,page);
 	if(f == NULL)
 	{
-		free(page);
+		pte_delete(&thread_current()->page_table, page);
 		return false;
 	}
   if(!success||!install_page(page->vaddr, f->addr, page->writable))
     {
       frame_deallocate(f->addr);
-      free(page);
+      pte_delete(&thread_current()->page_table, page);
       return false;
     }
 	if(intr_context())

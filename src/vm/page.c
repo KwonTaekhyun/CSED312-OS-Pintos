@@ -64,13 +64,13 @@ void pt_destroy_func(struct hash_elem *e, void *aux)
         frame_deallocate(addr);
         pagedir_clear_page(thread_current()->pagedir, page->vaddr);
     }
-    free(page);
+    pte_delete(&thread_current()->page_table, page);
 } 
 bool load_file(struct frame *frame, struct pte *p)
 {
     if(file_read_at(p->file, frame->addr, p->read_bytes, p->offset)!=(p->read_bytes))
     {
-        frame_deallocate(frame->addr);
+        //frame_deallocate(frame->addr);
         return false;
     }
     memset((frame->addr)+(p->read_bytes), 0, p->zero_bytes);
@@ -104,8 +104,7 @@ bool pte_create_by_file(void* addr, struct file* file, off_t offset, size_t read
 
         page_entry->pinned = false;
 
-        hash_insert(&(thread_current()->page_table), &page_entry->elem);
-        return true;
+        return pte_insert(&(thread_current()->page_table), page_entry);
     }
     else
     {
