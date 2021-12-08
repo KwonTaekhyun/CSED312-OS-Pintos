@@ -348,7 +348,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
   process_activate ();
   //t->page_table = malloc(sizeof (struct hash));
   //if(t->page_table == NULL) goto done;
-  pt_init(&t->page_table);
+  //pt_init(&t->page_table);
   /* Open executable file. */
   // final-test
   // printf("lock aquire!\n");
