@@ -105,9 +105,9 @@ struct frame *frame_evict(enum palloc_flags flags)
 
 	if(frame->pte->type == VM_FILE){
         if(is_dirty){
-            lock_acquire(&filesys_lock);
+            lock_acquire(&file_lock);
             file_write_at(frame->pte->file, frame->addr, frame->pte->read_bytes, frame->pte->offset);
-            lock_release(&filesys_lock);
+            lock_release(&file_lock);
         }
 	}
 	else if(frame->pte->type == VM_BIN){
