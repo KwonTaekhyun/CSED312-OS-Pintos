@@ -346,8 +346,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
     goto done;
-  pt_init(&t->page_table);
   process_activate ();
+  t->page_table = malloc(sizeof hash);
+  if(t->page_table == NULL) goto done;
+  pt_init(&t->page_table);
   /* Open executable file. */
   // final-test
   // printf("lock aquire!\n");
@@ -437,7 +439,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
-
+  
   file_deny_write(file);
 
   success = true;
