@@ -101,6 +101,10 @@ struct frame *frame_evict(enum palloc_flags flags)
 
     while(pagedir_is_accessed(thread_current()->pagedir, frame->pte->vaddr))
     {
+        if(frame->pte->pinned){
+            frame = clock_forwarding();
+            continue;
+        }
         pagedir_set_accessed (thread_current()->pagedir, frame->pte->vaddr, false);
         frame = clock_forwarding();
     }
