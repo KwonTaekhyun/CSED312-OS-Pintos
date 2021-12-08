@@ -115,7 +115,7 @@ struct frame *frame_evict(enum palloc_flags flags)
             frame_swap_out(frame);
         }
 	}
-    else {
+    else if(frame->pte->type == VM_ANON){
         frame_swap_out(frame);
     }
 
