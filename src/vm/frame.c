@@ -110,11 +110,17 @@ struct frame *frame_evict(enum palloc_flags flags)
 	}
 	else if(frame->pte->type == VM_BIN){
         if(is_dirty){
-            frame_swap_out(frame);
+            size_t swap_index = swap_out(frame->addr);
+
+            frame->pte->swap_index = swap_index;
+            frame->pte->type = VM_ANON;
         }
 	}
     else if(frame->pte->type == VM_ANON){
-        frame_swap_out(frame);
+        size_t swap_index = swap_out(frame->addr);
+
+        frame->pte->swap_index = swap_index;
+        frame->pte->type = VM_ANON;
     }
 
     // frame 정보 및 데이터 제거 후 frame_table에서 제거
@@ -133,13 +139,4 @@ struct frame *clock_forwarding(){
         list_begin(&frame_table) : list_next(clock_hand);
 
     return list_entry(clock_hand, struct frame, elem);
-}
-
-void frame_swap_out(struct frame *frame){
-    size_t swap_index = swap_out(frame->addr);
-
-    frame->pte->swap_index = swap_index;
-    frame->pte->type = VM_ANON;
-
-    // printf("swap-out end\n");
 }
