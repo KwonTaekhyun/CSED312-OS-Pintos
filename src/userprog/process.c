@@ -115,7 +115,7 @@ start_process (void *file_name_)
   {
     argu_stack(argv, argc, &if_.esp);
   }
-  sema_up(&thread_current()->sema_load);
+  sema_up(&thread_current()->parent->sema_load);
   /* If load failed, quit. */
   palloc_free_page (file_name);
   //p3
