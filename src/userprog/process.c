@@ -423,8 +423,6 @@ load (const char *file_name, void (**eip) (void), void **esp)
 
  done:
   /* We arrive here whether the load is successful or not. */
-  // final-test
-  // printf("lock release!\n");
   lock_release(&filesys_lock);
   return success;
 }
@@ -509,11 +507,8 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
          and zero the final PAGE_ZERO_BYTES bytes. */
       size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
       size_t page_zero_bytes = PGSIZE - page_read_bytes;
-      
-      //p3
-      //printf("load_seg\n");
+
       struct pte *page = malloc(sizeof(struct pte));
-      //printf("load_seg done\n");
       if(page != NULL)
       {
         page->type = VM_BIN;
@@ -528,9 +523,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
         page->thread = thread_current();
-        //printf("pte insert\n");
         pte_insert(&thread_current()->page_table, page);
-        //printf("pte insert done\n");
       }
       else return false;
       /* Advance. */
@@ -538,13 +531,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
       zero_bytes -= page_zero_bytes;
       upage += PGSIZE;
       ofs+=page_read_bytes;
-
-      // printf("load_segment! %dtimes, virtual address: %p\n", i++, upage);
     }
-// printf("MEMSET test\n");
-// memset (addr, 0x5a, sizeof(char) * 2 * 1024 * 1024);
-// printf("MEMSET test\n");
-
   return true;
 }
 
@@ -557,7 +544,6 @@ setup_stack (void **esp)
   bool success = false;
     //p3
       struct pte *page = malloc(sizeof(struct pte));
-      //printf("setup_stack\n");
       if(page != NULL)
       {
         page->vaddr = pg_round_down(((uint8_t *)PHYS_BASE)-PGSIZE); 
@@ -572,22 +558,23 @@ setup_stack (void **esp)
         page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
         page->thread = thread_current();
-        success = pte_insert(&thread_current()->page_table, page);
-        //printf("setup_stack done\n");
       }
       else return false;
     frame = frame_allocate(PAL_USER | PAL_ZERO, page);
     if (frame != NULL) 
     {
       success = install_page (pg_round_down(((uint8_t *) PHYS_BASE) - PGSIZE), frame->addr, true);
-      if (success)*esp = PHYS_BASE;
+      if (success)
+      {
+        *esp = PHYS_BASE;
+        success = pte_insert(&thread_current()->page_table, page);
+      }
       else 
       {
         frame_deallocate(frame->addr);
-        pte_delete(&thread_current()->page_table, page);
+        free(page);
       }
     }
-
   return success;
 }
 
