@@ -494,7 +494,7 @@ void check_address(void *addr, void *esp)
 		if(page == NULL)
 		{
 			if(addr >= esp-STACK_HEURISTIC){
-				if(!expand_stack(addr))
+				if(!growing_stack(addr))
 					sys_exit(-1);
 			}
 			else

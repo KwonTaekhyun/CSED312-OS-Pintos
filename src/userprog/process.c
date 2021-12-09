@@ -658,6 +658,7 @@ void argu_stack(char **argv, int argc, void **esp)
 bool handle_mm_fault(struct pte *p)
 {
   struct frame *frame = frame_allocate(PAL_USER, p);
+  if(!frame) return false;
   p->frame = frame;
   p->pinned = true;
   if(p->is_loaded) {
@@ -709,7 +710,7 @@ bool handle_mm_fault(struct pte *p)
   }
   else return false;
 }
-bool expand_stack(void *addr)
+bool growing_stack(void *addr)
 {
 	struct frame *f;
   bool success = false;
