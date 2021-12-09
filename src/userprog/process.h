@@ -13,4 +13,5 @@ void argu_stack(char **argv, int argc, void **esp);
 
 //p3
 bool handle_mm_fault(struct pte *p);
+bool expand_stack(void *addr);
 #endif /* userprog/process.h */

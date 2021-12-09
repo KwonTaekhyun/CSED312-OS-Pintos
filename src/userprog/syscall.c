@@ -59,7 +59,6 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
-      //unpin_string((void *)*(uint32_t *)(f->esp + 4));
       pte_find((f->esp + 4))->pinned = false;
       break;
     }
@@ -73,7 +72,6 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
-      //unpin_string((void *)*(uint32_t *)(f->esp + 4));
       pte_find((f->esp + 4))->pinned = false;
       break;
     }
@@ -88,7 +86,6 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
-      //unpin_string((void *)*(uint32_t *)(f->esp + 4));
       pte_find((f->esp + 4))->pinned = false;
       break;
     }
@@ -102,7 +99,6 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
-      //unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       pte_find((f->esp + 8))->pinned = false;
       pte_find((f->esp + 12))->pinned = false;
       break;
@@ -112,7 +108,6 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
-      //unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
       pte_find((f->esp + 8))->pinned = false;
       pte_find((f->esp + 12))->pinned = false;
       break;
@@ -483,11 +478,10 @@ void check_valid_string(const void *str, void *esp)
   uint8_t *i;
   struct pte *page;
   char *str_temp = (char*) str;
-  check_address((void*)str_temp, esp);
-  while(*str_temp != 0)
+  while(*str_temp < 0)
 	{
+    check_address(str_temp, esp);
 		str_temp += 1;
-		check_address(str_temp, esp);
 	}
 }
 void check_address(void *addr, void *esp)
@@ -509,34 +503,4 @@ void check_address(void *addr, void *esp)
 	}
 	else sys_exit(-1);
 
-}
-
-void unpin_ptr(void *vaddr)
-{
-	struct pte *page  = pte_find(vaddr);
-	if(page != NULL)
-	{
-		page->pinned = false;
-	}
-}
-
-void unpin_string(void *str)
-{
-	unpin_ptr(str);
-	while(*(char *)str != 0)
-	{
-		str = (char *)str + 1;
-		unpin_ptr(str);
-	}
-}
-
-void unpin_buffer(void *buffer, unsigned size)
-{
-	int i;
-	char *temp = (char *)buffer;
-	for(i=0; i<size; i++)
-	{
-		unpin_ptr(temp);
-		temp++;
-	}
 }
