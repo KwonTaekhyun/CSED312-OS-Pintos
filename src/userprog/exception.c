@@ -156,21 +156,14 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
   check_address(fault_addr, f->esp);
-
-   if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
-        sys_exit(-1);
-
-   bool load = false;
-  	struct pte *page = pte_find(fault_addr);
-  	if(page != NULL)
-  	{
-	  	load = handle_mm_fault(page);
-	  	if(page->is_loaded)
-	  	{
-			page->pinned = false;
-			load = true;
-	  	}
-	}
+  if(!not_present) sys_exit(-1);
+  struct pte *page = pte_find(fault_addr);
+  bool load = false;
+  if(page != NULL)
+  {
+     load = handle_mm_fault(page);
+     if(page->is_loaded) load = true;
+   }
    if(!load) sys_exit(-1);
    
 }
