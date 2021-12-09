@@ -705,7 +705,6 @@ bool handle_mm_fault(struct pte *p)
       return false;
     }
     p->is_loaded = true;
-    p->pinned = false;
     return true;
   }
   else return false;
