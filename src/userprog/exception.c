@@ -162,8 +162,9 @@ page_fault (struct intr_frame *f)
   if(page != NULL)
   {
      load = handle_mm_fault(page);
-     if(page->is_loaded) load = true;
+     //if(page->is_loaded) page->pinned = false;
    }
+   
    if(!load) sys_exit(-1);
    
 }

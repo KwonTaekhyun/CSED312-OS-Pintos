@@ -657,21 +657,11 @@ void argu_stack(char **argv, int argc, void **esp)
 
 bool handle_mm_fault(struct pte *p)
 {
-  // P3-6-test
-  // printf("PF address: %p, type: %d\n", p->vaddr, p->type);
-
   struct frame *frame = frame_allocate(PAL_USER, p);
-  // P3-5. File memory mapping  
-  // printf("1\n");
   p->frame = frame;
   p->pinned = true;
   if(p->is_loaded) {
     frame_deallocate(frame->addr);
-    return false;
-  }
-  if(frame==NULL){
-    // P3-5. File memory mapping  
-    // printf("3\n");
     return false;
   }
   if(p!=NULL) 
@@ -680,11 +670,8 @@ bool handle_mm_fault(struct pte *p)
     {
       case VM_BIN : 
       {
-        // printf("load_file_BIN\n");
         if(!load_file(frame, p))
         {
-          //frame_deallocate(f->addr);
-          printf("load file error\n");
           frame_deallocate(frame->addr);
           return false;
         }
@@ -694,18 +681,19 @@ bool handle_mm_fault(struct pte *p)
       {
         if(!load_file(frame, p))
         {
-          //frame_deallocate(f->addr);
-          printf("load file error\n");
           frame_deallocate(frame->addr);
           return false;
         }
         break;
       }
-      case VM_ANON : {
-        if(p->swap_index != BITMAP_ERROR){
+      case VM_ANON : 
+      {
+        if(p->swap_index != BITMAP_ERROR)
+        {
           swap_in(p->swap_index, frame->addr);
         }
-        else{
+        else
+        {
           memset(frame->addr, 0, PGSIZE);
         }
         break;
@@ -714,10 +702,10 @@ bool handle_mm_fault(struct pte *p)
     if(!install_page(p->vaddr, frame->addr, p->writable))
     {
       frame_deallocate(frame->addr);
-      //frame_deallocate(f->addr);
       return false;
     }
     p->is_loaded = true;
+    p->pinned = false;
     return true;
   }
   else return false;
