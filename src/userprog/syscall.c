@@ -59,7 +59,8 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_exec((const char *)*(uint32_t *)(f->esp + 4));
-      unpin_string((void *)*(uint32_t *)(f->esp + 4));
+      //unpin_string((void *)*(uint32_t *)(f->esp + 4));
+      pte_find((f->esp + 4))->pinned = false;
       break;
     }
     case SYS_WAIT:{
@@ -72,7 +73,8 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_create((const char *)*(uint32_t *)(f->esp + 4), (int)*(uint32_t *)(f->esp + 8));
-      unpin_string((void *)*(uint32_t *)(f->esp + 4));
+      //unpin_string((void *)*(uint32_t *)(f->esp + 4));
+      pte_find((f->esp + 4))->pinned = false;
       break;
     }
     case SYS_REMOVE:{
@@ -86,7 +88,8 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_valid_string((const void *)*(uint32_t *)(f->esp + 4), f->esp);
       f->eax = sys_open((const char *)*(uint32_t *)(f->esp + 4));
-      unpin_string((void *)*(uint32_t *)(f->esp + 4));
+      //unpin_string((void *)*(uint32_t *)(f->esp + 4));
+      pte_find((f->esp + 4))->pinned = false;
       break;
     }
     case SYS_FILESIZE:{
@@ -99,7 +102,9 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 1);
       f->eax = sys_read((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
-      unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      //unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      pte_find((f->esp + 8))->pinned = false;
+      pte_find((f->esp + 12))->pinned = false;
       break;
     }
     case SYS_WRITE:{
@@ -107,7 +112,9 @@ syscall_handler (struct intr_frame *f)
       //p3
       check_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)), f->esp, 0);
       f->eax = sys_write((int)*(uint32_t *)(f->esp + 4), (void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
-      unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      //unpin_buffer((void *)*(uint32_t *)(f->esp + 8), (unsigned)*((uint32_t *)(f->esp + 12)));
+      pte_find((f->esp + 8))->pinned = false;
+      pte_find((f->esp + 12))->pinned = false;
       break;
     }
     case SYS_SEEK:{
@@ -136,7 +143,7 @@ syscall_handler (struct intr_frame *f)
       break;
     }
   }
-  unpin_ptr(f->esp);
+  pte_find(f->esp)->pinned = false;
 }
 
 // system call 구현 함수들
