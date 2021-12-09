@@ -98,8 +98,7 @@ struct frame *frame_evict(enum palloc_flags flags)
     }
 
     // eviction
-    bool is_dirty = pagedir_is_dirty(thread_current()->pagedir, frame->pte->vaddr)
-      || pagedir_is_dirty(thread_current()->pagedir, frame->addr);
+    bool is_dirty = pagedir_is_dirty(thread_current()->pagedir, frame->pte->vaddr);
 
 	if(frame->pte->type == VM_FILE){
         if(is_dirty){
