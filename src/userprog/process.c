@@ -717,35 +717,40 @@ bool growing_stack(void *addr)
   if((size_t)(PHYS_BASE - pg_round_down(addr)) > MAX_STACK_SIZE)
 		return false;
 	struct pte *page = malloc(sizeof(struct pte));
-      if(page != NULL)
-      {
-        page->vaddr = pg_round_down(addr); 
-        page->writable = true; 
-        page->type = VM_ANON; 
-        page->is_loaded = true;
-        page->file = NULL;
-        page->offset = 0;
-        page->read_bytes = 0;
-        page->zero_bytes = 0;
-        page->pinned = true;
-        page->frame = NULL;
-        page->swap_index = BITMAP_ERROR;
-        page->thread = thread_current();
-        success = pte_insert(&thread_current()->page_table, page);
-      }
-	/* allocate page and initialize the page's vm_entry */
+  if(page != NULL)
+  {
+    page->vaddr = pg_round_down(addr); 
+    page->writable = true; 
+    page->type = VM_ANON; 
+    page->is_loaded = true;
+    page->file = NULL;
+    page->offset = 0;
+    page->read_bytes = 0;
+    page->zero_bytes = 0;
+    page->pinned = true;
+    page->frame = NULL;
+    page->swap_index = BITMAP_ERROR;
+    page->thread = thread_current();
+  }
 	f = frame_allocate(PAL_USER,page);
 	if(f == NULL)
 	{
 		pte_delete(&thread_current()->page_table, page);
 		return false;
 	}
-  if(!success||!install_page(page->vaddr, f->addr, page->writable))
-    {
-      frame_deallocate(f->addr);
-      pte_delete(&thread_current()->page_table, page);
-      return false;
-    }
+  if(!install_page(page->vaddr, f->addr, page->writable))
+  {
+    frame_deallocate(f->addr);
+    pte_delete(&thread_current()->page_table, page);
+    return false;
+  }
+  if(!pte_insert(&thread_current()->page_table, page))
+  {
+    frame_deallocate(f->addr);
+    pte_delete(&thread_current()->page_table, page);
+    return false;
+  }
+
 	if(intr_context())
 	{
 		page->pinned = false;
