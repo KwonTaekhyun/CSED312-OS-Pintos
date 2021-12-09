@@ -142,10 +142,6 @@ syscall_handler (struct intr_frame *f)
 // system call 구현 함수들
 
 void sys_exit(int exit_status){
-  // final-test
-  // debug_backtrace();
-
-
   struct thread *current_thread = thread_current();
   current_thread->exit_status = exit_status;
 
@@ -505,7 +501,6 @@ void check_address(void *addr, void *esp)
 		}
 	}
 	else sys_exit(-1);
-
 }
 
 void unpin_ptr(void *vaddr)
@@ -530,10 +525,10 @@ void unpin_string(void *str)
 void unpin_buffer(void *buffer, unsigned size)
 {
 	int i;
-	char *local_buffer = (char *)buffer;
+	char *temp = (char *)buffer;
 	for(i=0; i<size; i++)
 	{
-		unpin_ptr(local_buffer);
-		local_buffer++;
+		unpin_ptr(temp);
+		temp++;
 	}
 }
