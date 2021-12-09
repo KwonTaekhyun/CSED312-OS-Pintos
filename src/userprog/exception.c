@@ -156,7 +156,6 @@ page_fault (struct intr_frame *f)
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
   check_address(fault_addr, f->esp);
-
    if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
         sys_exit(-1);
 
@@ -171,6 +170,10 @@ page_fault (struct intr_frame *f)
 			page->pinned = false;
 			load = true;
 	  	}
+	}
+   else if(fault_addr >= f->esp-STACK_HEURISTIC){
+		if(!expand_stack(fault_addr))
+		   sys_exit(-1);
 	}
    if(load == false) sys_exit(-1);
    

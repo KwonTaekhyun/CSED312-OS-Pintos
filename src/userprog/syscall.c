@@ -492,12 +492,12 @@ void check_address(void *addr, void *esp)
 		page = pte_find(addr);
 		if(page == NULL)
 		{
-			if(addr >= esp-STACK_HEURISTIC){
+			/* if(addr >= esp-STACK_HEURISTIC){
 				if(!expand_stack(addr))
 					sys_exit(-1);
 			}
 			else
-				sys_exit(-1);
+				sys_exit(-1); */
 		}
 	}
 	else sys_exit(-1);
