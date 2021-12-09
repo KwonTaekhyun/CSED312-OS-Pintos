@@ -522,7 +522,6 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
         page->pinned = false;
         page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
-        page->thread = thread_current();
         pte_insert(&thread_current()->page_table, page);
       }
       else return false;
@@ -557,7 +556,6 @@ setup_stack (void **esp)
         page->pinned = true;
         page->frame = NULL;
         page->swap_index = BITMAP_ERROR;
-        page->thread = thread_current();
       }
       else return false;
     frame = frame_allocate(PAL_USER | PAL_ZERO, page);
@@ -717,7 +715,6 @@ bool growing_stack(void *addr)
     page->pinned = true;
     page->frame = NULL;
     page->swap_index = BITMAP_ERROR;
-    page->thread = thread_current();
   }
 	f = frame_allocate(PAL_USER,page);
 	if(f == NULL)
