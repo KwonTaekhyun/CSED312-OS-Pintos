@@ -734,10 +734,6 @@ bool growing_stack(void *addr)
     pte_delete(&thread_current()->page_table, page);
     return false;
   }
-/* 
-	if(intr_context())
-	{
-		page->pinned = false;
-	} */
+  page->is_loaded = true;
 	return true;
 }
