@@ -155,12 +155,22 @@ page_fault (struct intr_frame *f)
   not_present = (f->error_code & PF_P) == 0;
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
+
+  struct pte *page = pte_find(fault_addr);
   check_address(fault_addr, f->esp);
+  if (page == NULL)
+  {
+     if(fault_addr >= f->esp-STACK_HEURISTIC){
+		if(!expand_stack(fault_addr))
+		   sys_exit(-1);
+      }
+      else sys_exit(-1);
+  }
    if(fault_addr == NULL || !not_present || !is_user_vaddr(fault_addr))
         sys_exit(-1);
 
    bool load = false;
-  	struct pte *page = pte_find(fault_addr);
+  	
 
   	if(page != NULL)
   	{
@@ -170,10 +180,6 @@ page_fault (struct intr_frame *f)
 			page->pinned = false;
 			load = true;
 	  	}
-	}
-   else if(fault_addr >= f->esp-STACK_HEURISTIC){
-		if(!expand_stack(fault_addr))
-		   sys_exit(-1);
 	}
    if(load == false) sys_exit(-1);
    
